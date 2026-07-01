@@ -1,24 +1,21 @@
 # -Mahsulot-qidiruv-GET-form-
+Ushbu loyiha uchun CRUD (Create, Read, Update, Delete) operatsiyalarini to'liq qamrab olgan, PRG (Post/Redirect/Get) patterniga amal qiluvchi va xavfsiz Flask dasturini tayyorladim.
+
+[file-tag: code-generated-file-0-1783073356801980846]
+
 Loyiha qisqacha tushuntirishi:
-PRG Pattern: /post route'ida xabar saqlangandan so'ng, redirect(url_for('index')) amalga oshiriladi. Bu foydalanuvchi sahifani yangilaganda (F5) xabar qayta yuborilishining oldini oladi.
+CRUD funksionalligi:
 
-Duplikatni bloklash: session['last_post'] orqali oxirgi yuborilgan xabar matni saqlanadi. Agar yangi yuborilayotgan xabar avvalgisi bilan bir xil bo'lsa, xabar qabul qilinmaydi va xatolik xabari chiqadi.
+Create: /notes/new orqali ma'lumot kiritiladi.
 
-Xavfsizlik: @login_required dekoratori yordamida /post faqat login qilganlar uchun ochiq qilingan.
+Read: Bosh sahifada ro'yxat va /notes/<id> da alohida nota ko'rinishi.
 
-Jinja2: Bosh sahifada {% for post in posts[:20] %} orqali eng yangi 20 ta xabar va ularning muallifi, vaqti hamda matni dinamik tarzda render qilinadi.
+Update: /notes/<id>/edit orqali mavjud ma'lumot tahrirlanadi.
 
-Faylni yuklab olib, loyihangizga qo'shishingiz kifoya. Yana yordam kerak bo'lsa, bemalol ayting!app.py: Barcha kerakli modellar (Note klassi), SQLite konfiguratsiyasi va marshrutlar (/ va /add) mavjud.
+Delete: /notes/<id>/delete orqali o'chiriladi.
 
-seed.py: Loyihani ishga tushirganingizda bazani to'ldirib beruvchi maxsus skript (Kamida 3 ta nota qo'shadi).
+404 Xatolik: get_or_404() funksiyasi yordamida mavjud bo'lmagan ID uchun avtomatik 404 sahifasi qaytariladi.
 
-templates/index.html: Notlarni eng yangisidan boshlab chiqaruvchi (yangi notlar yuqorida) Jinja2 shabloni.
+PRG Pattern va Flash: Har bir POST so'rovdan so'ng redirect() ishlatilgan va flash() orqali foydalanuvchiga muvaffaqiyatli amal bajarilgani haqida xabar beriladi.
 
-README.md: Loyihani qanday ishga tushirish bo'yicha aniq qadamlar (o'rnatish, migratsiya va ishga tushirish).
-
-100 ball olish uchun eslatma:
-Seed: Loyihani birinchi marta ishga tushirayotganda python seed.py buyrug'ini bajaring, shunda bazangiz bo'sh qolmaydi.
-
-DateTime: Notlar yaratilgan vaqt (created_at) avtomatik tarzda datetime.utcnow orqali saqlanadi.
-
-Tartiblash: Note.query.order_by(Note.created_at.desc()).all() qismi yangi notlarning doimo birinchi bo'lib chiqishini ta'minlaydi.
+Jinja2 Templates: HTML shablonlari bazadagi ma'lumotlarni dinamik ko'rsatishga moslangan.
