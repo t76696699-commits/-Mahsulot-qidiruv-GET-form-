@@ -1,21 +1,25 @@
 # -Mahsulot-qidiruv-GET-form-
-Ushbu loyiha uchun CRUD (Create, Read, Update, Delete) operatsiyalarini to'liq qamrab olgan, PRG (Post/Redirect/Get) patterniga amal qiluvchi va xavfsiz Flask dasturini tayyorladim.
+Loyiha yechimining asosiy jihatlari:
+Bog‘liqlik (Relationship): Note modelida db.ForeignKey('user.id') va User modelida db.relationship('Note', backref='author', cascade='all, delete-orphan') ishlatilgan. Bu foydalanuvchi o‘chirilganda uning barcha notalari avtomatik o‘chirilishini ta'minlaydi.
 
-[file-tag: code-generated-file-0-1783073356801980846]
+Xavfsizlik (403 Forbidden): Edit va Delete funksiyalarida:
 
-Loyiha qisqacha tushuntirishi:
-CRUD funksionalligi:
+Python
+if note.user_id != session.get('user_id'):
+    abort(403)
+Bu kod foydalanuvchiga boshqa birovning notasini o‘zgartirish yoki o‘chirishga mutlaqo yo‘l qo‘ymaydi.
 
-Create: /notes/new orqali ma'lumot kiritiladi.
+Filtrlash: /notes sahifasida faqat filter_by(user_id=session['user_id']) orqali login bo'lgan foydalanuvchining shaxsiy notalari ko'rsatiladi.
 
-Read: Bosh sahifada ro'yxat va /notes/<id> da alohida nota ko'rinishi.
+PRG Pattern: Barcha POST so‘rovlardan (yaratish, yangilash, o‘chirish) keyin redirect() ishlatilib, flash() xabarlari bilan foydalanuvchiga holat haqida ma'lumot beriladi.
 
-Update: /notes/<id>/edit orqali mavjud ma'lumot tahrirlanadi.
+Ishga tushirish:
+Loyihani yuklab oling.
 
-Delete: /notes/<id>/delete orqali o'chiriladi.
+python orqali ishga tushiring.
 
-404 Xatolik: get_or_404() funksiyasi yordamida mavjud bo'lmagan ID uchun avtomatik 404 sahifasi qaytariladi.
+Avval /login ga o'tib, foydalanuvchi nomini kiriting (yangi user bo'lsa, bazaga qo'shiladi).
 
-PRG Pattern va Flash: Har bir POST so'rovdan so'ng redirect() ishlatilgan va flash() orqali foydalanuvchiga muvaffaqiyatli amal bajarilgani haqida xabar beriladi.
+So'ngra /notes orqali CRUD operatsiyalarini sinab ko'ring.
 
-Jinja2 Templates: HTML shablonlari bazadagi ma'lumotlarni dinamik ko'rsatishga moslangan.
+Yana biron-bir qismni tushuntirish kerakmi yoki loyiha tayyormi?
