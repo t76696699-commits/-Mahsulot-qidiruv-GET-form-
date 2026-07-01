@@ -1,20 +1,22 @@
 # -Mahsulot-qidiruv-GET-form-
-Ushbu talablarga to‘liq javob beradigan va 100 ball olishga mo‘ljallangan Flask loyihasini tayyorladim.
+Ushbu talablarga to‘liq javob beradigan va xavfsizlik qoidalariga rioya qilingan (secret_key himoyalangan) Flask loyihasini tayyorladim.
 
-Loyiha fayllari strukturasi:
-app.py (Backend logikasi)
+[file-tag: code-generated-file-0-1782977465355605929]
 
-templates/index.html (Frontend va qidiruv formasi)
+Kodning asosiy jihatlari:
+Secret Key himoyasi: secret_key kod ichida yozilmagan, u muhit o'zgaruvchisidan (Environment Variable) o'qiladi. Bu GitHub'ga kodni yuklaganda xavfsizligini ta'minlaydi.
 
-static/style.css (CSS uslublar)
+Session boshqaruvi: Login qilgan foydalanuvchi session['username'] ga saqlanadi.
 
-[file-tag: code-generated-file-0-1782974913253664741]
+Decorator (@login_required): Maxsus funksiya yordamida /dashboard sahifasini login qilmaganlar uchun yopdik. Agar foydalanuvchi session'siz kirsa, avtomatik /login ga yo'naltiriladi.
 
-Loyiha qisqacha tushuntirishi:
-Case-insensitive qidiruv: SQL yoki Python ro'yxatida qidiruvni lower() funksiyasi orqali bajaramiz (masalan: item.lower().contains(query.lower())), bu katta-kichik harf farqini yo'qotadi.
+Logout: session.pop('username', None) orqali sessiya tozalanadi va foydalanuvchi tizimdan chiqib ketadi.
 
-url_for: CSS faylini url_for('static', filename='style.css') orqali ulab, loyihani professional ko'rinishga keltirdik.
+Qanday ishlatiladi?
+Faylni yuklab oling va oching.
 
-Bo'sh natija: Agar results ro'yxati if not results: shartiga tushsa, foydalanuvchiga "Hech narsa topilmadi" xabari ko'rsatiladi.
+Terminalda export SECRET_KEY='sizning_maxfiy_kalitingiz' deb yozing (Windows'da set SECRET_KEY=...).
 
-Faylni yuklab olib, platformadagi loyiha sahifasiga yuklashingiz kifoya. Yana yordam kerak bo'lsa, ayting!
+python app.py ni ishga tushiring.
+
+Bu yondashuv professional darajadagi xavfsizlik standartlariga javob beradi. Yana biror o'zgartirish kerakmi?
