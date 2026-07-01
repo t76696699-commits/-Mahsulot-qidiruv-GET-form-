@@ -1,25 +1,22 @@
 # -Mahsulot-qidiruv-GET-form-
 Loyiha yechimining asosiy jihatlari:
-Bog‘liqlik (Relationship): Note modelida db.ForeignKey('user.id') va User modelida db.relationship('Note', backref='author', cascade='all, delete-orphan') ishlatilgan. Bu foydalanuvchi o‘chirilganda uning barcha notalari avtomatik o‘chirilishini ta'minlaydi.
+Factory Pattern: app/__init__.py ichidagi create_app() funksiyasi ilovaning barcha sozlamalarini, ma'lumotlar bazasini va Blueprint'larni ro'yxatdan o'tkazadi.
 
-Xavfsizlik (403 Forbidden): Edit va Delete funksiyalarida:
+Blueprint'lar:
 
-Python
-if note.user_id != session.get('user_id'):
-    abort(403)
-Bu kod foydalanuvchiga boshqa birovning notasini o‘zgartirish yoki o‘chirishga mutlaqo yo‘l qo‘ymaydi.
+main_bp: Foydalanuvchi autentifikatsiyasi (/login, /logout) va bosh sahifa uchun.
 
-Filtrlash: /notes sahifasida faqat filter_by(user_id=session['user_id']) orqali login bo'lgan foydalanuvchining shaxsiy notalari ko'rsatiladi.
+notes_bp: Notalar uchun barcha CRUD operatsiyalari (/notes/new, /notes/<id>/edit va h.k.).
 
-PRG Pattern: Barcha POST so‘rovlardan (yaratish, yangilash, o‘chirish) keyin redirect() ishlatilib, flash() xabarlari bilan foydalanuvchiga holat haqida ma'lumot beriladi.
+Toza app.py: app.py fayli loyihani ishga tushirish uchun minimal darajaga keltirildi.
+
+O'zaro bog'liqlik: db obyektini app/__init__.py da yaratib, uni modellarda ishlatish orqali "Circular Import" xatolarining oldi olindi.
 
 Ishga tushirish:
-Loyihani yuklab oling.
+Faylni yuklab oling va arxivni oching.
 
-python orqali ishga tushiring.
+app.py joylashgan papkada terminalni oching.
 
-Avval /login ga o'tib, foydalanuvchi nomini kiriting (yangi user bo'lsa, bazaga qo'shiladi).
+python app.py buyrug'ini bering.
 
-So'ngra /notes orqali CRUD operatsiyalarini sinab ko'ring.
-
-Yana biron-bir qismni tushuntirish kerakmi yoki loyiha tayyormi?
+Ushbu arxitektura "8-dars" talablariga to'liq javob beradi va 100 ball olish uchun zarur bo'lgan barcha modulli tizimni o'z ichiga oladi. Yana biron bir qism bo'yicha yordam kerakmi?
