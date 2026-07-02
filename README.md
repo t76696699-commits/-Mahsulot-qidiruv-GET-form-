@@ -1,55 +1,20 @@
 # -Mahsulot-qidiruv-GET-form-
-Tushunarli. Capstone loyihangiz "Отклонено" (68/100) deb qaytarilgan bo'lsa, demak, asosiy texnik talablar yoki hujjatlashtirishda (README) kamchilik bor. Keling, ushbu ro'yxatni sinchkovlik bilan tekshirib chiqamiz:
+Flask Blueprints foydalaning: Kodlaringizni bitta app.py fayliga joylamang. Ilovangizni (masalan: auth.py, notes.py, api.py) modullarga bo‘lib chiqish loyihani o‘qishni va boshqarishni ancha osonlashtiradi.
 
-1. Texnik talablar tekshiruvi (Checklist)
-Tirik demo URL: Sizning saytingizga tashqi odam kirganda sahifa ochilyaptimi?
+Flask-Migrate (Alembic) qo‘shing: Ma’lumotlar bazasi sxemasini o‘zgartirganda ma’lumotlarni o‘chirib tashlamay, flask db migrate va flask db upgrade buyruqlari orqali xavfsiz yangilang. Bu professional yondashuv.
 
-Tekshiring: Render yoki Railway dashboardida "Deployment successful" degan yashil belgi bormi?
+Custom Error Pages: Foydalanuvchi noto‘g‘ri sahifaga kirganda ("404 Not Found") yoki serverda xatolik yuz berganda ("500 Internal Server Error") chiroyli, o‘z dizayningizdagi xatolik sahifalarini ko‘rsating.
 
-.env va secret_key:
+Marshmallow yoki WTForms bilan validatsiya: API orqali yuborilayotgan ma’lumotlarni qat’iy tekshiring. Masalan, notning sarlavhasi bo‘sh bo‘lmasligi yoki ma’lum uzunlikdan oshmasligi kerak.
 
-Tekshiring: GitHub repozitoriyangizni oching. U yerda .env fayli ko'rinib turibdimi? Agar ko'rinsa, bu katta xato! U mutlaqo bo'lmasligi kerak.
+Logging (Log yozish): print() funksiyasidan foydalanish o‘rniga, Python’ning logging modulini ishlating. Bu xatolarni keyinchalik server loglaridan osongina topishga yordam beradi.
 
-Ishlab chiqarish (Production) muhiti: Render yoki boshqa hosting sozlamalarida "Environment Variables" bo'limiga SECRET_KEY va boshqa kalitlarni kiritganmisiz?
+CORS (Cross-Origin Resource Sharing): Agar API’ingizni boshqa frontend (React/Vue) yoki mobil ilovalar bilan ishlatmoqchi bo‘lsangiz, Flask-CORS kutubxonasini o‘rnatib, API’ga ruxsat berishni sozlang.
 
-Procfile:
+Swagger yoki API hujjatlari: README faylingizda API endpointlari (URL, method, request body, response) haqida aniqroq ma’lumot bering. Bu tekshiruvchiga API qanday ishlashini tushunishga yordam beradi.
 
-Tekshiring: Asosiy papkada Procfile (kengaytmasiz) fayli bormi? Ichida web: gunicorn app:app (yoki main:app) yozuvi bormi?
+Static fayllarni optimallashtirish: Agar CSS yoki JS fayllaringiz bo‘lsa, ularni static papkasiga to‘g‘ri joylashtiring va brauzer keshini (cache) to‘g‘ri ishlatish uchun konfiguratsiyani tekshiring.
 
-DEBUG=False:
+Responsive Design (Mobile-friendly): Saytingiz mobil telefonlarda ham, kompyuterda ham chiroyli ko‘rinishini ta’minlang. Bootstrap yoki Tailwind CSS ishlatish bu ishni osonlashtiradi.
 
-Tekshiring: app.run(debug=True) kodi kod bazasida qolib ketmadimi? Ishlab chiqarish muhitida debug parametri har doim False bo'lishi kerak.
-
-2. README.md - Muhim qism
-Agar texnik qism to'g'ri bo'lsa, tekshiruvchi sizning README faylingizni yetarli emas deb topgan bo'lishi mumkin. README quyidagi tuzilishga ega bo'lishi shart:
-
-Notlar Ilovasi
-Demo URL: [Havolani shu yerga qo'ying]
-
-Lokal o'rnatish
-Repozitoriyani yuklab oling: git clone ...
-
-Virtual muhitni yoqing va kutubxonalarni o'rnating: pip install -r requirements.txt
-
-.env faylini yarating va SECRET_KEY=... ni yozing.
-
-Ishga tushiring: python app.py
-
-Deploy qadamlari
-(Bu yerda loyihani qaysi platformaga va qanday o'tkazganingizni qisqacha yozing)
-
-REST API
-API endpoint'lari:
-
-GET /api/notes - Barcha notlarni olish
-
-POST /api/notes - Yangi not qo'shish
-
-Nima uchun qaytarilgani haqida:
-Ko'pincha talabalar .env faylini GitHub'ga yuklab qo'yishadi yoki Procfile faylini unutishadi.
-
-Navbatdagi qadam:
-
-Loyihangizning GitHub linkini (agar public bo'lsa) yoki Procfile hamda requirements.txt fayllaringiz tarkibini bu yerga yozib yuboring.
-
-Qaysi hosting platformasidan foydalanayapsiz? (Render, Railway yoki PythonAnywhere?)
+Code Quality (PEP 8): Kodingizni toza yozing. Bo‘sh qatorlar, ortiqcha izohlar (comment) va standart qoidalarga (PEP 8) amal qiling. Kod chiroyli bo‘lsa, tekshiruvchi ham ijobiy taassurot oladi.
