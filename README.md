@@ -1,66 +1,68 @@
-Quyida PostgreSQL uchun siz so'ragan barcha SQL so'rovlari keltirilgan. Bu so'rovlar students (talabalar) va grades (baholar) jadvallari mavjud deb faraz qilingan.
+Ushbu PostgreSQL so‘rovlari ma’lumotlar bazasi bilan ishlashda eng ko‘p uchraydigan va muhim operatsiyalarni qamrab oladi.
 
-1. Sinf reytingi (count, avg, max, min)
+1. INSERT (Ma’lumot qo‘shish usullari)
 SQL
--- Sinf bo'yicha talabalar soni, o'rtacha bahosi, eng yuqori va eng past bahoni aniqlash
-SELECT 
-    class_id,
-    COUNT(student_id) AS total_students,
-    AVG(grade) AS avg_grade,
-    MAX(grade) AS max_grade,
-    MIN(grade) AS min_grade
-FROM grades
-GROUP BY class_id;
-2. Fan bo'yicha statistika (HAVING bilan)
-SQL
--- O'rtacha bahosi 70 dan yuqori bo'lgan fanlarni topish
-SELECT 
-    subject_name,
-    AVG(grade) AS avg_subject_grade
-FROM grades
-GROUP BY subject_name
-HAVING AVG(grade) > 70;
-3. Har fan bo'yicha eng yaxshi talaba
-SQL
--- Subquery yordamida har bir fandan eng yuqori baho olgan talabani aniqlash
-SELECT g.subject_name, g.student_name, g.grade
-FROM grades g
-WHERE g.grade = (
-    SELECT MAX(grade) 
-    FROM grades 
-    WHERE subject_name = g.subject_name
-);
-4. Bahosiz talabalar (LEFT JOIN + IS NULL)
-SQL
--- Hali birorta ham baho olmagan talabalarni topish
-SELECT s.student_name
-FROM students s
-LEFT JOIN grades g ON s.student_id = g.student_id
-WHERE g.grade IS NULL;
-5. "Universal a'lochi" (MIN(baho) >= 85)
-SQL
--- Barcha fanlardan olgan baholari 85 dan kam bo'lmagan talabalar
-SELECT student_id, student_name
-FROM grades
-GROUP BY student_id, student_name
-HAVING MIN(grade) >= 85;
-6. Hamma talabalar uchun o'rtacha (LEFT JOIN)
-SQL
--- Bahosi bor yoki yo'qligidan qat'iy nazar hamma talabaning o'rtacha bahosi
-SELECT s.student_name, AVG(g.grade) AS average_score
-FROM students s
-LEFT JOIN grades g ON s.student_id = g.student_id
-GROUP BY s.student_id, s.student_name;
-7. Bonus — UNION ALL bilan dashboard metrikalari
-SQL
--- Dashboard uchun umumiy statistika (jami talabalar va umumiy o'rtacha)
-SELECT 'Jami talabalar soni' AS metric, COUNT(*)::text AS value
-FROM students
-UNION ALL
-SELECT 'Umumiy o''rtacha baho', AVG(grade)::text
-FROM grades;
-Eslatma:
+-- 1. Oddiy INSERT
+INSERT INTO users (name, age) VALUES ('Ali', 25);
 
-Ushbu so'rovlar PostgreSQL muhitida optimal ishlashi uchun student_id va subject_name ustunlarida indekslar bo'lishi tavsiya etiladi.
+-- 2. Ko‘p qatorli (vergulli) INSERT
+INSERT INTO users (name, age) VALUES ('Vali', 30), ('Guli', 22), ('Soli', 28);
 
-Agar jadval tuzilmasi (schema) bo'yicha aniqroq o'zgarishlar kerak bo'lsa (masalan, jadval nomlari boshqacha bo'lsa), bemalol ayting, kodni moslashtirib beraman.
+-- 3. RETURNING bilan (qo‘shilgan qator ID sini olish)
+INSERT INTO users (name, age) VALUES ('Karim', 35) RETURNING id;
+
+-- 4. Boshqa jadvaldan SELECT bilan INSERT
+INSERT INTO archive_users (name, age) 
+SELECT name, age FROM users WHERE age > 30;
+
+-- 5. ON CONFLICT (Upsert) - Agar kalit takrorlansa, yangilaydi
+INSERT INTO users (id, name, age) VALUES (1, 'Ali', 26) 
+ON CONFLICT (id) DO UPDATE SET age = EXCLUDED.age;
+2. UPDATE (Ma’lumotni yangilash)
+SQL
+-- 1. Oddiy UPDATE
+UPDATE users SET age = 27 WHERE name = 'Ali';
+
+-- 2. Expression (ifoda) bilan UPDATE
+UPDATE products SET price = price * 1.1 WHERE category = 'electronics';
+
+-- 3. Korelatsion (Subquery) bilan UPDATE
+UPDATE orders SET total_price = (SELECT SUM(amount) FROM order_items WHERE order_items.order_id = orders.id);
+3. DELETE (O‘chirish)
+SQL
+-- 1. Oddiy DELETE
+DELETE FROM users WHERE age < 18;
+
+-- 2. RETURNING bilan (o‘chirilgan qatorlarni ko‘rish)
+DELETE FROM users WHERE name = 'Guli' RETURNING *;
+4. Tranzaksiyalar (BEGIN, COMMIT, ROLLBACK)
+SQL
+-- Tranzaksiyani boshlash
+BEGIN;
+
+INSERT INTO accounts (user_id, balance) VALUES (1, 100);
+UPDATE accounts SET balance = balance - 100 WHERE user_id = 2;
+
+-- Xatolik bo‘lsa bekor qilish (ROLLBACK)
+ROLLBACK; 
+
+-- Barchasi muvaffaqiyatli bo‘lsa saqlash (COMMIT)
+COMMIT;
+5. SAVEPOINT (Qisman bekor qilish)
+SQL
+BEGIN;
+INSERT INTO logs (action) VALUES ('Start');
+SAVEPOINT sp1; -- Qayta tiklash nuqtasi
+
+INSERT INTO logs (action) VALUES ('Risky operation');
+ROLLBACK TO SAVEPOINT sp1; -- 'Risky operation' bekor qilindi, 'Start' saqlandi
+
+COMMIT;
+6. Xavf: WHERE'siz UPDATE/DELETE
+DIQQAT: WHERE shartisiz bajarilgan UPDATE yoki DELETE buyruqlari jadvaldagi barcha qatorlarni o‘zgartiradi yoki o‘chirib tashlaydi.
+
+Xavfli UPDATE: UPDATE users SET status = 'active'; (Barcha foydalanuvchilar aktiv bo‘lib qoladi).
+
+Xavfli DELETE: DELETE FROM users; (Jadval bo‘shatiladi).
+
+Himoya: Ishlab chiqarish (production) muhitida DELETE yoki UPDATE yozishdan oldin, avval SELECT bilan qaysi qatorlar tanlanayotganini tekshirib ko‘ring. Tranzaksiya (BEGIN) ichida bajarish esa xatolikni ROLLBACK qilish imkonini beradi.
