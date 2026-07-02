@@ -1,38 +1,103 @@
-1. Kodlaringizni GitHub'ga to'liq yuklang
-Sizda kodlar kompyuteringizda bor, lekin ular GitHub repozitoriyasiga "push" qilinmagan. Terminalda loyihangiz papkasiga kiring va quyidagilarni bajaring:
+1. Loyiha strukturasi
+Loyihangiz quyidagi ko‘rinishda bo‘lishi kerak:
 
-Bash
-# Hamma fayllarni qo'shish
-git add .
+Plaintext
+my_flask_app/
+├── .env                # Maxfiy ma'lumotlar (gitignore qiling)
+├── .gitignore          # Keraksiz fayllarni yashirish
+├── app.py              # Asosiy Flask kodingiz
+├── requirements.txt    # Kutubxonalar
+├── Procfile            # Render/Railway uchun ishga tushirish buyrug'i
+└── README.md           # Qo'llanma
+2. Muhim konfiguratsiyalar
+.gitignore
+Quyidagi fayllarni git'ga yuklamaslik uchun .gitignore fayliga yozing:
 
-# O'zgarishlarni izohlash bilan saqlash
-git commit -m "Full Flask app structure, Procfile, and requirements added"
+Plaintext
+.env
+__pycache__/
+*.pyc
+venv/
+requirements.txt
+Kerakli kutubxonalarni saqlang:
 
-# GitHub'ga yuborish
-git push origin main
-2. Repozitoriya tarkibini tekshiring
-git push qilganingizdan so'ng, GitHub'dagi repozitoriyangizga kiring. U yerda faqat README.md emas, quyidagi fayllar ham bo'lishi shart:
+Plaintext
+Flask
+python-dotenv
+gunicorn
+Procfile
+Render yoki Railway platformalari uchun:
 
-app.py (yoki main.py) — asosiy Flask ilovangiz.
+Plaintext
+web: gunicorn app:app
+app.py (Konfiguratsiya namunasi)
+DEBUG va SECRET_KEY ni .env dan o‘qish:
 
-requirements.txt — barcha kutubxonalar ro'yxati.
+Python
+import os
+from flask import Flask
+from dotenv import load_dotenv
 
-Procfile — web: gunicorn app:app yozuvi bilan.
+load_dotenv()
 
-templates/ va static/ papkalari.
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
 
-.gitignore — unda .env va __pycache__ bo'lishi shart.
+@app.route('/')
+def index():
+    return "Web UI ishlamoqda!"
 
-3. Nega bular muhim?
-Versiyalash: Git faqat README'ni kuzatib qolgan bo'lsa, qolgan fayllar "untracted" (kuzatilmaydigan) holatda qolib ketgan.
+@app.route('/api/data')
+def api_data():
+    return {"status": "success", "message": "REST API ishlamoqda"}
 
-Tekshiruv: Tekshiruvchi sizning kodingizni o'qib, gunicorn va DEBUG=False sozlamalarini ko'rishi kerak. Agar fayllar GitHub'da bo'lmasa, u sizni kod yozmagan deb o'ylaydi.
+if __name__ == '__main__':
+    app.run()
+3. .env fayli
+Lokal muhitda .env faylini yarating:
 
-4. Yakuniy tekshiruv (Checklist)
-Kodlaringizni yuklaganingizdan so'ng, tekshiruvchi uchun buni yozib qo'ying:
+Plaintext
+SECRET_KEY=yashirin_kalit_sozingiz_bu_yerda
+DEBUG=False
+4. README.md (Namuna)
+Loyiha repozitoriyasining asosi uchun:
 
-GitHub repozitoriyam public (ochiq) ekanligini tekshirdim.
+Flask App
+Bu loyiha Flask framework'ida qurilgan va Render'ga deploy qilingan.
 
-Procfile va requirements.txt root papkada ekanligini tekshirdim.
+Lokal o'rnatish
+Repozitoriyani klonlang: git clone <url>
 
-.env faylim GitHub'da yo'q, .gitignore ga qo'shilgan.
+Virtual muhit yarating: python -m venv venv
+
+Kutubxonalarni o'rnating: pip install -r requirements.txt
+
+.env faylini yarating va SECRET_KEY ni qo'shing.
+
+Ishga tushiring: gunicorn app:app
+
+Deploy qadamlari
+Kodni GitHub'ga push qiling.
+
+Render.com da "New Web Service" yarating.
+
+Repozitoriyani ulang.
+
+"Environment Variables" qismida SECRET_KEY va DEBUG=False ni qo'shing.
+
+Demo URL
+https://sizning-saytingiz.onrender.com
+
+5. Deploy bo'yicha maslahat
+Agar Render dan foydalansangiz:
+
+Dashboard'da Environment bo‘limiga o‘ting.
+
+Add Environment Variable tugmasini bosing.
+
+Key: SECRET_KEY, Value: [sizning-kalitingiz] ni kiriting.
+
+PYTHON_VERSION ni 3.9+ qilib belgilashni unutmang.
+
+Ushbu bosqichlar barcha talablaringizni qondiradi va professional tarzda ishlab chiqilgan ilova hisoblanadi. Loyihangizni deploy qilishda qaysi platformani (Render/Railway) tanlashni rejalashtiryapsiz?
