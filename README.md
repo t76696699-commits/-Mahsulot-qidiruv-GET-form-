@@ -1,11 +1,44 @@
-# -Mahsulot-qidiruv-GET-form-
-Procfile: Fayl nomi aniq Procfile (kattalik bilan, hech qanday .txt kengaytmasiz) bo‘lishi shart. Ichidagi yozuv aynan shundaymi: web: gunicorn app:app? (Agar asosiy faylingiz main.py bo‘lsa, u web: gunicorn main:app bo‘lishi kerak).
-Procfile: Fayl nomi aniq Procfile (kattalik bilan, hech qanday .txt kengaytmasiz) bo‘lishi shart. Ichidagi yozuv aynan shundaymi: web: gunicorn app:app? (Agar asosiy faylingiz main.py bo‘lsa, u web: gunicorn main:app bo‘lishi kerak).
+1. README.md faylini mukammallashtiring
+Tekshiruvchi birinchi navbatda shu faylga qaraydi. U quyidagicha tuzilgan bo'lishi kerak:
 
-requirements.txt: Fayl ichida gunicorn va python-dotenv kutubxonalari yozilganmi? (Terminalda pip freeze > requirements.txt buyrug‘ini ishlatib, uni yangilab ko‘ring).
+Sarlavha: Loyiha nomi (Notlar ilovasi).
 
-Hosting sozlamalari (Environment Variables): Siz .env faylini GitHub'ga yuklamadingiz, bu juda to‘g‘ri! Lekin siz Render/Railway dashboardida (Settings -> Environment Variables) SECRET_KEY va ma'lumotlar bazasi yo'llarini qo'shdingizmi? Hosting uni koddan emas, o‘zining sozlamalaridan olishi kerak.
+Demo URL: Hujjatning eng yuqorisida kattaroq shriftda yozilgan faol havola.
 
-Database: Agar siz SQLite ishlatayotgan bo‘lsangiz, u production'da (Render'da) muammo tug‘dirishi mumkin, chunki u fayllar tizimini vaqtincha (ephemeral) saqlaydi va ilova restart bo‘lganda ma'lumotlar o‘chib ketadi. (Deploy uchun PostgreSQL tavsiya etiladi).
+Lokal o'rnatish:
 
-REST API: Saytingiz ochilayapti, lekin /api/notes endpoint'iga kirganda xatolik beryaptimi? Agar barcha kodlar app.py ichida bo‘lsa, balki router'lar o‘zaro to‘qnashayotgandir.
+git clone [URL]
+
+pip install -r requirements.txt
+
+.env faylini qanday yaratish kerakligi (masalan: SECRET_KEY=yashirin_kalit).
+
+Deploy qadamlari: Loyihani qaysi hostingga (Render/Railway) qanday ulaganingiz haqida qisqacha 2-3 ta gap.
+
+API dokumentatsiyasi: REST API endpointlarini ro'yxatlang:
+
+GET /api/notes — Barcha notlarni olish.
+
+POST /api/notes — Yangi not yaratish.
+
+2. Procfile va runtime.txt
+Procfile: Fayl nomi aniq Procfile (kengaytmasiz). Ichida: web: gunicorn app:app (agar asosiy fayl app.py bo'lsa).
+
+runtime.txt: (Ixtiyoriy, lekin Render uchun foydali) Root papkada runtime.txt faylini yarating va ichiga python-3.11 (yoki o'zingiz ishlatayotgan versiya) deb yozing.
+
+3. Xavfsizlik (Eng muhim qism)
+GitHub-dan .env ni o'chiring: Agar .env GitHub'da turgan bo'lsa, ballingizni hech qachon 100 qilmaydi. Uni o'chirib, .gitignore fayliga .env deb yozib qo'ying.
+
+Environment Variables: Render yoki Railway dashboardidagi "Environment Variables" bo'limiga SECRET_KEY, DATABASE_URL kabi qiymatlarni kodga yozmasdan, dashboard orqali kiriting.
+
+4. Production holati (DEBUG=False)
+Kodingizda app.run(debug=True) qolib ketgan bo'lsa, bu xavfsizlik xatosi.
+
+Kodda shunday yozing: app.run(debug=os.getenv('DEBUG', 'False') == 'True')
+
+Hosting sozlamalarida DEBUG ni False deb belgilang.
+
+5. Loglarni tekshiring (Debug)
+Logs: Hostingingiz (Render/Railway) dashboardidagi "Logs" bo'limiga kiring. Agar u yerda qizil yozuvlar bo'lsa, loyihangiz 100/100 ololmaydi.
+
+Agar 500 Internal Server Error chiqayotgan bo'lsa, bu ko'pincha ma'lumotlar bazasi yoki SECRET_KEY topilmayotganidan bo'ladi.
