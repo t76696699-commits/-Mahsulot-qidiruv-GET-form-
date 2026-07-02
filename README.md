@@ -1,20 +1,10 @@
 # -Mahsulot-qidiruv-GET-form-
-Flask Blueprints foydalaning: Kodlaringizni bitta app.py fayliga joylamang. Ilovangizni (masalan: auth.py, notes.py, api.py) modullarga bo‘lib chiqish loyihani o‘qishni va boshqarishni ancha osonlashtiradi.
+Procfile: Fayl nomi aniq Procfile (kattalik bilan, hech qanday .txt kengaytmasiz) bo‘lishi shart. Ichidagi yozuv aynan shundaymi: web: gunicorn app:app? (Agar asosiy faylingiz main.py bo‘lsa, u web: gunicorn main:app bo‘lishi kerak).
 
-Flask-Migrate (Alembic) qo‘shing: Ma’lumotlar bazasi sxemasini o‘zgartirganda ma’lumotlarni o‘chirib tashlamay, flask db migrate va flask db upgrade buyruqlari orqali xavfsiz yangilang. Bu professional yondashuv.
+requirements.txt: Fayl ichida gunicorn va python-dotenv kutubxonalari yozilganmi? (Terminalda pip freeze > requirements.txt buyrug‘ini ishlatib, uni yangilab ko‘ring).
 
-Custom Error Pages: Foydalanuvchi noto‘g‘ri sahifaga kirganda ("404 Not Found") yoki serverda xatolik yuz berganda ("500 Internal Server Error") chiroyli, o‘z dizayningizdagi xatolik sahifalarini ko‘rsating.
+Hosting sozlamalari (Environment Variables): Siz .env faylini GitHub'ga yuklamadingiz, bu juda to‘g‘ri! Lekin siz Render/Railway dashboardida (Settings -> Environment Variables) SECRET_KEY va ma'lumotlar bazasi yo'llarini qo'shdingizmi? Hosting uni koddan emas, o‘zining sozlamalaridan olishi kerak.
 
-Marshmallow yoki WTForms bilan validatsiya: API orqali yuborilayotgan ma’lumotlarni qat’iy tekshiring. Masalan, notning sarlavhasi bo‘sh bo‘lmasligi yoki ma’lum uzunlikdan oshmasligi kerak.
+Database: Agar siz SQLite ishlatayotgan bo‘lsangiz, u production'da (Render'da) muammo tug‘dirishi mumkin, chunki u fayllar tizimini vaqtincha (ephemeral) saqlaydi va ilova restart bo‘lganda ma'lumotlar o‘chib ketadi. (Deploy uchun PostgreSQL tavsiya etiladi).
 
-Logging (Log yozish): print() funksiyasidan foydalanish o‘rniga, Python’ning logging modulini ishlating. Bu xatolarni keyinchalik server loglaridan osongina topishga yordam beradi.
-
-CORS (Cross-Origin Resource Sharing): Agar API’ingizni boshqa frontend (React/Vue) yoki mobil ilovalar bilan ishlatmoqchi bo‘lsangiz, Flask-CORS kutubxonasini o‘rnatib, API’ga ruxsat berishni sozlang.
-
-Swagger yoki API hujjatlari: README faylingizda API endpointlari (URL, method, request body, response) haqida aniqroq ma’lumot bering. Bu tekshiruvchiga API qanday ishlashini tushunishga yordam beradi.
-
-Static fayllarni optimallashtirish: Agar CSS yoki JS fayllaringiz bo‘lsa, ularni static papkasiga to‘g‘ri joylashtiring va brauzer keshini (cache) to‘g‘ri ishlatish uchun konfiguratsiyani tekshiring.
-
-Responsive Design (Mobile-friendly): Saytingiz mobil telefonlarda ham, kompyuterda ham chiroyli ko‘rinishini ta’minlang. Bootstrap yoki Tailwind CSS ishlatish bu ishni osonlashtiradi.
-
-Code Quality (PEP 8): Kodingizni toza yozing. Bo‘sh qatorlar, ortiqcha izohlar (comment) va standart qoidalarga (PEP 8) amal qiling. Kod chiroyli bo‘lsa, tekshiruvchi ham ijobiy taassurot oladi.
+REST API: Saytingiz ochilayapti, lekin /api/notes endpoint'iga kirganda xatolik beryaptimi? Agar barcha kodlar app.py ichida bo‘lsa, balki router'lar o‘zaro to‘qnashayotgandir.
