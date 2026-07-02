@@ -1,103 +1,66 @@
-1. Loyiha strukturasi
-Loyihangiz quyidagi ko‘rinishda bo‘lishi kerak:
+Quyida PostgreSQL uchun siz so'ragan barcha SQL so'rovlari keltirilgan. Bu so'rovlar students (talabalar) va grades (baholar) jadvallari mavjud deb faraz qilingan.
 
-Plaintext
-my_flask_app/
-├── .env                # Maxfiy ma'lumotlar (gitignore qiling)
-├── .gitignore          # Keraksiz fayllarni yashirish
-├── app.py              # Asosiy Flask kodingiz
-├── requirements.txt    # Kutubxonalar
-├── Procfile            # Render/Railway uchun ishga tushirish buyrug'i
-└── README.md           # Qo'llanma
-2. Muhim konfiguratsiyalar
-.gitignore
-Quyidagi fayllarni git'ga yuklamaslik uchun .gitignore fayliga yozing:
+1. Sinf reytingi (count, avg, max, min)
+SQL
+-- Sinf bo'yicha talabalar soni, o'rtacha bahosi, eng yuqori va eng past bahoni aniqlash
+SELECT 
+    class_id,
+    COUNT(student_id) AS total_students,
+    AVG(grade) AS avg_grade,
+    MAX(grade) AS max_grade,
+    MIN(grade) AS min_grade
+FROM grades
+GROUP BY class_id;
+2. Fan bo'yicha statistika (HAVING bilan)
+SQL
+-- O'rtacha bahosi 70 dan yuqori bo'lgan fanlarni topish
+SELECT 
+    subject_name,
+    AVG(grade) AS avg_subject_grade
+FROM grades
+GROUP BY subject_name
+HAVING AVG(grade) > 70;
+3. Har fan bo'yicha eng yaxshi talaba
+SQL
+-- Subquery yordamida har bir fandan eng yuqori baho olgan talabani aniqlash
+SELECT g.subject_name, g.student_name, g.grade
+FROM grades g
+WHERE g.grade = (
+    SELECT MAX(grade) 
+    FROM grades 
+    WHERE subject_name = g.subject_name
+);
+4. Bahosiz talabalar (LEFT JOIN + IS NULL)
+SQL
+-- Hali birorta ham baho olmagan talabalarni topish
+SELECT s.student_name
+FROM students s
+LEFT JOIN grades g ON s.student_id = g.student_id
+WHERE g.grade IS NULL;
+5. "Universal a'lochi" (MIN(baho) >= 85)
+SQL
+-- Barcha fanlardan olgan baholari 85 dan kam bo'lmagan talabalar
+SELECT student_id, student_name
+FROM grades
+GROUP BY student_id, student_name
+HAVING MIN(grade) >= 85;
+6. Hamma talabalar uchun o'rtacha (LEFT JOIN)
+SQL
+-- Bahosi bor yoki yo'qligidan qat'iy nazar hamma talabaning o'rtacha bahosi
+SELECT s.student_name, AVG(g.grade) AS average_score
+FROM students s
+LEFT JOIN grades g ON s.student_id = g.student_id
+GROUP BY s.student_id, s.student_name;
+7. Bonus — UNION ALL bilan dashboard metrikalari
+SQL
+-- Dashboard uchun umumiy statistika (jami talabalar va umumiy o'rtacha)
+SELECT 'Jami talabalar soni' AS metric, COUNT(*)::text AS value
+FROM students
+UNION ALL
+SELECT 'Umumiy o''rtacha baho', AVG(grade)::text
+FROM grades;
+Eslatma:
 
-Plaintext
-.env
-__pycache__/
-*.pyc
-venv/
-requirements.txt
-Kerakli kutubxonalarni saqlang:
+Ushbu so'rovlar PostgreSQL muhitida optimal ishlashi uchun student_id va subject_name ustunlarida indekslar bo'lishi tavsiya etiladi.
 
-Plaintext
-Flask
-python-dotenv
-gunicorn
-Procfile
-Render yoki Railway platformalari uchun:
-
-Plaintext
-web: gunicorn app:app
-app.py (Konfiguratsiya namunasi)
-DEBUG va SECRET_KEY ni .env dan o‘qish:
-
-Python
-import os
-from flask import Flask
-from dotenv import load_dotenv
-
-load_dotenv()
-
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
-
-@app.route('/')
-def index():
-    return "Web UI ishlamoqda!"
-
-@app.route('/api/data')
-def api_data():
-    return {"status": "success", "message": "REST API ishlamoqda"}
-
-if __name__ == '__main__':
-    app.run()
-3. .env fayli
-Lokal muhitda .env faylini yarating:
-
-Plaintext
-SECRET_KEY=yashirin_kalit_sozingiz_bu_yerda
-DEBUG=False
-4. README.md (Namuna)
-Loyiha repozitoriyasining asosi uchun:
-
-Flask App
-Bu loyiha Flask framework'ida qurilgan va Render'ga deploy qilingan.
-
-Lokal o'rnatish
-Repozitoriyani klonlang: git clone <url>
-
-Virtual muhit yarating: python -m venv venv
-
-Kutubxonalarni o'rnating: pip install -r requirements.txt
-
-.env faylini yarating va SECRET_KEY ni qo'shing.
-
-Ishga tushiring: gunicorn app:app
-
-Deploy qadamlari
-Kodni GitHub'ga push qiling.
-
-Render.com da "New Web Service" yarating.
-
-Repozitoriyani ulang.
-
-"Environment Variables" qismida SECRET_KEY va DEBUG=False ni qo'shing.
-
-Demo URL
-https://sizning-saytingiz.onrender.com
-
-5. Deploy bo'yicha maslahat
-Agar Render dan foydalansangiz:
-
-Dashboard'da Environment bo‘limiga o‘ting.
-
-Add Environment Variable tugmasini bosing.
-
-Key: SECRET_KEY, Value: [sizning-kalitingiz] ni kiriting.
-
-PYTHON_VERSION ni 3.9+ qilib belgilashni unutmang.
-
-Ushbu bosqichlar barcha talablaringizni qondiradi va professional tarzda ishlab chiqilgan ilova hisoblanadi. Loyihangizni deploy qilishda qaysi platformani (Render/Railway) tanlashni rejalashtiryapsiz?
+Agar jadval tuzilmasi (schema) bo'yicha aniqroq o'zgarishlar kerak bo'lsa (masalan, jadval nomlari boshqacha bo'lsa), bemalol ayting, kodni moslashtirib beraman.
