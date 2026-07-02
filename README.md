@@ -1,29 +1,38 @@
-README.md sifati: Loyiha vazifasi, foydalanish bo'yicha ko'rsatma, demo linki va API endpoint'lari aniq yozilganmi?
+1. Kodlaringizni GitHub'ga to'liq yuklang
+Sizda kodlar kompyuteringizda bor, lekin ular GitHub repozitoriyasiga "push" qilinmagan. Terminalda loyihangiz papkasiga kiring va quyidagilarni bajaring:
 
-.gitignore fayli: .env, __pycache__/, instance/, .venv/ kabi fayllar git'ga yuklanmaganligiga ishonch hosil qiling (git rm -r --cached . buyrug'i yordam beradi).
+Bash
+# Hamma fayllarni qo'shish
+git add .
 
-Procfile tekshiruvi: Fayl nomi aniq Procfile (kengaytmasiz) va ichida web: gunicorn app:app (yoki main:app) yozilganmi?
+# O'zgarishlarni izohlash bilan saqlash
+git commit -m "Full Flask app structure, Procfile, and requirements added"
 
-requirements.txt yangiligi: Loyihada ishlatilgan barcha kutubxonalar (flask, gunicorn, python-dotenv, flask-sqlalchemy va h.k.) unda bormi?
+# GitHub'ga yuborish
+git push origin main
+2. Repozitoriya tarkibini tekshiring
+git push qilganingizdan so'ng, GitHub'dagi repozitoriyangizga kiring. U yerda faqat README.md emas, quyidagi fayllar ham bo'lishi shart:
 
-DEBUG=False rejimi: Serverda debug rejimi o‘chirilganiga ishonch hosil qiling (xavfsizlik uchun eng muhimi).
+app.py (yoki main.py) — asosiy Flask ilovangiz.
 
-Environment Variables: SECRET_KEY va ma'lumotlar bazasi URL'lari os.getenv() orqali olinayotganini tekshiring.
+requirements.txt — barcha kutubxonalar ro'yxati.
 
-Hosting Dashboard: Render/Railway sozlamalarida "Environment Variables" bo'limiga SECRET_KEY va boshqa kalitlarni qo'shganmisiz?
+Procfile — web: gunicorn app:app yozuvi bilan.
 
-Ma'lumotlar bazasi migratsiyasi: Flask-Migrate ishlatilgan bo'lsa, flask db upgrade buyrug'i server ishga tushganda avtomatik bajarilishi kerak (yoki start-up command sifatida qo'shing).
+templates/ va static/ papkalari.
 
-Gunicorn ishlashi: Loyiha app.run() (development server) emas, balki gunicorn (production server) orqali ishlayotganini tekshiring.
+.gitignore — unda .env va __pycache__ bo'lishi shart.
 
-Statik fayllar: CSS/JS/Rasmlar static/ papkasida va ularga yo'llar url_for('static', filename='...') orqali to'g'ri ko'rsatilganmi?
+3. Nega bular muhim?
+Versiyalash: Git faqat README'ni kuzatib qolgan bo'lsa, qolgan fayllar "untracted" (kuzatilmaydigan) holatda qolib ketgan.
 
-REST API javoblari: API so'rovlari muvaffaqiyatli bo'lsa 200 OK, xato bo'lsa 400/404/500 status kodlarini qaytarayotganini tekshiring.
+Tekshiruv: Tekshiruvchi sizning kodingizni o'qib, gunicorn va DEBUG=False sozlamalarini ko'rishi kerak. Agar fayllar GitHub'da bo'lmasa, u sizni kod yozmagan deb o'ylaydi.
 
-CORS sozlamalari: Agar API'ni frontend bilan bog'lasangiz, Flask-CORS ishlatilganmi?
+4. Yakuniy tekshiruv (Checklist)
+Kodlaringizni yuklaganingizdan so'ng, tekshiruvchi uchun buni yozib qo'ying:
 
-Loglarni kuzatish: Hosting'dagi "Logs" (Jurnallar) bo'limida hech qanday qizil rangli xatolik yo'qligiga ishonch hosil qiling.
+GitHub repozitoriyam public (ochiq) ekanligini tekshirdim.
 
-Responsive UI: Sayt mobil telefonlarda ham buzilmay ochilayotganini (Bootstrap/Tailwind ishlatilgan bo'lsa) tekshiring.
+Procfile va requirements.txt root papkada ekanligini tekshirdim.
 
-Demo Link'ni tekshirish: README faylida bergan havolangiz orqali saytga kirib, not qo'shib va o'chirib ko'ring (to'liq funksional).
+.env faylim GitHub'da yo'q, .gitignore ga qo'shilgan.
