@@ -1,22 +1,55 @@
 # -Mahsulot-qidiruv-GET-form-
-Loyiha yechimining asosiy jihatlari:
-Factory Pattern: app/__init__.py ichidagi create_app() funksiyasi ilovaning barcha sozlamalarini, ma'lumotlar bazasini va Blueprint'larni ro'yxatdan o'tkazadi.
+Tushunarli. Capstone loyihangiz "Отклонено" (68/100) deb qaytarilgan bo'lsa, demak, asosiy texnik talablar yoki hujjatlashtirishda (README) kamchilik bor. Keling, ushbu ro'yxatni sinchkovlik bilan tekshirib chiqamiz:
 
-Blueprint'lar:
+1. Texnik talablar tekshiruvi (Checklist)
+Tirik demo URL: Sizning saytingizga tashqi odam kirganda sahifa ochilyaptimi?
 
-main_bp: Foydalanuvchi autentifikatsiyasi (/login, /logout) va bosh sahifa uchun.
+Tekshiring: Render yoki Railway dashboardida "Deployment successful" degan yashil belgi bormi?
 
-notes_bp: Notalar uchun barcha CRUD operatsiyalari (/notes/new, /notes/<id>/edit va h.k.).
+.env va secret_key:
 
-Toza app.py: app.py fayli loyihani ishga tushirish uchun minimal darajaga keltirildi.
+Tekshiring: GitHub repozitoriyangizni oching. U yerda .env fayli ko'rinib turibdimi? Agar ko'rinsa, bu katta xato! U mutlaqo bo'lmasligi kerak.
 
-O'zaro bog'liqlik: db obyektini app/__init__.py da yaratib, uni modellarda ishlatish orqali "Circular Import" xatolarining oldi olindi.
+Ishlab chiqarish (Production) muhiti: Render yoki boshqa hosting sozlamalarida "Environment Variables" bo'limiga SECRET_KEY va boshqa kalitlarni kiritganmisiz?
 
-Ishga tushirish:
-Faylni yuklab oling va arxivni oching.
+Procfile:
 
-app.py joylashgan papkada terminalni oching.
+Tekshiring: Asosiy papkada Procfile (kengaytmasiz) fayli bormi? Ichida web: gunicorn app:app (yoki main:app) yozuvi bormi?
 
-python app.py buyrug'ini bering.
+DEBUG=False:
 
-Ushbu arxitektura "8-dars" talablariga to'liq javob beradi va 100 ball olish uchun zarur bo'lgan barcha modulli tizimni o'z ichiga oladi. Yana biron bir qism bo'yicha yordam kerakmi?
+Tekshiring: app.run(debug=True) kodi kod bazasida qolib ketmadimi? Ishlab chiqarish muhitida debug parametri har doim False bo'lishi kerak.
+
+2. README.md - Muhim qism
+Agar texnik qism to'g'ri bo'lsa, tekshiruvchi sizning README faylingizni yetarli emas deb topgan bo'lishi mumkin. README quyidagi tuzilishga ega bo'lishi shart:
+
+Notlar Ilovasi
+Demo URL: [Havolani shu yerga qo'ying]
+
+Lokal o'rnatish
+Repozitoriyani yuklab oling: git clone ...
+
+Virtual muhitni yoqing va kutubxonalarni o'rnating: pip install -r requirements.txt
+
+.env faylini yarating va SECRET_KEY=... ni yozing.
+
+Ishga tushiring: python app.py
+
+Deploy qadamlari
+(Bu yerda loyihani qaysi platformaga va qanday o'tkazganingizni qisqacha yozing)
+
+REST API
+API endpoint'lari:
+
+GET /api/notes - Barcha notlarni olish
+
+POST /api/notes - Yangi not qo'shish
+
+Nima uchun qaytarilgani haqida:
+Ko'pincha talabalar .env faylini GitHub'ga yuklab qo'yishadi yoki Procfile faylini unutishadi.
+
+Navbatdagi qadam:
+
+Loyihangizning GitHub linkini (agar public bo'lsa) yoki Procfile hamda requirements.txt fayllaringiz tarkibini bu yerga yozib yuboring.
+
+Qaysi hosting platformasidan foydalanayapsiz? (Render, Railway yoki PythonAnywhere?)
