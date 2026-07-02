@@ -1,5 +1,6 @@
 # -Mahsulot-qidiruv-GET-form-
 Procfile: Fayl nomi aniq Procfile (kattalik bilan, hech qanday .txt kengaytmasiz) bo‘lishi shart. Ichidagi yozuv aynan shundaymi: web: gunicorn app:app? (Agar asosiy faylingiz main.py bo‘lsa, u web: gunicorn main:app bo‘lishi kerak).
+Procfile: Fayl nomi aniq Procfile (kattalik bilan, hech qanday .txt kengaytmasiz) bo‘lishi shart. Ichidagi yozuv aynan shundaymi: web: gunicorn app:app? (Agar asosiy faylingiz main.py bo‘lsa, u web: gunicorn main:app bo‘lishi kerak).
 
 requirements.txt: Fayl ichida gunicorn va python-dotenv kutubxonalari yozilganmi? (Terminalda pip freeze > requirements.txt buyrug‘ini ishlatib, uni yangilab ko‘ring).
 
