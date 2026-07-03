@@ -1,93 +1,49 @@
-HTML (index.html)
-HTML
-<nav class="navbar">
-    <div class="logo">Logo</div>
-    <ul class="nav-links">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Services</a></li>
-        <li><a href="#">Contact</a></li>
-    </ul>
-    <button class="cta-btn">Sign Up</button>
-</nav>
+Bu topshiriq Python'dagi lazy evaluation (kechiktirilgan hisoblash) va generator pipeline (konveyer) tushunchalarini mukammal o'zida aks ettiradi. List yaratmasdan, faqat kerakli ma'lumotni oqim sifatida qayta ishlash uchun quyidagi koddan foydalanishimiz mumkin:
 
-<section class="hero">
-    <div class="hero-col">Ustun 1</div>
-    <div class="hero-col">Ustun 2</div>
-    <div class="hero-col">Ustun 3</div>
-</section>
-CSS (style.css)
-CSS
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+Python yechimi
+Python
+import datetime
 
-/* Navigatsiya */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 5%;
-    background-color: #333;
-    color: white;
-}
+# 1. Faylni qator-qator o'qish generatori
+def read_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            yield line.strip()
 
-.nav-links {
-    display: flex;
-    gap: 30px;
-    list-style: none;
-}
+# 2. Faqat "ERROR" satrlarini filterlash generatori
+def filter_errors(lines):
+    for line in lines:
+        if "ERROR" in line.upper():
+            yield line
 
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
+# 3. Har satrga vaqt belgisi qo'shish generatori
+def add_timestamp(lines):
+    for line in lines:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        yield f"[{timestamp}] {line}"
 
-.nav-links a:hover {
-    color: #ffcc00; /* Hover effekti */
-}
+# --- Pipeline ishga tushirilishi ---
+file_path = 'log.txt' # Fayl yo'li
 
-.cta-btn {
-    padding: 10px 20px;
-    background-color: #ffcc00;
-    border: none;
-    cursor: pointer;
-}
+# Pipeline bog'lanishi
+lines = read_file(file_path)
+errors = filter_errors(lines)
+pipeline = add_timestamp(errors)
 
-/* Hero qismi */
-.hero {
-    display: flex;
-    gap: 20px; /* Margin o'rniga gap */
-    padding: 50px 5%;
-}
+# Statistika uchun o'zgaruvchilar
+total_lines = 0
+error_count = 0
 
-.hero-col {
-    flex: 1; /* 3 ta teng ustun */
-    padding: 40px;
-    background-color: #f4f4f4;
-    border: 1px solid #ddd;
-    text-align: center;
-}
+print("--- Natijalar oqimi ---")
+# 4. Asosiy oqim (list yaratilmaydi, faqat iteratsiya qilinadi)
+for processed_line in pipeline:
+    print(processed_line)
+    error_count += 1
 
-/* Responsive dizayn */
-@media (max-width: 768px) {
-    .navbar {
-        flex-direction: column;
-        gap: 15px;
-    }
+# Jami qatorlar sonini aniqlash uchun faylni qayta sanaymiz (yoki o'qish jarayonida ham hisoblash mumkin edi)
+with open(file_path, 'r', encoding='utf-8') as f:
+    total_lines = sum(1 for _ in f)
 
-    .hero {
-        flex-direction: column; /* Ustunlarni qatorga aylantirish */
-    }
-}
-Muhim jihatlar:
-Flexbox: .navbar va .hero qismlarida flex dan foydalanib, elementlar tekis joylashtirildi.
-
-Gap: margin o'rniga gap xususiyati ishlatildi, bu kodni ancha toza va boshqarishni osonlashtiradi.
-
-Media Query: @media (max-width: 768px) yordamida ekran kichrayganda (masalan, planshet yoki telefonda) elementlar ustun (column) ko'rinishiga o'tadi.
-
-Hover: Navigatsiya linklariga transition va hover qo'shildi, bu foydalanuvchi tajribasini yaxshilaydi.
+print(f"\n--- Statistika ---")
+print(f"Jami satrlar: {total_lines}")
+print(f"ERROR satrlari: {error_count}")
