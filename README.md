@@ -1,80 +1,66 @@
-Quyida PostgreSQL uchun keltirilgan talablarga to‘liq javob beradigan ma’lumotlar bazasi sxemasi va misollar keltirilgan.
-
-1. Jadval yaratish va bog‘lanishlar (DDL)
-Keling, kichik bir elektron do‘kon tizimini yaratamiz: Kategoriyalar, Mahsulotlar, Mijozlar va Buyurtmalar.
+1. 10,000+ qator generatsiya qilish
+Katta hajmdagi ma'lumotlar bilan ishlash uchun jadval yaratamiz va generate_series funksiyasi yordamida ma'lumot to‘ldiramiz.
 
 SQL
--- 1. Kategoriyalar jadvali
-CREATE TABLE categories (
-    category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
+CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100),
+    department VARCHAR(50),
+    salary NUMERIC(10, 2),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Mahsulotlar jadvali (CHECK va DEFAULT bilan)
-CREATE TABLE products (
-    product_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    price NUMERIC(12, 2) CHECK (price > 0),
-    stock_qty INT DEFAULT 0,
-    category_id INT REFERENCES categories(category_id) ON DELETE RESTRICT
-);
-
--- 3. Mijozlar jadvali (Multi-column UNIQUE misoli)
-CREATE TABLE customers (
-    customer_id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    -- Pasport seriyasi va raqami birgalikda takrorlanmasligi kerak
-    passport_series VARCHAR(2) NOT NULL,
-    passport_number VARCHAR(7) NOT NULL,
-    UNIQUE(passport_series, passport_number) 
-);
-
--- 4. Buyurtmalar jadvali (TIMESTAMPTZ va ON DELETE CASCADE bilan)
-CREATE TABLE orders (
-    order_id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customers(customer_id) ON DELETE CASCADE,
-    product_id INT REFERENCES products(product_id),
-    order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-2. ALTER TABLE misollari
-Jadval yaratilgandan keyin unga yangi ustun qo‘shish yoki mavjud ustunni o‘zgartirish:
+INSERT INTO employees (full_name, department, salary)
+SELECT 
+    'Employee ' || i,
+    (ARRAY['IT', 'HR', 'Sales', 'Marketing'])[floor(random() * 4) + 1],
+    (random() * 5000 + 1000)::NUMERIC(10, 2)
+FROM generate_series(1, 20000) AS i;
+2. Indekssiz EXPLAIN (Seq Scan)
+Indeks bo‘lmaganda PostgreSQL butun jadvalni qidirib chiqadi (Sequential Scan).
 
 SQL
--- Yangi ustun qo'shish
-ALTER TABLE products ADD COLUMN discount_price NUMERIC(12, 2);
-
--- Mavjud ustun turini o'zgartirish (yoki cheklov qo'shish)
-ALTER TABLE products ALTER COLUMN name SET NOT NULL;
-3. Xatolarga urinishlar (Constraint Violation)
-Quyidagi buyruqlar yuqoridagi cheklovlarni (constraints) buzadi va PostgreSQL xato qaytaradi:
+EXPLAIN ANALYZE SELECT * FROM employees WHERE full_name = 'Employee 15000';
+-- Natija: Seq Scan on employees (cost=0.00..385.00 rows=1 width=35)
+3. B-tree indeks qo‘shish va taqqoslash
+full_name ustuniga B-tree indeksi qo‘shamiz.
 
 SQL
--- 1. CHECK xatosi: Narx 0 dan kichik bo'lishi mumkin emas
-INSERT INTO products (name, price) VALUES ('Telefon', -100);
--- Xato: new row for relation "products" violates check constraint "products_price_check"
+CREATE INDEX idx_employees_full_name ON employees (full_name);
 
--- 2. UNIQUE xatosi: Bir xil pasport ma'lumotlarini qayta kiritish
-INSERT INTO customers (first_name, last_name, email, passport_series, passport_number) 
-VALUES ('Ali', 'Aliyev', 'ali@mail.com', 'AA', '1234567');
+-- Indeks bilan qayta tekshiramiz
+EXPLAIN ANALYZE SELECT * FROM employees WHERE full_name = 'Employee 15000';
+-- Natija: Index Scan using idx_employees_full_name on employees 
+-- Seq Scan'dan ancha tezroq ishlaydi.
+4. Boshqa indeks turlari
+Multi-column indeks:
+Ko'pincha department va salary bo'yicha bir vaqtda qidiruv bo'lsa, bu indeks samarali bo'ladi.
 
-INSERT INTO customers (first_name, last_name, email, passport_series, passport_number) 
-VALUES ('Vali', 'Valiyev', 'vali@mail.com', 'AA', '1234567');
--- Xato: duplicate key value violates unique constraint "customers_passport_series_passport_number_key"
+SQL
+CREATE INDEX idx_dept_salary ON employees (department, salary);
+Functional indeks (LOWER):
+Agar so‘rovlar LOWER(full_name) ko‘rinishida bo‘lsa, oddiy indeks ishlamaydi.
 
--- 3. FOREIGN KEY (RESTRICT) xatosi: Kategoriyani o'chirishga urinish
--- Agar kategoriyada mahsulot bo'lsa, uni o'chirib bo'lmaydi
-DELETE FROM categories WHERE category_id = 1;
--- Xato: update or delete on table "categories" violates foreign key constraint 
--- "products_category_id_fkey" on table "products"
-Tushuntirishlar:
-NUMERIC(12, 2): 12 ta xona, shundan 2 tasi verguldan keyin (pul birliklari uchun ideal).
+SQL
+CREATE INDEX idx_lower_fullname ON employees (LOWER(full_name));
+Partial index (Qisman indeks):
+Faqat 'IT' bo‘limidagi xodimlarni qidirish uchun bazani yengillashtirish.
 
-TIMESTAMPTZ: Vaqt mintaqasini hisobga oluvchi vaqt formati (server vaqtini to‘g‘ri saqlaydi).
+SQL
+CREATE INDEX idx_it_employees ON employees (full_name) WHERE department = 'IT';
+FK ustuniga indeks:
+PostgreSQL FOREIGN KEY ustunlariga avtomatik indeks qo'ymaydi. Agar orders jadvalida customer_id bo'lsa, uni qo'lda qo'shish kerak:
 
-ON DELETE RESTRICT: Agar bog‘liq jadvalda (products) ma’lumot bo‘lsa, asosiy jadval (categories) qatorini o‘chirishga ruxsat bermaydi.
+SQL
+-- Agar orders jadvali bo'lsa:
+CREATE INDEX idx_orders_customer_id ON orders(customer_id);
+5. Indekslar narxi (Hisobot)
+Indekslar qidiruvni tezlashtirsa-da, ularning "narxi" (salbiy tomonlari) mavjud:
 
-ON DELETE CASCADE: Agar mijoz (customer) o‘chirilsa, uning barcha buyurtmalari (orders) avtomatik ravishda bazadan o‘chiriladi.
+Yozish tezligining pasayishi (Write Overhead): Har safar INSERT, UPDATE yoki DELETE qilganda, bazaning asosiy jadval bilan birga barcha indekslarni ham yangilashiga to‘g‘ri keladi. Bu operatsiyani sekinlashtiradi.
 
-Multi-column UNIQUE: UNIQUE(passport_series, passport_number) kombinatsiyasi bir kishi bir xil pasport ma'lumotlari bilan ikki marta ro'yxatdan o'tishini oldini oladi.
+Xotira (Disk Space): Indekslar qo‘shimcha disk joyini egallaydi. Juda ko‘p indekslar bazaning umumiy hajmini keskin oshirib yuborishi mumkin.
+
+RAM (Buffer Cache): Indekslar RAM'da joylashadi. Keraksiz indekslar operativ xotirani egallab, boshqa muhim ma'lumotlar uchun joy qoldirmasligi mumkin.
+
+Planner murakkabligi: Juda ko‘p indeks bo‘lsa, SQL Optimizer (Planner) eng yaxshi
