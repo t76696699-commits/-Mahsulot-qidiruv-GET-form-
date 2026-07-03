@@ -1,68 +1,80 @@
-Ushbu PostgreSQL so‘rovlari ma’lumotlar bazasi bilan ishlashda eng ko‘p uchraydigan va muhim operatsiyalarni qamrab oladi.
+Quyida PostgreSQL uchun keltirilgan talablarga to‘liq javob beradigan ma’lumotlar bazasi sxemasi va misollar keltirilgan.
 
-1. INSERT (Ma’lumot qo‘shish usullari)
+1. Jadval yaratish va bog‘lanishlar (DDL)
+Keling, kichik bir elektron do‘kon tizimini yaratamiz: Kategoriyalar, Mahsulotlar, Mijozlar va Buyurtmalar.
+
 SQL
--- 1. Oddiy INSERT
-INSERT INTO users (name, age) VALUES ('Ali', 25);
+-- 1. Kategoriyalar jadvali
+CREATE TABLE categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
 
--- 2. Ko‘p qatorli (vergulli) INSERT
-INSERT INTO users (name, age) VALUES ('Vali', 30), ('Guli', 22), ('Soli', 28);
+-- 2. Mahsulotlar jadvali (CHECK va DEFAULT bilan)
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    price NUMERIC(12, 2) CHECK (price > 0),
+    stock_qty INT DEFAULT 0,
+    category_id INT REFERENCES categories(category_id) ON DELETE RESTRICT
+);
 
--- 3. RETURNING bilan (qo‘shilgan qator ID sini olish)
-INSERT INTO users (name, age) VALUES ('Karim', 35) RETURNING id;
+-- 3. Mijozlar jadvali (Multi-column UNIQUE misoli)
+CREATE TABLE customers (
+    customer_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    -- Pasport seriyasi va raqami birgalikda takrorlanmasligi kerak
+    passport_series VARCHAR(2) NOT NULL,
+    passport_number VARCHAR(7) NOT NULL,
+    UNIQUE(passport_series, passport_number) 
+);
 
--- 4. Boshqa jadvaldan SELECT bilan INSERT
-INSERT INTO archive_users (name, age) 
-SELECT name, age FROM users WHERE age > 30;
+-- 4. Buyurtmalar jadvali (TIMESTAMPTZ va ON DELETE CASCADE bilan)
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(customer_id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(product_id),
+    order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+2. ALTER TABLE misollari
+Jadval yaratilgandan keyin unga yangi ustun qo‘shish yoki mavjud ustunni o‘zgartirish:
 
--- 5. ON CONFLICT (Upsert) - Agar kalit takrorlansa, yangilaydi
-INSERT INTO users (id, name, age) VALUES (1, 'Ali', 26) 
-ON CONFLICT (id) DO UPDATE SET age = EXCLUDED.age;
-2. UPDATE (Ma’lumotni yangilash)
 SQL
--- 1. Oddiy UPDATE
-UPDATE users SET age = 27 WHERE name = 'Ali';
+-- Yangi ustun qo'shish
+ALTER TABLE products ADD COLUMN discount_price NUMERIC(12, 2);
 
--- 2. Expression (ifoda) bilan UPDATE
-UPDATE products SET price = price * 1.1 WHERE category = 'electronics';
+-- Mavjud ustun turini o'zgartirish (yoki cheklov qo'shish)
+ALTER TABLE products ALTER COLUMN name SET NOT NULL;
+3. Xatolarga urinishlar (Constraint Violation)
+Quyidagi buyruqlar yuqoridagi cheklovlarni (constraints) buzadi va PostgreSQL xato qaytaradi:
 
--- 3. Korelatsion (Subquery) bilan UPDATE
-UPDATE orders SET total_price = (SELECT SUM(amount) FROM order_items WHERE order_items.order_id = orders.id);
-3. DELETE (O‘chirish)
 SQL
--- 1. Oddiy DELETE
-DELETE FROM users WHERE age < 18;
+-- 1. CHECK xatosi: Narx 0 dan kichik bo'lishi mumkin emas
+INSERT INTO products (name, price) VALUES ('Telefon', -100);
+-- Xato: new row for relation "products" violates check constraint "products_price_check"
 
--- 2. RETURNING bilan (o‘chirilgan qatorlarni ko‘rish)
-DELETE FROM users WHERE name = 'Guli' RETURNING *;
-4. Tranzaksiyalar (BEGIN, COMMIT, ROLLBACK)
-SQL
--- Tranzaksiyani boshlash
-BEGIN;
+-- 2. UNIQUE xatosi: Bir xil pasport ma'lumotlarini qayta kiritish
+INSERT INTO customers (first_name, last_name, email, passport_series, passport_number) 
+VALUES ('Ali', 'Aliyev', 'ali@mail.com', 'AA', '1234567');
 
-INSERT INTO accounts (user_id, balance) VALUES (1, 100);
-UPDATE accounts SET balance = balance - 100 WHERE user_id = 2;
+INSERT INTO customers (first_name, last_name, email, passport_series, passport_number) 
+VALUES ('Vali', 'Valiyev', 'vali@mail.com', 'AA', '1234567');
+-- Xato: duplicate key value violates unique constraint "customers_passport_series_passport_number_key"
 
--- Xatolik bo‘lsa bekor qilish (ROLLBACK)
-ROLLBACK; 
+-- 3. FOREIGN KEY (RESTRICT) xatosi: Kategoriyani o'chirishga urinish
+-- Agar kategoriyada mahsulot bo'lsa, uni o'chirib bo'lmaydi
+DELETE FROM categories WHERE category_id = 1;
+-- Xato: update or delete on table "categories" violates foreign key constraint 
+-- "products_category_id_fkey" on table "products"
+Tushuntirishlar:
+NUMERIC(12, 2): 12 ta xona, shundan 2 tasi verguldan keyin (pul birliklari uchun ideal).
 
--- Barchasi muvaffaqiyatli bo‘lsa saqlash (COMMIT)
-COMMIT;
-5. SAVEPOINT (Qisman bekor qilish)
-SQL
-BEGIN;
-INSERT INTO logs (action) VALUES ('Start');
-SAVEPOINT sp1; -- Qayta tiklash nuqtasi
+TIMESTAMPTZ: Vaqt mintaqasini hisobga oluvchi vaqt formati (server vaqtini to‘g‘ri saqlaydi).
 
-INSERT INTO logs (action) VALUES ('Risky operation');
-ROLLBACK TO SAVEPOINT sp1; -- 'Risky operation' bekor qilindi, 'Start' saqlandi
+ON DELETE RESTRICT: Agar bog‘liq jadvalda (products) ma’lumot bo‘lsa, asosiy jadval (categories) qatorini o‘chirishga ruxsat bermaydi.
 
-COMMIT;
-6. Xavf: WHERE'siz UPDATE/DELETE
-DIQQAT: WHERE shartisiz bajarilgan UPDATE yoki DELETE buyruqlari jadvaldagi barcha qatorlarni o‘zgartiradi yoki o‘chirib tashlaydi.
+ON DELETE CASCADE: Agar mijoz (customer) o‘chirilsa, uning barcha buyurtmalari (orders) avtomatik ravishda bazadan o‘chiriladi.
 
-Xavfli UPDATE: UPDATE users SET status = 'active'; (Barcha foydalanuvchilar aktiv bo‘lib qoladi).
-
-Xavfli DELETE: DELETE FROM users; (Jadval bo‘shatiladi).
-
-Himoya: Ishlab chiqarish (production) muhitida DELETE yoki UPDATE yozishdan oldin, avval SELECT bilan qaysi qatorlar tanlanayotganini tekshirib ko‘ring. Tranzaksiya (BEGIN) ichida bajarish esa xatolikni ROLLBACK qilish imkonini beradi.
+Multi-column UNIQUE: UNIQUE(passport_series, passport_number) kombinatsiyasi bir kishi bir xil pasport ma'lumotlari bilan ikki marta ro'yxatdan o'tishini oldini oladi.
