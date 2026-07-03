@@ -1,49 +1,52 @@
-Bu topshiriq Python'dagi lazy evaluation (kechiktirilgan hisoblash) va generator pipeline (konveyer) tushunchalarini mukammal o'zida aks ettiradi. List yaratmasdan, faqat kerakli ma'lumotni oqim sifatida qayta ishlash uchun quyidagi koddan foydalanishimiz mumkin:
-
-Python yechimi
+Restoran statistikasi moduli
 Python
-import datetime
+from collections import defaultdict
 
-# 1. Faylni qator-qator o'qish generatori
-def read_file(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            yield line.strip()
+# 1. 15+ buyurtmadan iborat ma'lumotlar to'plami
+orders = [
+    {"ofitsiant": "Ali", "taom": "Osh", "narx": 45000, "sana": "2026-07-01", "kategoriya": "Milliy"},
+    {"ofitsiant": "Vali", "taom": "Shashlik", "narx": 30000, "sana": "2026-07-01", "kategoriya": "Gril"},
+    {"ofitsiant": "Ali", "taom": "Sho'rva", "narx": 25000, "sana": "2026-07-01", "kategoriya": "Sho'rva"},
+    {"ofitsiant": "Guli", "taom": "Pizza", "narx": 60000, "sana": "2026-07-02", "kategoriya": "Fast-food"},
+    {"ofitsiant": "Vali", "taom": "Lag'mon", "narx": 35000, "sana": "2026-07-02", "kategoriya": "Milliy"},
+    {"ofitsiant": "Ali", "taom": "Steak", "narx": 80000, "sana": "2026-07-02", "kategoriya": "Gril"},
+    {"ofitsiant": "Guli", "taom": "Osh", "narx": 45000, "sana": "2026-07-03", "kategoriya": "Milliy"},
+    {"ofitsiant": "Ali", "taom": "Salat", "narx": 15000, "sana": "2026-07-03", "kategoriya": "Salat"},
+    {"ofitsiant": "Vali", "taom": "Burger", "narx": 25000, "sana": "2026-07-03", "kategoriya": "Fast-food"},
+    {"ofitsiant": "Guli", "taom": "Shashlik", "narx": 30000, "sana": "2026-07-03", "kategoriya": "Gril"},
+    {"ofitsiant": "Ali", "taom": "Lag'mon", "narx": 35000, "sana": "2026-07-04", "kategoriya": "Milliy"},
+    {"ofitsiant": "Vali", "taom": "Pizza", "narx": 60000, "sana": "2026-07-04", "kategoriya": "Fast-food"},
+    {"ofitsiant": "Guli", "taom": "Sho'rva", "narx": 25000, "sana": "2026-07-04", "kategoriya": "Sho'rva"},
+    {"ofitsiant": "Ali", "taom": "Osh", "narx": 45000, "sana": "2026-07-04", "kategoriya": "Milliy"},
+    {"ofitsiant": "Vali", "taom": "Steak", "narx": 80000, "sana": "2026-07-04", "kategoriya": "Gril"}
+]
 
-# 2. Faqat "ERROR" satrlarini filterlash generatori
-def filter_errors(lines):
-    for line in lines:
-        if "ERROR" in line.upper():
-            yield line
+# 2. Set comprehension: Unique ofitsiantlar
+unique_waiters = {order['ofitsiant'] for order in orders}
 
-# 3. Har satrga vaqt belgisi qo'shish generatori
-def add_timestamp(lines):
-    for line in lines:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        yield f"[{timestamp}] {line}"
+# 3. Dict comprehension: Ofitsiant -> Jami summa
+waiter_performance = {w: sum(o['narx'] for o in orders if o['ofitsiant'] == w) for w in unique_waiters}
 
-# --- Pipeline ishga tushirilishi ---
-file_path = 'log.txt' # Fayl yo'li
+# 4. Sorted + lambda: TOP 3 ofitsiant
+top_3_waiters = sorted(waiter_performance.items(), key=lambda x: x[1], reverse=True)[:3]
 
-# Pipeline bog'lanishi
-lines = read_file(file_path)
-errors = filter_errors(lines)
-pipeline = add_timestamp(errors)
+# 5. Generator expression: Umumiy summa hisoblash
+total_revenue = sum(order['narx'] for order in orders)
 
-# Statistika uchun o'zgaruvchilar
-total_lines = 0
-error_count = 0
+# 6. Max: Eng qimmat buyurtma
+most_expensive_order = max(orders, key=lambda x: x['narx'])
 
-print("--- Natijalar oqimi ---")
-# 4. Asosiy oqim (list yaratilmaydi, faqat iteratsiya qilinadi)
-for processed_line in pipeline:
-    print(processed_line)
-    error_count += 1
+# 7. Kunlik statistika
+daily_stats = defaultdict(int)
+for o in orders:
+    daily_stats[o['sana']] += o['narx']
 
-# Jami qatorlar sonini aniqlash uchun faylni qayta sanaymiz (yoki o'qish jarayonida ham hisoblash mumkin edi)
-with open(file_path, 'r', encoding='utf-8') as f:
-    total_lines = sum(1 for _ in f)
+# --- Natijani jadval ko'rinishida chiqarish ---
+print(f"{'Ofitsiant':<15} | {'Jami summa':<10}")
+print("-" * 30)
+for waiter, total in waiter_performance.items():
+    print(f"{waiter:<15} | {total:<10}")
 
-print(f"\n--- Statistika ---")
-print(f"Jami satrlar: {total_lines}")
-print(f"ERROR satrlari: {error_count}")
+print(f"\nTOP 3 Ofitsiantlar: {top_3_waiters}")
+print(f"Jami tushum: {total_revenue} so'm")
+print(f"Eng qimmat buyurtma: {most_expensive_order['taom']} ({most_expensive_order['narx']} so'm)")
