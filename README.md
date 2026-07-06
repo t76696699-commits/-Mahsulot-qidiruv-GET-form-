@@ -1,52 +1,71 @@
-Restoran statistikasi moduli
-Python
-from collections import defaultdict
+1. INNER JOIN bilan 3 ta jadvalni bog‘lash
+Ushbu so‘rov faqat baholangan talabalar, ularning fanlari va olgan baholarini chiqaradi. Agar talaba baho olmagan bo‘lsa, bu ro‘yxatga kirmaydi.
 
-# 1. 15+ buyurtmadan iborat ma'lumotlar to'plami
-orders = [
-    {"ofitsiant": "Ali", "taom": "Osh", "narx": 45000, "sana": "2026-07-01", "kategoriya": "Milliy"},
-    {"ofitsiant": "Vali", "taom": "Shashlik", "narx": 30000, "sana": "2026-07-01", "kategoriya": "Gril"},
-    {"ofitsiant": "Ali", "taom": "Sho'rva", "narx": 25000, "sana": "2026-07-01", "kategoriya": "Sho'rva"},
-    {"ofitsiant": "Guli", "taom": "Pizza", "narx": 60000, "sana": "2026-07-02", "kategoriya": "Fast-food"},
-    {"ofitsiant": "Vali", "taom": "Lag'mon", "narx": 35000, "sana": "2026-07-02", "kategoriya": "Milliy"},
-    {"ofitsiant": "Ali", "taom": "Steak", "narx": 80000, "sana": "2026-07-02", "kategoriya": "Gril"},
-    {"ofitsiant": "Guli", "taom": "Osh", "narx": 45000, "sana": "2026-07-03", "kategoriya": "Milliy"},
-    {"ofitsiant": "Ali", "taom": "Salat", "narx": 15000, "sana": "2026-07-03", "kategoriya": "Salat"},
-    {"ofitsiant": "Vali", "taom": "Burger", "narx": 25000, "sana": "2026-07-03", "kategoriya": "Fast-food"},
-    {"ofitsiant": "Guli", "taom": "Shashlik", "narx": 30000, "sana": "2026-07-03", "kategoriya": "Gril"},
-    {"ofitsiant": "Ali", "taom": "Lag'mon", "narx": 35000, "sana": "2026-07-04", "kategoriya": "Milliy"},
-    {"ofitsiant": "Vali", "taom": "Pizza", "narx": 60000, "sana": "2026-07-04", "kategoriya": "Fast-food"},
-    {"ofitsiant": "Guli", "taom": "Sho'rva", "narx": 25000, "sana": "2026-07-04", "kategoriya": "Sho'rva"},
-    {"ofitsiant": "Ali", "taom": "Osh", "narx": 45000, "sana": "2026-07-04", "kategoriya": "Milliy"},
-    {"ofitsiant": "Vali", "taom": "Steak", "narx": 80000, "sana": "2026-07-04", "kategoriya": "Gril"}
-]
+SQL
+SELECT 
+    t.ism, 
+    f.fan_nomi, 
+    b.baho
+FROM talabalar t
+INNER JOIN baholar b ON t.id = b.talaba_id
+INNER JOIN fanlar f ON b.fan_id = f.id;
+2. LEFT JOIN bilan bahosizlarni saqlash
+Bahosi bor yoki yo‘qligidan qat’i nazar, barcha talabalarni va ularning baholarini ko‘rish uchun LEFT JOIN ishlatamiz. Bahosi yo‘q talabalar qarshisida NULL chiqadi.
 
-# 2. Set comprehension: Unique ofitsiantlar
-unique_waiters = {order['ofitsiant'] for order in orders}
+SQL
+SELECT 
+    t.ism, 
+    b.baho
+FROM talabalar t
+LEFT JOIN baholar b ON t.id = b.talaba_id;
+3. Bahosizlarni topish (WHERE b.id IS NULL)
+Hali biror marta baho olmagan (yoki imtihondan qarzdor) talabalarni aniqlash uchun LEFT JOIN qilib, so‘ng NULL qiymatlarni filtrlaymiz.
 
-# 3. Dict comprehension: Ofitsiant -> Jami summa
-waiter_performance = {w: sum(o['narx'] for o in orders if o['ofitsiant'] == w) for w in unique_waiters}
+SQL
+SELECT 
+    t.ism
+FROM talabalar t
+LEFT JOIN baholar b ON t.id = b.talaba_id
+WHERE b.id IS NULL;
+4. Har talabaning o‘rtacha bahosi (LEFT JOIN + GROUP BY)
+Hatto baho olmagan talabalarni ham tushirib qoldirmaslik uchun LEFT JOIN qilamiz va ROUND funksiyasi orqali o‘rtacha bahoni yaxlitlaymiz.
 
-# 4. Sorted + lambda: TOP 3 ofitsiant
-top_3_waiters = sorted(waiter_performance.items(), key=lambda x: x[1], reverse=True)[:3]
+SQL
+SELECT 
+    t.ism, 
+    ROUND(AVG(b.baho), 2) AS o_rtacha_baho
+FROM talabalar t
+LEFT JOIN baholar b ON t.id = b.talaba_id
+GROUP BY t.id, t.ism;
+5. Har fan bo‘yicha eng yuqori ball olgan talaba
+Bu masalani PostgreSQL-ning eng qulay instrumenti bo‘lgan DISTINCT ON yoki Oyna funksiyalari (Window Functions) bilan yechish mumkin. Quyida eng samarali yo‘li keltirilgan:
 
-# 5. Generator expression: Umumiy summa hisoblash
-total_revenue = sum(order['narx'] for order in orders)
+SQL
+SELECT DISTINCT ON (f.id)
+    f.fan_nomi,
+    t.ism AS talaba_ismi,
+    b.baho AS eng_yuqori_baho
+FROM fanlar f
+INNER JOIN baholar b ON f.id = b.fan_id
+INNER JOIN talabalar t ON b.talaba_id = t.id
+ORDER BY f.id, b.baho DESC;
+6. Self JOIN misoli (Xuddi sinfdoshlar kabi)
+Bitta jadvalni o‘zini o‘ziga bog‘lash. Masalan, bir xil guruhda o‘qiydigan talabalarni (sinfdoshlarni) juftlik qilib chiqarish. t1.id < t2.id sharti bir xil juftlik qayta takrorlanmasligi (A va B, B va A bo'lib kelmasligi) uchun kerak.
 
-# 6. Max: Eng qimmat buyurtma
-most_expensive_order = max(orders, key=lambda x: x['narx'])
+SQL
+SELECT 
+    t1.ism AS talaba_1, 
+    t2.ism AS talaba_2, 
+    t1.guruh_id
+FROM talabalar t1
+INNER JOIN talabalar t2 ON t1.guruh_id = t2.guruh_id AND t1.id < t2.id;
+7. Ataylab xato — Implicit JOIN (Cartesian Product / CROSS JOIN)
+Eski uslubdagi (ANSI-89) bog‘lashda WHERE sharti unutilsa yoki noto‘g‘ri yozilsa, Cartesian Product (Dekart ko‘paytmasi) hosil bo‘ladi. Ya'ni, jadvaldagi har bir qator ikkinchi jadvaldagi har bir qatorga ko‘paytirib chiqiladi (tizimni yuklama ostida qoldiradigan xavfli xato).
 
-# 7. Kunlik statistika
-daily_stats = defaultdict(int)
-for o in orders:
-    daily_stats[o['sana']] += o['narx']
-
-# --- Natijani jadval ko'rinishida chiqarish ---
-print(f"{'Ofitsiant':<15} | {'Jami summa':<10}")
-print("-" * 30)
-for waiter, total in waiter_performance.items():
-    print(f"{waiter:<15} | {total:<10}")
-
-print(f"\nTOP 3 Ofitsiantlar: {top_3_waiters}")
-print(f"Jami tushum: {total_revenue} so'm")
-print(f"Eng qimmat buyurtma: {most_expensive_order['taom']} ({most_expensive_order['narx']} so'm)")
+SQL
+-- ATAYLAB QILINGAN XATO: WHERE sharti yo'q
+SELECT 
+    t.ism, 
+    f.fan_nomi
+FROM talabalar t, fanlar f; 
+-- Bu so'rov CROSS JOIN vazifasini bajarib yuboradi va keraksiz millionlab qatorlarni qa
