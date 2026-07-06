@@ -1,72 +1,123 @@
-1. COUNT(*) va COUNT(DISTINCT) bilan misol
-COUNT(*) – jadvaldagi jami qatorlar sonini hisoblaydi (hatto qiymati NULL bo'lsa ham).
+Loyiha strukturasi
+Plaintext
+my_flask_app/
+│
+├── app/
+│   └── __init__.py
+├── config.py
+├── wsgi.py
+├── .env
+└── README.md
+1. config.py
+Konfiguratsiyalar klasslar koʻrinishida yozildi. SECRET_KEY esa xavfsizlik nuqtai nazaridan .env faylidan yoki tizim muhitidan (os.environ) oʻqib olinadi.
 
-COUNT(DISTINCT ustun) – faqat takrorlanmas (unikal) va NULL bo'lmagan qiymatlarni hisoblaydi.
+Python
+import os
+from dotenv import load_dotenv
 
-SQL
-SELECT 
-    COUNT(*) AS jami_talabalar,
-    COUNT(DISTINCT guruh_id) AS jami_unikal_guruhlar
-FROM talabalar;
-2. SUM, AVG, MIN, MAX va ROUND bilan to‘liq statistika
-Xodimlarning oylik maoshlari misolida umumiy, eng yuqori, eng past va yaxlitlangan o‘rtacha qiymatlarni hisoblash:
+# .env faylini yuklash
+load_dotenv()
 
-SQL
-SELECT 
-    SUM(maosh) AS jami_maosh_fondi,
-    MIN(maosh) AS eng_kam_maosh,
-    MAX(maosh) AS eng_ko_p_maosh,
-    AVG(maosh) AS aniq_o_rtacha_maosh,
-    ROUND(AVG(maosh), 2) AS yaxlitlangan_o_rtacha_maosh  -- Verguldan keyin 2 ta raqamgacha
-FROM xodimlar;
-3. String funksiyalar misoli (UPPER, LENGTH, ||)
-Matnlar ustida amallar bajarish: ism-familiyani katta harfga o'tkazish, ularni birlashtirish (||) va matn uzunligini o'lchash.
+class Config:
+    """Asosiy (baza) konfiguratsiya klassi"""
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'default-very-secret-key-12345')
+    FLASK_RUN_PORT = 5000
 
-SQL
-SELECT 
-    UPPER(ism) AS katta_harfda,
-    ism || ' ' || familiya AS to_liq_ism,
-    LENGTH(ism) AS ism_harflar_soni
-FROM xodimlar;
-4. Sana funksiyalari (NOW(), CURRENT_DATE, EXTRACT)
-Vaqt va sana bilan ishlash, sanadan ma'lum bir qismni (yil, oy, kun) ajratib olish.
+class DevelopmentConfig(Config):
+    """Development (Ishlab chiqish) rejimi"""
+    DEBUG = True
+    ENV = 'development'
 
-SQL
-SELECT 
-    NOW() AS hozirgi_vaqt_va_sana,          -- Masalan: 2026-07-06 10:47:03
-    CURRENT_DATE AS bugungi_sana,           -- Masalan: 2026-07-06
-    EXTRACT(YEAR FROM tugilgan_sana) AS tugilgan_yili,
-    EXTRACT(MONTH FROM NOW()) AS joriy_oy  -- Hozirgi oy raqami (7)
-FROM xodimlar;
-5. Matematik funksiyalar (CEIL, FLOOR, MOD)
-CEIL(x) – sonni tepaga qarab butun songa yaxlitlaydi.
+class TestingConfig(Config):
+    """Testing (Testlash) rejimi"""
+    TESTING = True
+    DEBUG = True
 
-FLOOR(x) – sonni pastga qarab butun songa yaxlitlaydi.
+class ProductionConfig(Config):
+    """Production (Jonli efir) rejimi"""
+    DEBUG = False
+    TESTING = False
+    ENV = 'production'
 
-MOD(x, y) – x ni y ga bo‘lgandagi qoldiqni hisoblaydi.
+# Rejimlarni matnli kalitlar orqali chaqirish uchun lug'at
+config_by_name = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig
+}
+2. app/__init__.py
+Application Factory (create_app) funksiyasi yaratildi. Standart holatda u development rejimini qabul qiladi.
 
-SQL
-SELECT 
-    CEIL(5.1) AS tepaga_yaxlitlash,   -- Natija: 6
-    FLOOR(5.9) AS pastga_yaxlitlash,  -- Natija: 5
-    MOD(10, 3) AS qoldiq_hisoblash    -- Natija: 1 (10 ni 3 ga bo'lgandagi qoldiq)
-FROM xodimlar LIMIT 1;
-6. Ataylab xato — WHERE ichida agregat funksiya ishlatish
-❌ Xato so‘rov:
-SQL
--- ATAYLAB QILINGAN XATO
-SELECT ism, maosh 
-FROM xodimlar 
-WHERE maosh > AVG(maosh);
-Xatolik xabari: ERROR: aggregate functions are not allowed in WHERE
+Python
+from flask import Flask
+from config import config_by_name
 
-💡 Sababi va tushuntirish:
-SQL so'rovlarni bajarishda ma'lum bir ketma-ketlikka amal qiladi (SQL Order of Execution). WHERE filtri jadvaldagi qatorlar guruhlanishidan va agregat funksiyalar (masalan, AVG()) hisoblanishidan oldin ishga tushadi. Ya'ni, WHERE ishlayotgan vaqtda PostgreSQL hali o‘rtacha maosh qanchaligini bilmaydi.
+def create_app(config_name='development'):
+    app = Flask(__name__)
+    
+    # Konfiguratsiyani yuklash
+    app.config.from_object(config_by_name[config_name])
+    
+    # Oddiy endpoint (tekshirish uchun)
+    @app.route('/')
+    def index():
+        return f"Hello! App is running in **{app.config['ENV']}** mode."
+        
+    return app
+3. wsgi.py
+Faqatgina factory funksiyasini chaqirib, dasturni ishga tushiruvchi eng sodda va toʻgʻri koʻrinish (jami 4 qator).
 
-✅ To‘g‘ri yechim (Subquery yoki HAVING yordamida):
-O'rtacha maoshdan yuqori oladiganlarni topish uchun ichma-ich so'rov (Subquery) ishlatiladi:
+Python
+import os
+from app import create_app
 
-SQL
-SELECT ism, maosh 
-FROM xodimlar 
-WHERE maosh > (SELECT AVG(maosh) FROM xodimlar);
+# Muhitdan rejimni oladi (agar berilmagan bo'lsa, development)
+env = os.environ.get('FLASK_ENV', 'development')
+app = create_app(env)
+4. .env (Namuna)
+Loyiha ildiz papkasida .env nomli fayl ochib, maxfiy kalitni joylashtiring:
+
+Фрагмент кода
+SECRET_KEY=SizningJudaHamMaxfiyKalitingiz123!
+5. README.md
+Loyiha qanday ishga tushishi va rejimlar oʻrtasidagi farqlar tushuntirilgan qoʻllanma.
+
+Markdown
+# Flask App Factory Project
+
+Ushbu loyiha Flask'ning eng to'g'ri arxitektura strukturalaridan biri bo'lgan **Application Factory** patterni asosida qurilgan.
+
+## Ishga tushirish (Running the Application)
+
+Loyihani ikki xil rejimda ishga tushirish mumkin: **Development** va **Production**. Ularning asosiy farqi muhit o'zgaruvchilari (environment variables) va server tanlovidadir.
+
+---
+
+### 1. Development (Ishlab chiqish rejimi)
+Bu rejim dasturchi kod yozayotgan jarayon uchun mo'ljallangan. Unda **Hot Reload** (kod o'zgarganda server avtomat yangilanishi) va **Debug Mode** (xatoliklarni brauzerda ko'rsatish) faol bo'ladi.
+
+**Ishga tushirish buyruqlari:**
+```bash
+# Terminalda muhitni o'rnatish
+export FLASK_ENV=development  # Linux/macOS
+set FLASK_ENV=development     # Windows (CMD)
+
+# Flask'ning ichki serverida ishga tushirish
+flask run
+2. Production (Jonli efir rejimi)
+Bu rejim dastur tayyor bo'lib, serverga (jonli efirga) yuklanganda ishlatiladi. Unda xavfsizlik va tezlik uchun Debug Mode o'chiriladi. Shuningdek, Flask'ning ichki serveri o'rniga WSGI serverdan (Gunicorn yoki uWSGI) foydalaniladi.
+
+Ishga tushirish buyruqlari:
+
+Bash
+# Terminalda muhitni o'rnatish
+export FLASK_ENV=production
+
+# Gunicorn (WSGI server) orqali wsgi.py faylini ishga tushirish
+gunicorn wsgi:app
+Rejimlar orasidagi asosiy farqlar (Tabela)
+Xususiyat	Development	Production
+Debug Mode	True (Yoqilgan)	False (O'chirilgan)
+Xatoliklar (Errors)	Brauzerda batafsil ko'rinadi	Maxfiy qoladi (500 Internal Error)
+Server	Flask built-in server (Faqat test uchun)	Gunicorn / uWSGI (Yuqori yuklamalar uchun)
+Kod o'zgarishi	Server avtomat o'zini yangilaydi	Serverni qo'lda qayta start qilish kerak
