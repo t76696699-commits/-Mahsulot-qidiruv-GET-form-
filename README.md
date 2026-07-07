@@ -1,123 +1,175 @@
-Loyiha strukturasi
+1. Loyiha fayllari strukturasi
+Kodni quyidagi tartibda joylashtirishingiz mumkin:
+
 Plaintext
-my_flask_app/
-│
-├── app/
-│   └── __init__.py
-├── config.py
-├── wsgi.py
-├── .env
-└── README.md
-1. config.py
-Konfiguratsiyalar klasslar koʻrinishida yozildi. SECRET_KEY esa xavfsizlik nuqtai nazaridan .env faylidan yoki tizim muhitidan (os.environ) oʻqib olinadi.
+app/
+├── app.py          # Asosiy Flask ilovasi va marshrutlar
+├── models.py       # SQLAlchemy modellari va bog'lanishlar
+└── templates/
+    └── index.html  # Bosh sahifa (HTML)
+2. Modellar (models.py)
+Bu yerda User, Note, Tag modellari va ular o'rtasidagi munosabatlar (relationship, cascade, secondary) joylashgan.
 
 Python
-import os
-from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
 
-# .env faylini yuklash
-load_dotenv()
+db = SQLAlchemy()
 
-class Config:
-    """Asosiy (baza) konfiguratsiya klassi"""
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'default-very-secret-key-12345')
-    FLASK_RUN_PORT = 5000
+# Tag va Note o'rtasidagi oraliq (association) jadvali
+note_tags = db.Table('note_tags',
+    db.Column('note_id', db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id', ondelete='CASCADE'), primary_key=True)
+)
 
-class DevelopmentConfig(Config):
-    """Development (Ishlab chiqish) rejimi"""
-    DEBUG = True
-    ENV = 'development'
-
-class TestingConfig(Config):
-    """Testing (Testlash) rejimi"""
-    TESTING = True
-    DEBUG = True
-
-class ProductionConfig(Config):
-    """Production (Jonli efir) rejimi"""
-    DEBUG = False
-    TESTING = False
-    ENV = 'production'
-
-# Rejimlarni matnli kalitlar orqali chaqirish uchun lug'at
-config_by_name = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'production': ProductionConfig
-}
-2. app/__init__.py
-Application Factory (create_app) funksiyasi yaratildi. Standart holatda u development rejimini qabul qiladi.
-
-Python
-from flask import Flask
-from config import config_by_name
-
-def create_app(config_name='development'):
-    app = Flask(__name__)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     
-    # Konfiguratsiyani yuklash
-    app.config.from_object(config_by_name[config_name])
+    # Cascade 'all, delete-orphan' -> User o'chganda uning barcha notalari ham o'chadi
+    notes = db.relationship('Note', back_populates='author', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
     
-    # Oddiy endpoint (tekshirish uchun)
-    @app.route('/')
-    def index():
-        return f"Hello! App is running in **{app.config['ENV']}** mode."
-        
-    return app
-3. wsgi.py
-Faqatgina factory funksiyasini chaqirib, dasturni ishga tushiruvchi eng sodda va toʻgʻri koʻrinish (jami 4 qator).
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # User bilan teskari bog'lanish
+    author = db.relationship('User', back_populates='notes')
+    
+    # Tag bilan Many-to-Many bog'lanish
+    tags = db.relationship('Tag', secondary=note_tags, backref=db.backref('notes', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Note {self.title}>'
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+3. Flask Ilova va Marshrutlar (app.py)
+Bosh sahifada barcha notalarni author va tags ma'lumotlari bilan birga yuklab olamiz.
 
 Python
-import os
-from app import create_app
+from flask import Flask, render_template
+from models import db, User, Note, Tag
 
-# Muhitdan rejimni oladi (agar berilmagan bo'lsa, development)
-env = os.environ.get('FLASK_ENV', 'development')
-app = create_app(env)
-4. .env (Namuna)
-Loyiha ildiz papkasida .env nomli fayl ochib, maxfiy kalitni joylashtiring:
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///notes.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-Фрагмент кода
-SECRET_KEY=SizningJudaHamMaxfiyKalitingiz123!
-5. README.md
-Loyiha qanday ishga tushishi va rejimlar oʻrtasidagi farqlar tushuntirilgan qoʻllanma.
+db.init_app(app)
 
-Markdown
-# Flask App Factory Project
+@app.route('/')
+def index():
+    # N+1 muammosini oldini olish uchun author va tags'ni join oqrqali birdan yuklaymiz
+    notes = Note.query.options(db.joinedload(Note.author), db.joinedload(Note.tags)).all()
+    return render_template('index.html', notes=notes)
 
-Ushbu loyiha Flask'ning eng to'g'ri arxitektura strukturalaridan biri bo'lgan **Application Factory** patterni asosida qurilgan.
+# Bazani yaratish uchun CLI komanda (flask create-db)
+@app.cli.command("create-db")
+def create_db():
+    db.create_all()
+    print("Ma'lumotlar bazasi muvaffaqiyatli yaratildi!")
 
-## Ishga tushirish (Running the Application)
+if __name__ == '__main__':
+    app.run(debug=True)
+4. Flask Shell Skripti
+So'ralganidek 3 ta user, 6 ta note va 4 ta tag yaratib, ularni o'zaro bog'laydigan skript. Buni terminalda flask shell ichida ishga tushirishingiz yoki alohida Python skript qilib ishlatsangiz ham bo'ladi.
 
-Loyihani ikki xil rejimda ishga tushirish mumkin: **Development** va **Production**. Ularning asosiy farqi muhit o'zgaruvchilari (environment variables) va server tanlovidadir.
+Python
+# Terminalda: flask shell
+# Keyin quyidagi kodni nusxalab tashlang:
 
----
+from app import app, db
+from models import User, Note, Tag
 
-### 1. Development (Ishlab chiqish rejimi)
-Bu rejim dasturchi kod yozayotgan jarayon uchun mo'ljallangan. Unda **Hot Reload** (kod o'zgarganda server avtomat yangilanishi) va **Debug Mode** (xatoliklarni brauzerda ko'rsatish) faol bo'ladi.
+with app.app_context():
+    # 1. Bazani tozalash va qayta yaratish
+    db.drop_all()
+    db.create_all()
 
-**Ishga tushirish buyruqlari:**
-```bash
-# Terminalda muhitni o'rnatish
-export FLASK_ENV=development  # Linux/macOS
-set FLASK_ENV=development     # Windows (CMD)
+    # 2. 3 ta User yaratish
+    u1 = User(username="ali")
+    u2 = User(username="vali")
+    u3 = User(username="guli")
+    db.session.add_all([u1, u2, u3])
 
-# Flask'ning ichki serverida ishga tushirish
-flask run
-2. Production (Jonli efir rejimi)
-Bu rejim dastur tayyor bo'lib, serverga (jonli efirga) yuklanganda ishlatiladi. Unda xavfsizlik va tezlik uchun Debug Mode o'chiriladi. Shuningdek, Flask'ning ichki serveri o'rniga WSGI serverdan (Gunicorn yoki uWSGI) foydalaniladi.
+    # 3. 4 ta Tag yaratish
+    t1 = Tag(name="Dasturlash")
+    t2 = Tag(name="Shaxsiy")
+    t3 = Tag(name="Eslatma")
+    t4 = Tag(name="Motivatsiya")
+    db.session.add_all([t1, t2, t3, t4])
+    
+    db.session.commit() # ID'larni olish uchun kommit qilamiz
 
-Ishga tushirish buyruqlari:
+    # 4. 6 ta Note yaratish va ularni Author hamda Taglar bilan bog'lash
+    n1 = Note(title="Python o'rganish", content="Bugun Flask munosabatlarini o'rgandim.", author=u1)
+    n1.tags.extend([t1, t3])
 
-Bash
-# Terminalda muhitni o'rnatish
-export FLASK_ENV=production
+    n2 = Note(title="Bozorlik ro'yxati", content="Sut, qatiq va non olish kerak.", author=u1)
+    n2.tags.append(t2)
 
-# Gunicorn (WSGI server) orqali wsgi.py faylini ishga tushirish
-gunicorn wsgi:app
-Rejimlar orasidagi asosiy farqlar (Tabela)
-Xususiyat	Development	Production
-Debug Mode	True (Yoqilgan)	False (O'chirilgan)
-Xatoliklar (Errors)	Brauzerda batafsil ko'rinadi	Maxfiy qoladi (500 Internal Error)
-Server	Flask built-in server (Faqat test uchun)	Gunicorn / uWSGI (Yuqori yuklamalar uchun)
-Kod o'zgarishi	Server avtomat o'zini yangilaydi	Serverni qo'lda qayta start qilish kerak
+    n3 = Note(title="Ertangi rejalar", content="Ertalab soat 6:00 da turish.", author=u2)
+    n3.tags.extend([t2, t3])
+
+    n4 = Note(title="Yangi g'oya", content="Sun'iy intellekt yordamida startap qilish.", author=u2)
+    n4.tags.extend([t1, t4])
+
+    n5 = Note(title="Kitob mutolaasi", content="Har kuni 20 sahifa kitob o'qish.", author=u3)
+    n5.tags.extend([t3, t4])
+
+    n6 = Note(title="Sport bilan shug'ullanish", content="Yugurish va turnik.", author=u3)
+    n6.tags.append(t2)
+
+    db.session.add_all([n1, n2, n3, n4, n5, n6])
+    db.session.commit()
+
+    print("3 ta user, 6 ta note va 4 ta tag muvaffaqiyatli yaratildi va bog'landi!")
+5. Frontend (templates/index.html)
+Bosh sahifada har bir notaning yonida uning muallifi (author.username) va unga tegishli barcha taglar chiroyli ko'rinishda chiqariladi.
+
+HTML
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Notelar va Mualliflar</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .note-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .meta-info { color: #666; font-size: 0.9em; margin-bottom: 10px; }
+        .author { font-weight: bold; color: #333; }
+        .tag { background: #e0f7fa; color: #006064; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>Barcha Notalar Ro'yxati</h1>
+    
+    {% for note in notes %}
+        <div class="note-card">
+            <h2>{{ note.title }}</h2>
+            <div class="meta-info">
+                Muallif: <span class="author">@{{ note.author.username }}</span>
+            </div>
+            <p>{{ note.content }}</p>
+            <div>
+                {% for tag in note.tags %}
+                    <span class="tag">#{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <p>Hozircha hech qanday nota yo'q.</p>
+    {% endfor %}
+
+</body>
+</html>
