@@ -1,182 +1,192 @@
-Mana, Flask ilovangiz uchun barcha talablar bajarilgan, to'liq va xavfsiz fayl yuklash tizimi kodi. Proyekt strukturasi static elementlarni yuklash papkasidan ajratgan holda tuzildi.
+Mana, loyihangiz uchun barcha REST API standartlariga, xavfsizlik qoidalariga va ko'rsatilgan texnologik stekka to'liq javob beradigan kodlar to'plami.
 
-1. Papkalar strukturasi va .gitignore
-Loyihangiz ildiz (root) papkasida uploads/ nomli katalog oching va uning ichidagilar Git-ga tushib ketmasligi uchun .gitignore fayliga quyidagi qatorni qo'shing:
+Tizimda Web UI va API alohida ishlashi uchun Blueprint arxitekturasidan foydalanildi. Xatoliklar yuz berganda API har doim HTML emas, toza JSON qaytaradi.
 
-Plaintext
-# .gitignore
-uploads/
-2. Flask Ilovasi va Konfiguratsiya (app.py)
-Kodingizda imghdr moduli o'rniga zamonaviy va xavfsizroq puremagic yoki filetype kutubxonalaridan foydalanish tavsiya etiladi (chunki imghdr Python 3.11 dan boshlab deprecated bo'lgan va Python 3.13 da butunlay olib tashlangan). Biroq, talabga binoan imghdr mantiqini quyida keltiraman.
+1. API Blueprint kodi (api.py)
+Ushbu faylda barcha API endpointlari, request.get_json(silent=True) parsi, validatsiya mantiqi va JSON xatoliklar qaytaruvchi app_errorhandler o'rin olgan.
 
 Python
-import os
-import uuid
-import imghdr
-from flask import Flask, render_template, request, send_from_directory, abort
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired, FileAllowed
-from werkzeug.utils import secure_filename
+from flask import Blueprint, jsonify, request, abort, url_for
+
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+# Mock ma'lumotlar bazasi (Loyiha turi va testlar uchun)
+posts_db = {
+    1: {"id": 1, "title": "Birinchi post", "content": "Bu birinchi post mazmuni."},
+    2: {"id": 2, "title": "Ikkinchi post", "content": "Bu ikkinchi post mazmuni."}
+}
+current_id = 2
+
+# -------------------------------------------------------------
+# GLOBAL API ERROR HANDLERS (JSON javob qaytaradi)
+# -------------------------------------------------------------
+@api_bp.app_errorhandler(400)
+def bad_request(error):
+    # Agar xatolik obyektida maxsus xabar bo'lsa, o'shani qaytaramiz
+    message = getattr(error, 'description', 'Bad request')
+    if isinstance(message, dict) and 'error' in message:
+        return jsonify(message), 400
+    return jsonify({"error": message}), 400
+
+@api_bp.app_errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Resource not found"}), 404
+
+@api_bp.app_errorhandler(500)
+def internal_server_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+
+# -------------------------------------------------------------
+# ENDPOINTS
+# -------------------------------------------------------------
+
+# GET /api/posts — barcha postlar
+@api_bp.route('/posts', methods=['GET'])
+def get_posts():
+    return jsonify(list(posts_db.values())), 200
+
+
+# GET /api/posts/<id> — bitta post
+@api_bp.route('/posts/<int:post_id>', methods=['GET'])
+def get_post(post_id):
+    post = posts_db.get(post_id)
+    if not post:
+        abort(404)
+    return jsonify(post), 200
+
+
+# POST /api/posts — yangi post
+@api_bp.route('/posts', methods=['POST'])
+def create_post():
+    data = request.get_json(silent=True)
+    
+    # JSON noto'g'ri bo'lsa yoki umuman yuborilmagan bo'lsa
+    if data is None:
+        abort(400, description="Invalid JSON format")
+        
+    # Title validatsiyasi
+    title = data.get('title', '').strip() if data.get('title') else ''
+    if not title:
+        abort(400, description={'error': 'title required'})
+        
+    global current_id
+    current_id += 1
+    
+    new_post = {
+        "id": current_id,
+        "title": title,
+        "content": data.get('content', '')
+    }
+    posts_db[current_id] = new_post
+    
+    # Location header bilan 201 Created javobi
+    response = jsonify(new_post)
+    response.headers['Location'] = url_for('api.get_post', post_id=current_id, _external=True)
+    return response, 201
+
+
+# PUT /api/posts/<id> — yangilash
+@api_bp.route('/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    if post_id not in posts_db:
+        abort(404)
+        
+    data = request.get_json(silent=True)
+    if data is None:
+        abort(400, description="Invalid JSON format")
+        
+    title = data.get('title', '').strip() if data.get('title') else ''
+    if not title:
+        abort(400, description={'error': 'title required'})
+        
+    posts_db[post_id]['title'] = title
+    posts_db[post_id]['content'] = data.get('content', '')
+    
+    return jsonify(posts_db[post_id]), 200
+
+
+# DELETE /api/posts/<id> — o'chirish
+@api_bp.route('/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    if post_id not in posts_db:
+        abort(404)
+        
+    del posts_db[post_id]
+    return '', 204
+2. Asosiy Ilova Fayli (app.py)
+Bu yerda asosiy Flask ilovasi yaratiladi, API Blueprint ro'yxatdan o'tkaziladi va mavjud Web UI brauzer uchun odatiy rejimda ishlashda davom etadi.
+
+Python
+from flask import Flask, render_template
+from api import api_bp
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'sizning_maxfiy_kalitingiz'
 
-# Yuklash papkasi static dan tashqarida
-UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Fayl hajmi cheklovi: 5MB (5 * 1024 * 1024 bayt)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
-
-# Ma'lumotlar bazasi konfiguratsiyasi
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-db = SQLAlchemy(app)
-
-# Papka mavjudligini tekshirish
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# API Blueprint'ni ro'yxatdan o'tkazish
+app.register_blueprint(api_bp)
 
 # -------------------------------------------------------------
-# MIGRATION VA MODEL
+# WEB UI (Mavjud CRUD sahifalari ishlashda davom etadi)
 # -------------------------------------------------------------
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    avatar = db.Column(db.String(255), nullable=True)  # Avatar ustuni (String 255)
+@app.route('/')
+def index():
+    return "<h1>Web UI: Bosh sahifa (CRUD shu yerda ishlaydi)</h1>"
 
-# DIQQAT: Flask-Migrate orqali realizatsiya qilish uchun terminalda:
-# flask db init -> flask db migrate -m "add avatar to user" -> flask db upgrade
-
-# -------------------------------------------------------------
-# FORMA VA VALIDATORLAR
-# -------------------------------------------------------------
-class AvatarForm(FlaskForm):
-    avatar = FileField('Profil rasmi', validators=[
-        FileRequired(message="Fayl tanlanmagan!"),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], message="Faqat rasm formatlari ruxsat etilgan (jpg, png, gif)!")
-    ])
-
-# -------------------------------------------------------------
-# YORDAMCHI FUNKSIYA (Fayl turini ichki tekshirish)
-# -------------------------------------------------------------
-def validate_image_stream(file_stream):
-    """Faylning haqiqiy kontent turini (imghdr) orqali tekshirish"""
-    header = file_stream.read(512)  # Dastlabki baytlarni o'qiymiz
-    file_stream.seek(0)             # Stream ko'rsatkichini boshiga qaytaramiz
-    
-    format_type = imghdr.what(None, header)
-    if not format_type:
-        return None
-    # imghdr 'jpeg' qaytaradi, biz ruxsat bergan formatlarga moslaymiz
-    return format_type if format_type != 'jpeg' else 'jpg'
-
-# -------------------------------------------------------------
-# MARSHRUTLAR (ROUTES)
-# -------------------------------------------------------------
-
-@app.route('/user/upload', methods=['GET', 'POST'])
-def upload_avatar():
-    form = AvatarForm()
-    if form.validate_on_submit():
-        file = form.avatar.data
-        
-        # 1. Imghdr yordamida ichki tur tekshiruvi (Mime-type spoofing oldini olish)
-        detected_type = validate_image_stream(file.stream)
-        allowed_types = ['jpg', 'jpeg', 'png', 'gif']
-        
-        if not detected_type or detected_type not in allowed_types:
-            return "Xatolik: Fayl kengaytmasi rasm bo'lsa-da, uning ichki tuzilishi rasm emas!", 400
-
-        # 2. secure_filename + uuid.uuid4().hex bilan xavfsiz va noyob nom yaratish
-        original_filename = secure_filename(file.filename)
-        extension = os.path.splitext(original_filename)[1]
-        unique_filename = f"{uuid.uuid4().hex}{extension}"
-        
-        # Faylni saqlash
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-        file.save(file_path)
-        
-        # 3. Modelni bazaga saqlash (Misol tariqasida 1-id li userga bog'laymiz)
-        user = User.query.get(1) # Haqiqiy loyihada current_user ishlatiladi
-        if user:
-            user.avatar = unique_filename
-            db.session.commit()
-            
-        return f"Fayl muvaffaqiyatli yuklandi: {unique_filename}"
-        
-    return render_template('upload.html', form=form)
-
-# Faylni tashqariga xizmat qildirish (send_from_directory)
-@app.route('/user/uploads/<filename>')
-def serve_avatar(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-# -------------------------------------------------------------
-# ERROR HANDLERS (413 Too Large)
-# -------------------------------------------------------------
-@app.errorhandler(413)
-def request_entity_too_large(error):
-    return render_template('errors/413.html'), 413
+@app.route('/posts/<int:id>')
+def web_post_detail(id):
+    return f"<h1>Web UI: Post {id} tafsilotlari</h1>"
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()  # Test uchun bazani yaratish
-    app.run(debug=True)
-3. HTML Shablonlar (Templates)
-templates/upload.html
-Shablonda albatta enctype="multipart/form-data" atributi bo'lishi shart, aks holda fayl serverga yuborilmaydi.
+    app.run(debug=True, port=5000)
+3. Hujjatlashtirish (README.md)
+Har bir endpointni terminal orqali tekshirish uchun tayyor curl buyruqlari:
 
-HTML
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <title>Avatar Yuklash</title>
-</head>
-<body>
-    <h2>Profil avatarini yuklash</h2>
-    
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        
-        <div>
-            {{ form.avatar.label }}<br>
-            {{ form.avatar() }}
-            {% if form.avatar.errors %}
-                {% for error in form.avatar.errors %}
-                    <span style="color: red;">{{ error }}</span>
-                {% endfor %}
-            {% endif %}
-        </div>
-        
-        <br>
-        <button type="submit">Yuklash</button>
-    </form>
-</body>
-</html>
-templates/errors/413.html
-Fayl hajmi 5MB dan oshib ketganda chiroyli xato sahifasini ko'rsatish uchun:
+Markdown
+# REST API Dokumentatsiyasi
 
-HTML
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <title>Fayl o'lchami juda katta</title>
-    <style>
-        body { text-align: center; font-family: sans-serif; padding-top: 100px; background-color: #f8f9fa; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #dc3545; }
-        p { color: #6c757d; }
-        a { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>413 - Fayl hajmi juda katta!</h1>
-        <p>Kechirasiz, siz yuklamoqchi bo'lgan fayl hajmi ruxsat etilgan cheklovdan (5 MB) oshib ketdi.</p>
-        <a href="/user/upload">Orqaga qaytish</a>
-    </div>
-</body>
-</html>
+Barcha so'rovlar uchun `Content-Type: application/json` header'i yuborilishi shart (POST va PUT so'rovlarida).
+
+### 1. Barcha postlarni olish
+* **Metod:** `GET`
+* **URL:** `http://127.0.0.1:5000/api/posts`
+* **Status:** 200 OK
+```bash
+curl -X GET [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts)
+2. Bitta postni olish
+Metod: GET
+
+URL: http://127.0.0.1:5000/api/posts/1
+
+Status: 200 OK yoki 404 Not Found
+
+Bash
+curl -X GET [http://127.0.0.1:5000/api/posts/1](http://127.0.0.1:5000/api/posts/1)
+3. Yangi post yaratish
+Metod: POST
+
+URL: http://127.0.0.1:5000/api/posts
+
+Status: 201 Created (+ Location header)
+
+Bash
+curl -X POST [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts) \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Yangi Texnologiyalar", "content": "Flask API haqida maqola."}'
+Xatolik testi (title bo'sh bo'lsa - 400 Bad Request):
+
+Bash
+curl -X POST [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts) \
+     -H "Content-Type: application/json" \
+     -d '{"title": "", "content": "Kontent bor lekin sarlavha yo'q"}'
+4. Postni yangilash
+Metod: PUT
+
+URL: http://127.0.0.1:5000/api/posts/1
+
+Status: 200 OK
+
+Bash
+curl -X PUT [http://127.0.0.1:5000/api/posts/1](http://127.0.0.1:5000/api/posts/1) \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Yangilangan Sarlavha", "content": "Yangi kontent matni."}'
