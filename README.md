@@ -1,192 +1,109 @@
-Mana, loyihangiz uchun barcha REST API standartlariga, xavfsizlik qoidalariga va ko'rsatilgan texnologik stekka to'liq javob beradigan kodlar to'plami.
-
-Tizimda Web UI va API alohida ishlashi uchun Blueprint arxitekturasidan foydalanildi. Xatoliklar yuz berganda API har doim HTML emas, toza JSON qaytaradi.
-
-1. API Blueprint kodi (api.py)
-Ushbu faylda barcha API endpointlari, request.get_json(silent=True) parsi, validatsiya mantiqi va JSON xatoliklar qaytaruvchi app_errorhandler o'rin olgan.
-
-Python
-from flask import Blueprint, jsonify, request, abort, url_for
-
-api_bp = Blueprint('api', __name__, url_prefix='/api')
-
-# Mock ma'lumotlar bazasi (Loyiha turi va testlar uchun)
-posts_db = {
-    1: {"id": 1, "title": "Birinchi post", "content": "Bu birinchi post mazmuni."},
-    2: {"id": 2, "title": "Ikkinchi post", "content": "Bu ikkinchi post mazmuni."}
-}
-current_id = 2
-
-# -------------------------------------------------------------
-# GLOBAL API ERROR HANDLERS (JSON javob qaytaradi)
-# -------------------------------------------------------------
-@api_bp.app_errorhandler(400)
-def bad_request(error):
-    # Agar xatolik obyektida maxsus xabar bo'lsa, o'shani qaytaramiz
-    message = getattr(error, 'description', 'Bad request')
-    if isinstance(message, dict) and 'error' in message:
-        return jsonify(message), 400
-    return jsonify({"error": message}), 400
-
-@api_bp.app_errorhandler(404)
-def not_found(error):
-    return jsonify({"error": "Resource not found"}), 404
-
-@api_bp.app_errorhandler(500)
-def internal_server_error(error):
-    return jsonify({"error": "Internal server error"}), 500
-
-
-# -------------------------------------------------------------
-# ENDPOINTS
-# -------------------------------------------------------------
-
-# GET /api/posts — barcha postlar
-@api_bp.route('/posts', methods=['GET'])
-def get_posts():
-    return jsonify(list(posts_db.values())), 200
-
-
-# GET /api/posts/<id> — bitta post
-@api_bp.route('/posts/<int:post_id>', methods=['GET'])
-def get_post(post_id):
-    post = posts_db.get(post_id)
-    if not post:
-        abort(404)
-    return jsonify(post), 200
-
-
-# POST /api/posts — yangi post
-@api_bp.route('/posts', methods=['POST'])
-def create_post():
-    data = request.get_json(silent=True)
-    
-    # JSON noto'g'ri bo'lsa yoki umuman yuborilmagan bo'lsa
-    if data is None:
-        abort(400, description="Invalid JSON format")
-        
-    # Title validatsiyasi
-    title = data.get('title', '').strip() if data.get('title') else ''
-    if not title:
-        abort(400, description={'error': 'title required'})
-        
-    global current_id
-    current_id += 1
-    
-    new_post = {
-        "id": current_id,
-        "title": title,
-        "content": data.get('content', '')
-    }
-    posts_db[current_id] = new_post
-    
-    # Location header bilan 201 Created javobi
-    response = jsonify(new_post)
-    response.headers['Location'] = url_for('api.get_post', post_id=current_id, _external=True)
-    return response, 201
-
-
-# PUT /api/posts/<id> — yangilash
-@api_bp.route('/posts/<int:post_id>', methods=['PUT'])
-def update_post(post_id):
-    if post_id not in posts_db:
-        abort(404)
-        
-    data = request.get_json(silent=True)
-    if data is None:
-        abort(400, description="Invalid JSON format")
-        
-    title = data.get('title', '').strip() if data.get('title') else ''
-    if not title:
-        abort(400, description={'error': 'title required'})
-        
-    posts_db[post_id]['title'] = title
-    posts_db[post_id]['content'] = data.get('content', '')
-    
-    return jsonify(posts_db[post_id]), 200
-
-
-# DELETE /api/posts/<id> — o'chirish
-@api_bp.route('/posts/<int:post_id>', methods=['DELETE'])
-def delete_post(post_id):
-    if post_id not in posts_db:
-        abort(404)
-        
-    del posts_db[post_id]
-    return '', 204
-2. Asosiy Ilova Fayli (app.py)
-Bu yerda asosiy Flask ilovasi yaratiladi, API Blueprint ro'yxatdan o'tkaziladi va mavjud Web UI brauzer uchun odatiy rejimda ishlashda davom etadi.
-
-Python
-from flask import Flask, render_template
-from api import api_bp
+from flask import Flask, request, jsonify, url_for
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_, desc, asc
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# API Blueprint'ni ro'yxatdan o'tkazish
-app.register_blueprint(api_bp)
+# Model
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-# -------------------------------------------------------------
-# WEB UI (Mavjud CRUD sahifalari ishlashda davom etadi)
-# -------------------------------------------------------------
-@app.route('/')
-def index():
-    return "<h1>Web UI: Bosh sahifa (CRUD shu yerda ishlaydi)</h1>"
+    def to_dict(self, fields=None):
+        """Field selection (Bonus) uchun helper metod"""
+        data = {
+            'id': self.id,
+            'title': self.title,
+            'body': self.body,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+        if fields:
+            # Faqat so'ralgan fieldlarni qaytaramiz
+            return {k: v for k, v in data.items() if k in fields}
+        return data
 
-@app.route('/posts/<int:id>')
-def web_post_detail(id):
-    return f"<h1>Web UI: Post {id} tafsilotlari</h1>"
+# Route
+@app.route('/api/posts', methods=['get'])
+def get_posts():
+    # 1. Input Validation & Default values
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        if per_page > 50:  # Max 50 cheklovi
+            per_page = 50
+        if page < 1 or per_page < 1:
+            raise ValueError
+    except ValueError:
+        return jsonify({'error': 'Invalid page or per_page parameters'}), 400
+
+    q = request.args.get('q', '').strip()
+    sort_by = request.args.get('sort', 'id')
+    order = request.args.get('order', 'desc').lower()
+    fields_raw = request.args.get('fields', '')
+
+    # 2. Whitelist validation (SQL injection oldini olish)
+    allowed_sorts = ['created_at', 'title', 'id']
+    if sort_by not in allowed_sorts:
+        sort_by = 'id'  # fallback yoki 400 error qaytarish mumkin
+
+    if order not in ['asc', 'desc']:
+        order = 'desc'
+
+    # Field selection uchun whitelist
+    fields = [f.strip() for f in fields_raw.split(',')] if fields_raw else None
+
+    # 3. Query qurish (Qidiruv qismi)
+    query = Post.query
+    if q:
+        query = query.filter(or_(Post.title.ilike(f'%{q}%'), Post.body.ilike(f'%{q}%')))
+
+    # 4. Saralash (Sorting)
+    direction = desc if order == 'desc' else asc
+    query = query.order_by(direction(getattr(Post, sort_by)))
+
+    # 5. Paginate
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # 6. To'liq tashqi URL (Links) yaratish uchun helper
+    def generate_url(p):
+        if p is None:
+            return None
+        return url_for('get_posts', page=p, per_page=per_page, q=q, sort=sort_by, order=order, fields=fields_raw, _external=True)
+
+    # 7. JSON Response shakllantirish
+    response_data = {
+        'items': [item.to_dict(fields) for item in pagination.items],
+        'meta': {
+            'page': pagination.page,
+            'per_page': pagination.per_page,
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'has_next': pagination.has_next,
+            'has_prev': pagination.has_prev
+        },
+        'links': {
+            'self': generate_url(pagination.page),
+            'next': generate_url(pagination.next_num) if pagination.has_next else None,
+            'prev': generate_url(pagination.prev_num) if pagination.has_prev else None
+        }
+    }
+
+    return jsonify(response_data)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
-3. Hujjatlashtirish (README.md)
-Har bir endpointni terminal orqali tekshirish uchun tayyor curl buyruqlari:
-
-Markdown
-# REST API Dokumentatsiyasi
-
-Barcha so'rovlar uchun `Content-Type: application/json` header'i yuborilishi shart (POST va PUT so'rovlarida).
-
-### 1. Barcha postlarni olish
-* **Metod:** `GET`
-* **URL:** `http://127.0.0.1:5000/api/posts`
-* **Status:** 200 OK
-```bash
-curl -X GET [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts)
-2. Bitta postni olish
-Metod: GET
-
-URL: http://127.0.0.1:5000/api/posts/1
-
-Status: 200 OK yoki 404 Not Found
-
-Bash
-curl -X GET [http://127.0.0.1:5000/api/posts/1](http://127.0.0.1:5000/api/posts/1)
-3. Yangi post yaratish
-Metod: POST
-
-URL: http://127.0.0.1:5000/api/posts
-
-Status: 201 Created (+ Location header)
-
-Bash
-curl -X POST [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts) \
-     -H "Content-Type: application/json" \
-     -d '{"title": "Yangi Texnologiyalar", "content": "Flask API haqida maqola."}'
-Xatolik testi (title bo'sh bo'lsa - 400 Bad Request):
-
-Bash
-curl -X POST [http://127.0.0.1:5000/api/posts](http://127.0.0.1:5000/api/posts) \
-     -H "Content-Type: application/json" \
-     -d '{"title": "", "content": "Kontent bor lekin sarlavha yo'q"}'
-4. Postni yangilash
-Metod: PUT
-
-URL: http://127.0.0.1:5000/api/posts/1
-
-Status: 200 OK
-
-Bash
-curl -X PUT [http://127.0.0.1:5000/api/posts/1](http://127.0.0.1:5000/api/posts/1) \
-     -H "Content-Type: application/json" \
-     -d '{"title": "Yangilangan Sarlavha", "content": "Yangi kontent matni."}'
+    # DB yaratish va test ma'lumotlar qo'shish
+    with app.app_context():
+        db.create_all()
+        if not Post.query.first():
+            db.session.add_all([
+                Post(title="Python haqida", body="Python juda zo'r til."),
+                Post(title="Flask darslari", body="Flask yordamida API yozamiz."),
+                Post(title="SQLAlchemy qo'llanma", body="ORM orqali bazaga xavfsiz ulanish."),
+            ])
+            db.session.commit()
+    app.run(debug=True)
