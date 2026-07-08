@@ -1,322 +1,182 @@
-📝 1. app/forms.py - WTForms Klasslari
-Barcha so'ralgan formalar va validatorlar shu yerda joylashgan. SearchForm uchun CSRF himoyasi o'chirib qo'yilgan, chunki u GET so'rovi orqali ishlaydi.
+Mana, Flask ilovangiz uchun barcha talablar bajarilgan, to'liq va xavfsiz fayl yuklash tizimi kodi. Proyekt strukturasi static elementlarni yuklash papkasidan ajratgan holda tuzildi.
+
+1. Papkalar strukturasi va .gitignore
+Loyihangiz ildiz (root) papkasida uploads/ nomli katalog oching va uning ichidagilar Git-ga tushib ketmasligi uchun .gitignore fayliga quyidagi qatorni qo'shing:
+
+Plaintext
+# .gitignore
+uploads/
+2. Flask Ilovasi va Konfiguratsiya (app.py)
+Kodingizda imghdr moduli o'rniga zamonaviy va xavfsizroq puremagic yoki filetype kutubxonalaridan foydalanish tavsiya etiladi (chunki imghdr Python 3.11 dan boshlab deprecated bo'lgan va Python 3.13 da butunlay olib tashlangan). Biroq, talabga binoan imghdr mantiqini quyida keltiraman.
 
 Python
+import os
+import uuid
+import imghdr
+from flask import Flask, render_template, request, send_from_directory, abort
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
-from app.models import User
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from werkzeug.utils import secure_filename
 
-class RegisterForm(FlaskForm):
-    username = StringField('Username', validators=[
-        DataRequired(message="Username kiritilishi shart!"),
-        Length(min=3, max=50, message="Username 3 va 50 ta belgi oralig'ida bo'lishi kerak.")
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'sizning_maxfiy_kalitingiz'
+
+# Yuklash papkasi static dan tashqarida
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Fayl hajmi cheklovi: 5MB (5 * 1024 * 1024 bayt)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+# Ma'lumotlar bazasi konfiguratsiyasi
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+db = SQLAlchemy(app)
+
+# Papka mavjudligini tekshirish
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# -------------------------------------------------------------
+# MIGRATION VA MODEL
+# -------------------------------------------------------------
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    avatar = db.Column(db.String(255), nullable=True)  # Avatar ustuni (String 255)
+
+# DIQQAT: Flask-Migrate orqali realizatsiya qilish uchun terminalda:
+# flask db init -> flask db migrate -m "add avatar to user" -> flask db upgrade
+
+# -------------------------------------------------------------
+# FORMA VA VALIDATORLAR
+# -------------------------------------------------------------
+class AvatarForm(FlaskForm):
+    avatar = FileField('Profil rasmi', validators=[
+        FileRequired(message="Fayl tanlanmagan!"),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], message="Faqat rasm formatlari ruxsat etilgan (jpg, png, gif)!")
     ])
-    email = StringField('Email', validators=[
-        DataRequired(message="Email kiritilishi shart!"),
-        Email(message="To'g'ri email manzili kiriting.")
-    ])
-    password = PasswordField('Parol', validators=[
-        DataRequired(message="Parol kiritilishi shart!"),
-        Length(min=8, message="Parol kamida 8 ta belgidan iborat bo'lishi kerak.")
-    ])
-    confirm_password = PasswordField('Parolni tasdiqlang', validators=[
-        DataRequired(message="Parolni qayta kiriting!"),
-        EqualTo('password', message="Parollar bir-biriga mos kelmadi.")
-    ])
-    submit = SubmitField("Ro'yxatdan o'tish")
 
-    # Maxsus validatorlar (Custom Validators)
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user:
-            raise ValidationError("Ushbu username allaqachon band qilingan!")
-
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError("Ushbu email manzili allaqachon ro'yxatdan o'tgan!")
-
-
-class LoginForm(FlaskForm):
-    login_input = StringField('Username yoki Email', validators=[
-        DataRequired(message="Ushbu maydonni to'ldirish shart!")
-    ])
-    password = PasswordField('Parol', validators=[
-        DataRequired(message="Parolni kiriting!")
-    ])
-    remember = BooleanField('Meni eslab qol')
-    submit = SubmitField('Kirish')
-
-
-class PostForm(FlaskForm):
-    title = StringField('Sarlavha', validators=[
-        DataRequired(message="Post sarlavhasi bo'sh bo'lishi mumkin emas!"),
-        Length(max=100)
-    ])
-    content = TextAreaField('Kontent', validators=[
-        DataRequired(message="Post matni bo'sh bo'lishi mumkin emas!")
-    ])
-    submit = SubmitField('Saqlash')
-
-
-class SearchForm(FlaskForm):
-    # GET form bo'lgani uchun meta orqali CSRF o'chiriladi
-    class Meta:
-        csrf = False
-
-    q = StringField('Qidiruv', validators=[
-        DataRequired(message="Qidiruv so'zini kiriting.")
-    ], render_kw={"placeholder": "Postlarni qidirish..."})
-🚀 2. app/routes/ - Yangilangan Blueprintlar
-Endi tekshiruvlar form.validate_on_submit() orqali amalga oshadi, qo'lda yozilgan request.form.get() kodlari olib tashlangan.
-
-app/routes/auth.py
-Python
-from flask import Blueprint, render_template, redirect, url_for, request, flash
-from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User
-from app.forms import RegisterForm, LoginForm
-from app import db
-
-auth_bp = Blueprint('auth', __name__)
-
-@auth_bp.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('posts.index'))
+# -------------------------------------------------------------
+# YORDAMCHI FUNKSIYA (Fayl turini ichki tekshirish)
+# -------------------------------------------------------------
+def validate_image_stream(file_stream):
+    """Faylning haqiqiy kontent turini (imghdr) orqali tekshirish"""
+    header = file_stream.read(512)  # Dastlabki baytlarni o'qiymiz
+    file_stream.seek(0)             # Stream ko'rsatkichini boshiga qaytaramiz
     
-    form = RegisterForm()
-    if form.validate_on_submit(): # Avtomatik tarzda maxsus validatorlarni ham ishga tushiradi
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash("Ro'yxatdan muvaffaqiyatli o'tdingiz!", "success")
-        return redirect(url_for('auth.login'))
-        
-    return render_template('register.html', form=form)
+    format_type = imghdr.what(None, header)
+    if not format_type:
+        return None
+    # imghdr 'jpeg' qaytaradi, biz ruxsat bergan formatlarga moslaymiz
+    return format_type if format_type != 'jpeg' else 'jpg'
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('posts.index'))
+# -------------------------------------------------------------
+# MARSHRUTLAR (ROUTES)
+# -------------------------------------------------------------
 
-    form = LoginForm()
+@app.route('/user/upload', methods=['GET', 'POST'])
+def upload_avatar():
+    form = AvatarForm()
     if form.validate_on_submit():
-        user = User.query.filter(
-            (User.email == form.login_input.data) | (User.username == form.login_input.data)
-        ).first()
-
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('posts.index'))
-        else:
-            flash("Login yoki parol xato!", "danger")
-
-    return render_template('login.html', form=form)
-app/routes/posts.py (Qidiruv tizimi qo'shildi)
-Python
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
-from flask_login import login_required, current_user
-from app.models import Post
-from app.forms import PostForm, SearchForm
-from app import db
-
-posts_bp = Blueprint('posts', __name__)
-
-# SearchForm context_processor orqali har doim navbar'ga yetib boradi
-@posts_bp.context_processor
-def inject_search_form():
-    return dict(search_form=SearchForm(request.args))
-
-@posts_bp.route('/')
-def index():
-    q = request.args.get('q')
-    if q:
-        # Qidiruv natijalarini filterlash
-        posts = Post.query.filter(Post.title.contains(q) | Post.content.contains(q)).all()
-    else:
-        posts = Post.query.all()
-    return render_template('base.html', posts=posts)
-
-@posts_bp.route('/new', methods=['GET', 'POST'])
-@login_required
-def new_post():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
-        db.session.add(post)
-        db.session.commit()
-        flash("Post muvaffaqiyatli yaratildi!", "success")
-        return redirect(url_for('posts.index'))
-    return render_template('post_form.html', legend="Yangi Post yaratish", form=form)
-
-@posts_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_post(id):
-    post = Post.query.get_or_404(id)
-    if post.author != current_user and not current_user.is_admin:
-        abort(403)
+        file = form.avatar.data
         
-    form = PostForm(obj=post) # Post ma'lumotlarini formaga avtomatik yuklash
-    if form.validate_on_submit():
-        post.title = form.title.data
-        post.content = form.content.data
-        db.session.commit()
-        flash("Post yangilandi!", "success")
-        return redirect(url_for('posts.index'))
+        # 1. Imghdr yordamida ichki tur tekshiruvi (Mime-type spoofing oldini olish)
+        detected_type = validate_image_stream(file.stream)
+        allowed_types = ['jpg', 'jpeg', 'png', 'gif']
         
-    return render_template('post_form.html', legend="Postni tahrirlash", form=form)
-🎨 3. HTML Shablonlar (WTForms va CSRF bilan)
-Har bir shablonda {{ form.hidden_tag() }} qo'shilgan va xatoliklar bevosita input maydonlarining tagida chiqadi.
+        if not detected_type or detected_type not in allowed_types:
+            return "Xatolik: Fayl kengaytmasi rasm bo'lsa-da, uning ichki tuzilishi rasm emas!", 400
 
-app/templates/base.html (Navbarda SearchForm integratsiyasi)
+        # 2. secure_filename + uuid.uuid4().hex bilan xavfsiz va noyob nom yaratish
+        original_filename = secure_filename(file.filename)
+        extension = os.path.splitext(original_filename)[1]
+        unique_filename = f"{uuid.uuid4().hex}{extension}"
+        
+        # Faylni saqlash
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        # 3. Modelni bazaga saqlash (Misol tariqasida 1-id li userga bog'laymiz)
+        user = User.query.get(1) # Haqiqiy loyihada current_user ishlatiladi
+        if user:
+            user.avatar = unique_filename
+            db.session.commit()
+            
+        return f"Fayl muvaffaqiyatli yuklandi: {unique_filename}"
+        
+    return render_template('upload.html', form=form)
+
+# Faylni tashqariga xizmat qildirish (send_from_directory)
+@app.route('/user/uploads/<filename>')
+def serve_avatar(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# -------------------------------------------------------------
+# ERROR HANDLERS (413 Too Large)
+# -------------------------------------------------------------
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return render_template('errors/413.html'), 413
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()  # Test uchun bazani yaratish
+    app.run(debug=True)
+3. HTML Shablonlar (Templates)
+templates/upload.html
+Shablonda albatta enctype="multipart/form-data" atributi bo'lishi shart, aks holda fayl serverga yuborilmaydi.
+
 HTML
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>Avatar Yuklash</title>
 </head>
-<body class="container mt-4">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 p-3 rounded">
-        <a class="navbar-brand" href="{{ url_for('posts.index') }}">My Blog</a>
+<body>
+    <h2>Profil avatarini yuklash</h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
         
-        <form method="GET" action="{{ url_for('posts.index') }}" class="d-flex ms-3">
-            {{ search_form.q(class="form-control form-control-sm me-2") }}
-            <button class="btn btn-outline-success btn-sm" type="submit">Qidirish</button>
-        </form>
-
-        <div class="navbar-nav ms-auto">
-            {% if current_user.is_authenticated %}
-                <span class="navbar-text me-3">Salom, <b>{{ current_user.username }}</b></span>
-                <a class="nav-link" href="{{ url_for('posts.new_post') }}">Yangi Post</a>
-                <a class="nav-link" href="{{ url_for('auth.logout') }}">Chiqish</a>
-            {% else %}
-                <a class="nav-link" href="{{ url_for('auth.login') }}">Kirish</a>
-                <a class="nav-link" href="{{ url_for('auth.register') }}">Ro'yxatdan o'tish</a>
+        <div>
+            {{ form.avatar.label }}<br>
+            {{ form.avatar() }}
+            {% if form.avatar.errors %}
+                {% for error in form.avatar.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
             {% endif %}
         </div>
-    </nav>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
+        
+        <br>
+        <button type="submit">Yuklash</button>
+    </form>
 </body>
 </html>
-app/templates/register.html (Xatolar maydon ostida)
+templates/errors/413.html
+Fayl hajmi 5MB dan oshib ketganda chiroyli xato sahifasini ko'rsatish uchun:
+
 HTML
-{% extends "base.html" %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2>Ro'yxatdan o'tish</h2>
-        <form method="POST">
-            {{ form.hidden_tag() }} <div class="mb-3">
-                {{ form.username.label(class="form-label") }}
-                {{ form.username(class="form-control " + ("is-invalid" if form.username.errors else "")) }}
-                {% for error in form.username.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control " + ("is-invalid" if form.email.errors else "")) }}
-                {% for error in form.email.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control " + ("is-invalid" if form.password.errors else "")) }}
-                {% for error in form.password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3">
-                {{ form.confirm_password.label(class="form-label") }}
-                {{ form.confirm_password(class="form-control " + ("is-invalid" if form.confirm_password.errors else "")) }}
-                {% for error in form.confirm_password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            {{ form.submit(class="btn btn-primary") }}
-        </form>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Fayl o'lchami juda katta</title>
+    <style>
+        body { text-align: center; font-family: sans-serif; padding-top: 100px; background-color: #f8f9fa; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #dc3545; }
+        p { color: #6c757d; }
+        a { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>413 - Fayl hajmi juda katta!</h1>
+        <p>Kechirasiz, siz yuklamoqchi bo'lgan fayl hajmi ruxsat etilgan cheklovdan (5 MB) oshib ketdi.</p>
+        <a href="/user/upload">Orqaga qaytish</a>
     </div>
-</div>
-{% endblock %}
-app/templates/login.html
-HTML
-{% extends "base.html" %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2>Tizimga kirish</h2>
-        <form method="POST">
-            {{ form.hidden_tag() }}
-            
-            <div class="mb-3">
-                {{ form.login_input.label(class="form-label") }}
-                {{ form.login_input(class="form-control " + ("is-invalid" if form.login_input.errors else "")) }}
-                {% for error in form.login_input.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control " + ("is-invalid" if form.password.errors else "")) }}
-                {% for error in form.password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3 form-check">
-                {{ form.remember(class="form-check-input") }}
-                {{ form.remember.label(class="form-check-label") }}
-            </div>
-
-            {{ form.submit(class="btn btn-primary") }}
-        </form>
-    </div>
-</div>
-{% endblock %}
-app/templates/post_form.html
-HTML
-{% extends "base.html" %}
-{% block content %}
-<h2>{{ legend }}</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    
-    <div class="mb-3">
-        {{ form.title.label(class="form-label") }}
-        {{ form.title(class="form-control " + ("is-invalid" if form.title.errors else "")) }}
-        {% for error in form.title.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
-    </div>
-
-    <div class="mb-3">
-        {{ form.content.label(class="form-label") }}
-        {{ form.content(class="form-control " + ("is-invalid" if form.content.errors else ""), rows="5") }}
-        {% for error in form.content.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-        {% endfor %}
-    </div>
-
-    {{ form.submit(class="btn btn-success") }}
-</form>
-{% endblock %}
+</body>
+</html>
