@@ -1,105 +1,82 @@
-1. config.py - Konfiguratsiya
+📝 1. app/forms.py - WTForms Klasslari
+Barcha so'ralgan formalar va validatorlar shu yerda joylashgan. SearchForm uchun CSRF himoyasi o'chirib qo'yilgan, chunki u GET so'rovi orqali ishlaydi.
+
 Python
-import os
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from app.models import User
 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'juda_maxfiy_kalit_12345'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-2. app/__init__.py - Appni ishga tushirish va sozlash
+class RegisterForm(FlaskForm):
+    username = StringField('Username', validators=[
+        DataRequired(message="Username kiritilishi shart!"),
+        Length(min=3, max=50, message="Username 3 va 50 ta belgi oralig'ida bo'lishi kerak.")
+    ])
+    email = StringField('Email', validators=[
+        DataRequired(message="Email kiritilishi shart!"),
+        Email(message="To'g'ri email manzili kiriting.")
+    ])
+    password = PasswordField('Parol', validators=[
+        DataRequired(message="Parol kiritilishi shart!"),
+        Length(min=8, message="Parol kamida 8 ta belgidan iborat bo'lishi kerak.")
+    ])
+    confirm_password = PasswordField('Parolni tasdiqlang', validators=[
+        DataRequired(message="Parolni qayta kiriting!"),
+        EqualTo('password', message="Parollar bir-biriga mos kelmadi.")
+    ])
+    submit = SubmitField("Ro'yxatdan o'tish")
+
+    # Maxsus validatorlar (Custom Validators)
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError("Ushbu username allaqachon band qilingan!")
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError("Ushbu email manzili allaqachon ro'yxatdan o'tgan!")
+
+
+class LoginForm(FlaskForm):
+    login_input = StringField('Username yoki Email', validators=[
+        DataRequired(message="Ushbu maydonni to'ldirish shart!")
+    ])
+    password = PasswordField('Parol', validators=[
+        DataRequired(message="Parolni kiriting!")
+    ])
+    remember = BooleanField('Meni eslab qol')
+    submit = SubmitField('Kirish')
+
+
+class PostForm(FlaskForm):
+    title = StringField('Sarlavha', validators=[
+        DataRequired(message="Post sarlavhasi bo'sh bo'lishi mumkin emas!"),
+        Length(max=100)
+    ])
+    content = TextAreaField('Kontent', validators=[
+        DataRequired(message="Post matni bo'sh bo'lishi mumkin emas!")
+    ])
+    submit = SubmitField('Saqlash')
+
+
+class SearchForm(FlaskForm):
+    # GET form bo'lgani uchun meta orqali CSRF o'chiriladi
+    class Meta:
+        csrf = False
+
+    q = StringField('Qidiruv', validators=[
+        DataRequired(message="Qidiruv so'zini kiriting.")
+    ], render_kw={"placeholder": "Postlarni qidirish..."})
+🚀 2. app/routes/ - Yangilangan Blueprintlar
+Endi tekshiruvlar form.validate_on_submit() orqali amalga oshadi, qo'lda yozilgan request.form.get() kodlari olib tashlangan.
+
+app/routes/auth.py
 Python
-from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_migrate import Migrate
-from config import Config
-
-db = SQLAlchemy()
-login_manager = LoginManager()
-migrate = Migrate()
-
-def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
-
-    db.init_app(app)
-    login_manager.init_app(app)
-    migrate.init_app(app, db)
-
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message_category = 'info'
-
-    # Blueprintlarni ro'yxatdan o'tkazish
-    from app.routes.auth import auth_bp
-    from app.routes.posts import posts_bp
-    from app.routes.admin import admin_bp
-
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(posts_bp, url_prefix='/posts')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-
-    # Xatolik sahifalari (Error Handlers)
-    @app.errorhandler(401)
-    def unauthorized_error(error):
-        return render_template('401.html'), 401
-
-    @app.errorhandler(403)
-    def forbidden_error(error):
-        return render_template('403.html'), 403
-
-    return app
-3. app/models.py - Modellar
-Python
-from app import db, login_manager
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    role = db.Column(db.String(20), default='user')  # 'user' yoki 'admin'
-
-    posts = db.relationship('Post', backref='author', lazy=True)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    @property
-    def is_admin(self):
-        return self.role == 'admin'
-
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-4. app/decorators.py - Huquqlarni tekshiruvchi dekoratorlar
-Python
-from functools import wraps
-from flask import abort
-from flask_login import current_user
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-5. app/routes/auth.py - Autentifikatsiya Blueprinti
-Python
-from flask import Blueprint, render_template, redirect, url_prefix, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
+from app.forms import RegisterForm, LoginForm
 from app import db
 
 auth_bp = Blueprint('auth', __name__)
@@ -107,167 +84,114 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('posts.index')) # yoki bosh sahifa
+        return redirect(url_for('posts.index'))
     
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        if len(password) < 8:
-            flash("Parol kamida 8 ta belgidan iborat bo'lishi kerak!", "danger")
-            return render_template('register.html')
-
-        if User.query.filter((User.username == username) | (User.email == email)).first():
-            flash("Username yoki Email allaqachon mavjud!", "danger")
-            return render_template('register.html')
-
-        user = User(username=username, email=email)
-        user.set_password(password)
+    form = RegisterForm()
+    if form.validate_on_submit(): # Avtomatik tarzda maxsus validatorlarni ham ishga tushiradi
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-
-        flash("Ro'yxatdan muvaffaqiyatli o'tdingiz. Tizimga kiring.", "success")
+        flash("Ro'yxatdan muvaffaqiyatli o'tdingiz!", "success")
         return redirect(url_for('auth.login'))
-
-    return render_template('register.html')
+        
+    return render_template('register.html', form=form)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('posts.index'))
 
-    if request.method == 'POST':
-        login_input = request.form.get('login_input') # username yoki email
-        password = request.form.get('password')
-        remember = True if request.form.get('remember') else False
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter(
+            (User.email == form.login_input.data) | (User.username == form.login_input.data)
+        ).first()
 
-        user = User.query.filter((User.email == login_input) | (User.username == login_input)).first()
-
-        if user and user.check_password(password):
-            login_user(user, remember=remember)
-            
-            # ?next=... orqali kelgan sahifani aniqlash va qaytarish
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('posts.index'))
         else:
             flash("Login yoki parol xato!", "danger")
 
-    return render_template('login.html')
-
-@auth_bp.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('auth.login'))
-6. app/routes/posts.py - Postlar Blueprinti
+    return render_template('login.html', form=form)
+app/routes/posts.py (Qidiruv tizimi qo'shildi)
 Python
 from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
 from flask_login import login_required, current_user
 from app.models import Post
+from app.forms import PostForm, SearchForm
 from app import db
 
 posts_bp = Blueprint('posts', __name__)
 
+# SearchForm context_processor orqali har doim navbar'ga yetib boradi
+@posts_bp.context_processor
+def inject_search_form():
+    return dict(search_form=SearchForm(request.args))
+
 @posts_bp.route('/')
 def index():
-    posts = Post.query.all()
-    return render_template('base.html', posts=posts) # Bosh sahifada postlarni chiqarish
+    q = request.args.get('q')
+    if q:
+        # Qidiruv natijalarini filterlash
+        posts = Post.query.filter(Post.title.contains(q) | Post.content.contains(q)).all()
+    else:
+        posts = Post.query.all()
+    return render_template('base.html', posts=posts)
 
 @posts_bp.route('/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        content = request.form.get('content')
-        
-        post = Post(title=title, content=content, author=current_user)
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(title=form.title.data, content=form.content.data, author=current_user)
         db.session.add(post)
         db.session.commit()
+        flash("Post muvaffaqiyatli yaratildi!", "success")
         return redirect(url_for('posts.index'))
-    return render_template('post_form.html', legend="Yangi Post yaratish")
+    return render_template('post_form.html', legend="Yangi Post yaratish", form=form)
 
 @posts_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_post(id):
     post = Post.query.get_or_404(id)
-    
-    # Server-side tekshiruv: faqat muallif yoki admin o'zgartira oladi
     if post.author != current_user and not current_user.is_admin:
         abort(403)
         
-    if request.method == 'POST':
-        post.title = request.form.get('title')
-        post.content = request.form.get('content')
+    form = PostForm(obj=post) # Post ma'lumotlarini formaga avtomatik yuklash
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
         db.session.commit()
+        flash("Post yangilandi!", "success")
         return redirect(url_for('posts.index'))
         
-    return render_template('post_form.html', legend="Postni tahrirlash", post=post)
+    return render_template('post_form.html', legend="Postni tahrirlash", form=form)
+🎨 3. HTML Shablonlar (WTForms va CSRF bilan)
+Har bir shablonda {{ form.hidden_tag() }} qo'shilgan va xatoliklar bevosita input maydonlarining tagida chiqadi.
 
-@posts_bp.route('/<int:id>/delete', methods=['POST'])
-@login_required
-def delete_post(id):
-    post = Post.query.get_or_404(id)
-    
-    # Server-side tekshiruv
-    if post.author != current_user and not current_user.is_admin:
-        abort(403)
-        
-    db.session.delete(post)
-    db.session.commit()
-    flash("Post o'chirildi!", "success")
-    return redirect(url_for('posts.index'))
-7. app/routes/admin.py - Admin panel Blueprinti
-Python
-from flask import Blueprint, render_template, redirect, url_for, request, flash
-from app.models import User
-from app.decorators import admin_required
-from app import db
-
-admin_bp = Blueprint('admin', __name__)
-
-@admin_bp.route('/users', methods=['GET', 'POST'])
-@admin_required
-def manage_users():
-    if request.method == 'POST':
-        user_id = request.form.get('user_id')
-        new_role = request.form.get('role')
-        
-        user = User.query.get(user_id)
-        if user:
-            user.role = new_role
-            db.session.commit()
-            flash(f"{user.username} roli '{new_role}'ga o'zgartirildi.", "success")
-            
-    users = User.query.all()
-    return render_template('admin_users.html', users=users)
-8. manage.py - Loyihani ishga tushirish fayli
-Python
-from app import create_app
-
-app = create_app()
-
-if __name__ == '__main__':
-    app.run(debug=True)
-🎨 HTML Shablonlar (Templates)
-app/templates/base.html (Asosiy shablon va current_user tekshiruvi)
+app/templates/base.html (Navbarda SearchForm integratsiyasi)
 HTML
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Flask RBAC</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body class="container mt-4">
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 p-3 rounded">
         <a class="navbar-brand" href="{{ url_for('posts.index') }}">My Blog</a>
+        
+        <form method="GET" action="{{ url_for('posts.index') }}" class="d-flex ms-3">
+            {{ search_form.q(class="form-control form-control-sm me-2") }}
+            <button class="btn btn-outline-success btn-sm" type="submit">Qidirish</button>
+        </form>
+
         <div class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
-                <span class="navbar-text me-3">Salom, <b>{{ current_user.username }}</b> ({{ current_user.role }})</span>
-                {% if current_user.is_admin %}
-                    <a class="nav-link text-danger" href="{{ url_for('admin.manage_users') }}">Admin Panel</a>
-                {% endif %}
+                <span class="navbar-text me-3">Salom, <b>{{ current_user.username }}</b></span>
                 <a class="nav-link" href="{{ url_for('posts.new_post') }}">Yangi Post</a>
                 <a class="nav-link" href="{{ url_for('auth.logout') }}">Chiqish</a>
             {% else %}
@@ -285,29 +209,54 @@ HTML
         {% endif %}
     {% endwith %}
 
-    {% block content %}
-    <h2>Barcha Postlar</h2>
-    {% for post in posts %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h3>{{ post.title }}</h3>
-                <p>{{ post.content }}</p>
-                <small>Muallif: {{ post.author.username }}</small>
-                
-                {% if current_user.is_authenticated and (post.author == current_user or current_user.is_admin) %}
-                    <div class="mt-2">
-                        <a href="{{ url_for('posts.edit_post', id=post.id) }}" class="btn btn-sm btn-warning">Tahrirlash</a>
-                        <form action="{{ url_for('posts.delete_post', id=post.id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-danger">O'chirish</button>
-                        </form>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    {% endfor %}
-    {% endblock %}
+    {% block content %}{% endblock %}
 </body>
 </html>
+app/templates/register.html (Xatolar maydon ostida)
+HTML
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>Ro'yxatdan o'tish</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }} <div class="mb-3">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control " + ("is-invalid" if form.username.errors else "")) }}
+                {% for error in form.username.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control " + ("is-invalid" if form.email.errors else "")) }}
+                {% for error in form.email.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control " + ("is-invalid" if form.password.errors else "")) }}
+                {% for error in form.password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control " + ("is-invalid" if form.confirm_password.errors else "")) }}
+                {% for error in form.confirm_password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
 app/templates/login.html
 HTML
 {% extends "base.html" %}
@@ -316,82 +265,58 @@ HTML
     <div class="col-md-6">
         <h2>Tizimga kirish</h2>
         <form method="POST">
+            {{ form.hidden_tag() }}
+            
             <div class="mb-3">
-                <label>Username yoki Email</label>
-                <input type="text" name="login_input" class="form-control" required>
+                {{ form.login_input.label(class="form-label") }}
+                {{ form.login_input(class="form-control " + ("is-invalid" if form.login_input.errors else "")) }}
+                {% for error in form.login_input.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
             </div>
+
             <div class="mb-3">
-                <label>Parol</label>
-                <input type="password" name="password" class="form-control" required>
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control " + ("is-invalid" if form.password.errors else "")) }}
+                {% for error in form.password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
             </div>
+
             <div class="mb-3 form-check">
-                <input type="checkbox" name="remember" class="form-check-input" id="remember">
-                <label class="form-check-label" for="remember">Meni eslab qol</label>
+                {{ form.remember(class="form-check-input") }}
+                {{ form.remember.label(class="form-check-label") }}
             </div>
-            <button type="submit" class="btn btn-primary">Kirish</button>
+
+            {{ form.submit(class="btn btn-primary") }}
         </form>
     </div>
 </div>
 {% endblock %}
-app/templates/admin_users.html (Rol o'zgartirish formasi)
+app/templates/post_form.html
 HTML
 {% extends "base.html" %}
 {% block content %}
-<h2>Foydalanuvchilarni boshqarish (Admin)</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Roli o'zgartirish</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-            <td><span class="badge bg-secondary">{{ user.role }}</span></td>
-            <td>
-                <form method="POST" class="d-inline-flex">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <select name="role" class="form-select form-select-sm me-2">
-                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-success">Saqlash</button>
-                </form>
-            </td>
-        </tr>
+<h2>{{ legend }}</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control " + ("is-invalid" if form.title.errors else "")) }}
+        {% for error in form.title.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
         {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
-Xato sahifalari (401 va 403)
-app/templates/401.html:
+    </div>
 
-HTML
-{% extends "base.html" %}
-{% block content %}
-<div class="text-center mt-5">
-    <h1 class="display-1 text-warning">401</h1>
-    <h2>Avtorizatsiyadan o'tilmagan</h2>
-    <p>Ushbu sahifani ko'rish uchun avval tizimga kiring.</p>
-    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Kirish sahifasi</a>
-</div>
-{% endblock %}
-app/templates/403.html:
+    <div class="mb-3">
+        {{ form.content.label(class="form-label") }}
+        {{ form.content(class="form-control " + ("is-invalid" if form.content.errors else ""), rows="5") }}
+        {% for error in form.content.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-HTML
-{% extends "base.html" %}
-{% block content %}
-<div class="text-center mt-5">
-    <h1 class="display-1 text-danger">403</h1>
-    <h2>Ruxsat berilmagan</h2>
-    <p>Sizda ushbu sahifaga kirish huquqi yo'q!</p>
-    <a href="{{ url_for('posts.index') }}" class="btn btn-secondary">Bosh sahifaga qaytish</a>
-</div>
+    {{ form.submit(class="btn btn-success") }}
+</form>
 {% endblock %}
