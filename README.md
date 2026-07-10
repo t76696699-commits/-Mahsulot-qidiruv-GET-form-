@@ -1,152 +1,123 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-  <meta charset="UTF-8">
-  <title>Parallax Effekti</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Georgia', serif; }
+Flexbox nima?
+Flexbox (Flexible Box Layout) — CSS-ning zamonaviy joylashuv modeli bo'lib, elementlarni qator yoki ustun bo'ylab moslashuvchan tarzda joylashtirish imkonini beradi. U responsive dizayn yaratishni sezilarli darajada osonlashtiradi va murakkab layoutlarni bir necha qator kod bilan amalga oshirish imkonini beradi.
 
-    /* Parallax bo'lim */
-    .parallax {
-      min-height: 100vh;
-      background-attachment: fixed;
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-    }
+1. display: flex — Flexbox-ni yoqish
+Konteyner elementiga display: flex xususiyatini qo'shish uning barcha to'g'ridan-to'g'ri bolalarini flex elementlarga aylantiradi. Bu Flexbox-dan foydalanishning birinchi va eng muhim qadamidir.
 
-    /* Har bir parallax uchun o'z foni */
-    .parallax-1 {
-      background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-        url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600");
-    }
-    .parallax-2 {
-      background-image: linear-gradient(rgba(10,20,80,0.7), rgba(10,20,80,0.7)),
-        url("https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1600");
-    }
-    .parallax-3 {
-      background-image: linear-gradient(rgba(0,60,0,0.65), rgba(0,60,0,0.65)),
-        url("https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1600");
-    }
+.container {
+  display: flex;
+  background-color: #f5f5f5;
+  padding: 16px;
+}
+2. flex-direction — Yo'nalishni belgilash
+flex-direction xususiyati elementlarning asosiy o'q bo'ylab qanday yo'nalishda joylashishini belgilaydi. To'rtta qiymat mavjud:
 
-    .parallax-content { max-width: 700px; padding: 40px; }
-    .parallax-label {
-      font-size: 13px;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 16px;
-    }
-    .parallax-title { font-size: 56px; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
-    .parallax-desc { font-size: 18px; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 28px; }
-    .parallax-btn {
-      border: 2px solid white;
-      color: white;
-      padding: 14px 36px;
-      text-decoration: none;
-      font-size: 14px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      transition: background 0.3s, color 0.3s;
-    }
-    .parallax-btn:hover { background: white; color: #0a0a0a; }
+row — chapdan o'ngga (standart qiymat)
+row-reverse — o'ngdan chapga
+column — yuqoridan pastga
+column-reverse — pastdan yuqoriga
+.vertical-container {
+  display: flex;
+  flex-direction: column;
+}
 
-    /* Oddiy kontent bo'limlari */
-    .content-section {
-      padding: 80px 40px;
-      text-align: center;
-      background: white;
-    }
-    .content-section.dark {
-      background: #0f172a;
-      color: white;
-    }
-    .content-section h2 { font-size: 32px; margin-bottom: 16px; color: #1e293b; }
-    .content-section.dark h2 { color: white; }
-    .content-section p { font-size: 16px; color: #64748b; max-width: 600px; margin: 0 auto; line-height: 1.8; }
-    .content-section.dark p { color: #94a3b8; }
+.horizontal-container {
+  display: flex;
+  flex-direction: row;
+}
+3. justify-content — Asosiy o'q bo'ylab tekislash
+justify-content elementlarni asosiy o'q bo'ylab qanday taqsimlash kerakligini boshqaradi:
 
-    .features-row {
-      display: flex;
-      gap: 32px;
-      justify-content: center;
-      margin-top: 40px;
-      flex-wrap: wrap;
-    }
-    .feature {
-      background: #f8fafc;
-      border-radius: 16px;
-      padding: 28px;
-      width: 220px;
-      text-align: center;
-      border: 1px solid #e2e8f0;
-    }
-    .content-section.dark .feature { background: #1e293b; border-color: #334155; }
-    .feature .fi { font-size: 36px; margin-bottom: 12px; }
-    .feature h3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .content-section.dark .feature h3 { color: white; }
-    .feature p { font-size: 12px; color: #64748b; }
-    .content-section.dark .feature p { color: #94a3b8; }
-  </style>
-</head>
-<body>
+flex-start — boshiga tekislash (standart)
+flex-end — oxiriga tekislash
+center — markazga tekislash
+space-between — birinchi va oxirgi element chekkada, qolganlar orasida teng masofa
+space-around — har bir element atrofida teng masofa
+space-evenly — barcha bo'shliqlar teng
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+}
+4. align-items — Ko'ndalang o'q bo'ylab tekislash
+align-items elementlarni ko'ndalang o'q bo'ylab tekislaydi.
 
-  <!-- 1-parallax: Salom -->
-  <div class="parallax parallax-1">
-    <div class="parallax-content">
-      <div class="parallax-label">Parallax effekti</div>
-      <div class="parallax-title">Kelajak Boshlanadi</div>
-      <div class="parallax-desc">Scroll qilib ko'ring — fon va kontent turli tezlikda harakatlanadi</div>
-      <a href="#" class="parallax-btn">Kashf Etish</a>
-    </div>
-  </div>
+stretch — konteyner balandligiga cho'zish (standart)
+flex-start — tepaga tekislash
+flex-end — pastga tekislash
+center — vertikal markazga tekislash
+baseline — matn bazasi bo'yicha tekislash
+5. flex-wrap — Ko'p qatorga o'rash
+Standart holda barcha flex elementlar bitta qatorda joylashadi. flex-wrap: wrap ular uchun yangi qatorga o'tish imkonini beradi.
 
-  <!-- Kontent bo'limi -->
-  <div class="content-section">
-    <h2>Nima o'rganasiz?</h2>
-    <p>Bizning kursimizda HTML, CSS va JavaScript orqali professional veb-sahifalar yaratishni o'rganasiz.</p>
-    <div class="features-row">
-      <div class="feature"><div class="fi">🌐</div><h3>HTML</h3><p>Sahifa tuzilmasi</p></div>
-      <div class="feature"><div class="fi">🎨</div><h3>CSS</h3><p>Sahifa ko'rinishi</p></div>
-      <div class="feature"><div class="fi">⚡</div><h3>JS</h3><p>Interaktivlik</p></div>
-    </div>
-  </div>
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
 
-  <!-- 2-parallax: Kurslar -->
-  <div class="parallax parallax-2">
-    <div class="parallax-content">
-      <div class="parallax-label">Bizning kurslar</div>
-      <div class="parallax-title">Professional Darajada O'rgan</div>
-      <div class="parallax-desc">Har bir dars amaliy loyiha bilan mustahkamlanadi</div>
-      <a href="#" class="parallax-btn">Kurslarni Ko'rish</a>
-    </div>
-  </div>
+.gallery-item {
+  flex: 1 1 200px;
+}
+6. flex-grow, flex-shrink, flex-basis
+flex-grow — bo'sh joyni qancha o'sib to'ldirish
+flex-shrink — joy yetishmasa qancha kichrayish
+flex-basis — elementning boshlang'ich asosiy o'lchami
+7. gap — Elementlar orasidagi masofa
+.container {
+  display: flex;
+  gap: 20px;
+}
+Amaliy misol: Karta Layouti
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 24px;
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-  <!-- Kontent bo'limi -->
-  <div class="content-section dark">
-    <h2>Statistika</h2>
-    <p>Biz bilan ming minglab o'quvchilar muvaffaqiyatga erishgan</p>
-    <div class="features-row">
-      <div class="feature"><div class="fi">👥</div><h3>500+ O'quvchi</h3><p>Faol o'quvchilar</p></div>
-      <div class="feature"><div class="fi">📚</div><h3>12 Kurs</h3><p>Turli yo'nalishlar</p></div>
-      <div class="feature"><div class="fi">⭐</div><h3>4.9/5</h3><p>O'quvchilar bahosi</p></div>
-    </div>
-  </div>
+.card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 280px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
 
-  <!-- 3-parallax: Yakuniy -->
-  <div class="parallax parallax-3">
-    <div class="parallax-content">
-      <div class="parallax-label">Hoziroq boshlang</div>
-      <div class="parallax-title">O'z Kelajagingizni Quring</div>
-      <div class="parallax-desc">Dasturlash — kelajakning tili. Bugun o'rganishni boshlang!</div>
-      <a href="#" class="parallax-btn">Ro'yxatdan O'tish</a>
-    </div>
-  </div>
+.card__text {
+  flex-grow: 1;
+  color: #555;
+  margin-bottom: 16px;
+}
 
-</body>
-</html>
+.card__btn {
+  align-self: flex-start;
+  padding: 10px 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+Mini-Loyiha: Flexbox bilan Navigatsiya va Karta Qatori
+Quyidagi vazifalarni bajaring:
+
+Flexbox yordamida gorizontal navigatsiya paneli yarating — logotip chapda, menu o'ngda.
+3 ta karta (rasm, sarlavha, matn, tugma) ni bir qatorda, teng kenglikda joylashtiring.
+flex-wrap bilan ekran torayganida kartalar pastga tushsin.
+/* Misol: Flex konteyner */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+}
+Maqsad: Flexbox bilan real sahifa tartibini qurish.
