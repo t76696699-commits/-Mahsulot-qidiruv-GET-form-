@@ -1,92 +1,100 @@
-CSS Grid asoslari
-CSS Grid — bu ikki o'lchamli (2D) tartib tizimi bo'lib, veb-sahifalarni qator va ustunlar yordamida qulay tarzda joylashtirish imkonini beradi. Flexbox bitta o'qda ishlasa, Grid bir vaqtning o'zida gorizontal va vertikal o'q bo'ylab element joylashishini boshqaradi.
+CSS O'zgaruvchilari (Custom Properties)
+CSS o'zgaruvchilari — qayta ishlatiladigan qiymatlarni saqlash va boshqarish imkonini beruvchi zamonaviy xususiyat. Ranglar, o'lchamlar, shriftlarni bir martta belgilab, butun loyiha bo'ylab ishlatish mumkin.
 
-display: grid
-
-.container {
-  display: grid;
+1. :root Ko'lami
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --danger-color: #e74c3c;
+  --font-size-base: 16px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --border-radius: 8px;
 }
-grid-template-columns va grid-template-rows
-grid-template-columns ustunlar sonini va har bir ustun kengligini belgilaydi. fr (fraction) birligi mavjud bo'sh joyni mutanosib taqsimlaydi.
-
-
-.container {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  grid-template-rows: 80px auto 60px;
-}
-repeat() funksiyasi
-
-.container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+2. var() Funksiyasi
+.button {
+  background-color: var(--primary-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius);
 }
 
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+.alert-danger {
+  background-color: var(--danger-color);
+  padding: var(--spacing-md);
 }
-gap, row-gap, column-gap
-
-.container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+3. Zaxira Qiymatlar (Fallback Values)
+.text-element {
+  color: var(--text-color, #333333);
+  font-size: var(--font-size-large, var(--font-size-base, 16px));
 }
-grid-column va grid-row (span)
-
-.wide-card {
-  grid-column: span 2;
-}
-
-.header {
-  grid-column: 1 / -1;
-}
-grid-template-areas — Nomli maydonlar
-
-.page {
-  display: grid;
-  grid-template-columns: 220px 1fr 180px;
-  grid-template-rows: 64px 1fr 48px;
-  grid-template-areas:
-    "header  header  header"
-    "sidebar content aside"
-    "footer  footer  footer";
-  min-height: 100vh;
-  gap: 1rem;
+4. Media Query bilan O'zgartirish
+:root {
+  --font-size-h1: 3rem;
+  --columns: 3;
+  --padding-section: 80px;
 }
 
-.page-header  { grid-area: header; }
-.page-sidebar { grid-area: sidebar; }
-.page-content { grid-area: content; }
-.page-aside   { grid-area: aside; }
-.page-footer  { grid-area: footer; }
-Amaliy misol: 3 ustunli Blog Layouti
-
-.blog-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr 200px;
-  grid-template-rows: 64px 1fr 48px;
-  grid-template-areas:
-    "header  header  header"
-    "sidebar content aside"
-    "footer  footer  footer";
-  min-height: 100vh;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f5f5f5;
+@media (max-width: 768px) {
+  :root {
+    --font-size-h1: 2rem;
+    --columns: 1;
+    --padding-section: 40px;
+  }
 }
-Mini-Loyiha: CSS Grid bilan Portfolio Sahifasi
+
+h1 { font-size: var(--font-size-h1); }
+.grid { grid-template-columns: repeat(var(--columns), 1fr); }
+5. Light/Dark Mavzu
+:root {
+  --bg-primary: #ffffff;
+  --text-primary: #1a202c;
+  --accent-color: #3b82f6;
+}
+
+[data-theme='dark'] {
+  --bg-primary: #0f172a;
+  --text-primary: #f1f5f9;
+  --accent-color: #60a5fa;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+6. Dizayn Tizimi (Design System)
+:root {
+  --color-primary: #3b82f6;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+
+  --font-sans: 'Inter', sans-serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --radius-md: 8px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  transition: background-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+Mini-Loyiha: CSS O'zgaruvchilari bilan Tema Almashtirish
 Quyidagi vazifalarni bajaring:
 
-CSS Grid bilan 3 ustunli portfolio to'ri yarating.
-Birinchi loyihani ikki ustun kengligida (featured) qiling (grid-column: span 2).
-Sarlavha va footer ni to'liq kenglikda (grid-column: 1 / -1) joylashtiring.
-/* Misol: Grid tuzilmasi */
-.portfolio {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-.portfolio__featured { grid-column: span 2; }
-Maqsad: Grid bilan murakkab sahifa tartibini qurish.
+Asosiy ranglar va o'lchamlarni :root da CSS o'zgaruvchilari sifatida aniqlang.
+Tugma bosish bilan qorong'u/yorug' tema almashuvchi mexanizm yarating.
+Hech qanday rang to'g'ridan-to'g'ri yozilmasin — faqat o'zgaruvchilardan foydalaning.
+:root { --color-bg: #fff; --color-text: #1a1a2e; --color-primary: #4f46e5; }
+[data-theme="dark"] { --color-bg: #1a1a2e; --color-text: #f0f0f0; }
+Maqsad: CSS o'zgaruvchilari bilan miqyoslanadigan dizayn tizimi yaratish.
