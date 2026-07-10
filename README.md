@@ -1,140 +1,157 @@
-SASS va SCSS nima?
-SASS (Syntactically Awesome Style Sheets) — CSS ni kuchaytiruvchi preprocessor. U o'zgaruvchilar, nesting, mixins, funksiyalar kabi imkoniyatlarni beradi. SCSS — SASSning yangi sintaksisi bo'lib, odatdagi CSS ga o'xshaydi (figurali qavslar va nuqta-vergul ishlatadi).
+Mixin — qayta ishlatiluvchi CSS kod bloki. Funksiyaga o'xshaydi: parametr qabul qilishi va turli joylarda chaqirilishi mumkin. @mixin bilan e'lon qilinadi, @include bilan chaqiriladi.
 
-SASS vs SCSS sintaksis farqi
-// SCSS (tavsiya etiladi) — CSS ga o'xshash
-.nav {
-  display: flex;
-  gap: 16px;
-
-  &__item {
-    color: #333;
-  }
-}
-
-// SASS — tab asosida, qavslar yo'q
-.nav
-  display: flex
-  gap: 16px
-
-  &__item
-    color: #333
-O'rnatish
-// npm orqali
-npm install -g sass
-
-// Compile qilish
-sass input.scss output.css
-
-// Watch rejimi (avtomatik compile)
-sass --watch input.scss:output.css
-VS Code uchun Live Sass Compiler extension ham mavjud — saqlashda avtomatik compile qiladi.
-
-$O'zgaruvchilar (Variables)
-SCSS da o'zgaruvchilar $ belgisi bilan boshlanadi. Bir joyda o'zgartirsangiz, hamma joyda o'zgaradi:
-
-// _variables.scss
-$color-primary:   #6366f1;
-$color-secondary: #a855f7;
-$color-success:   #22c55e;
-$color-danger:    #ef4444;
-$color-text:      #1e293b;
-$color-muted:     #64748b;
-$color-bg:        #ffffff;
-$color-surface:   #f8fafc;
-
-$font-size-sm:  0.875rem;  // 14px
-$font-size-md:  1rem;      // 16px
-$font-size-lg:  1.125rem;  // 18px
-$font-heading:  2.25rem;   // 36px
-
-$space-xs:  4px;
-$space-sm:  8px;
-$space-md:  16px;
-$space-lg:  24px;
-$space-xl:  48px;
-$space-2xl: 80px;
-
-$radius-sm: 6px;
-$radius-md: 12px;
-$radius-lg: 20px;
-$radius-full: 9999px;
-
-$shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-$shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-$shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
-Nesting (Ichma-ich yozish)
-SCSS da selectorlarni ichma-ich yozish mumkin — HTML tuzilmasini aks ettiradi:
-
-.nav {
+Oddiy mixin
+// E'lon qilish
+@mixin flex-center {
   display: flex;
   align-items: center;
-  gap: $space-lg;
-  padding: $space-md $space-xl;
-  background: $color-bg;
-  box-shadow: $shadow-sm;
+  justify-content: center;
+}
 
-  // & — parent selectori (.nav)
-  &__brand {
-    font-size: $font-size-lg;
-    font-weight: 800;
-    color: $color-primary;
-    text-decoration: none;
-  }
+// Ishlatish
+.hero {
+  @include flex-center;
+  min-height: 100vh;
+}
 
-  &__links {
-    display: flex;
-    gap: $space-md;
-    list-style: none;
-  }
+.card__icon {
+  @include flex-center;
+  width: 48px;
+  height: 48px;
+}
+Parametrli mixin
+// Default qiymat bilan
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $gap: 0) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  gap: $gap;
+}
 
-  &__link {
-    color: $color-muted;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
+// Ishlatish
+.header {
+  @include flex(row, space-between, center, 16px);
+}
 
-    &:hover  { color: $color-primary; }
-    &.active { color: $color-primary; font-weight: 700; }
-  }
+.sidebar {
+  @include flex(column, flex-start, stretch, 8px);
+}
 
-  &__cta {
-    margin-left: auto;
-    padding: $space-sm $space-md;
-    background: $color-primary;
-    color: white;
-    border-radius: $radius-full;
-    text-decoration: none;
-    font-weight: 600;
+.card-grid {
+  @include flex(row, flex-start, stretch, 24px);
+  flex-wrap: wrap;
+}
+Responsive breakpoints mixin
+// _breakpoints.scss
+$breakpoints: (
+  'sm':  576px,
+  'md':  768px,
+  'lg':  1024px,
+  'xl':  1280px,
+  '2xl': 1536px,
+);
 
-    &:hover { opacity: 0.9; }
+@mixin respond-to($name) {
+  $value: map-get($breakpoints, $name);
+  @if $value {
+    @media (max-width: $value) {
+      @content;
+    }
+  } @else {
+    @warn "Breakpoint '#{$name}' topilmadi.";
   }
 }
-Compile natijasi
-/* output.css */
-.nav { display: flex; align-items: center; gap: 24px; padding: 16px 48px; }
-.nav__brand { font-size: 1.125rem; font-weight: 800; color: #6366f1; }
-.nav__link { color: #64748b; text-decoration: none; }
-.nav__link:hover { color: #6366f1; }
-.nav__link.active { color: #6366f1; font-weight: 700; }
-Amaliy maslahatlar
-O'zgaruvchilarni alohida _variables.scss faylida saqlang
-Nesting chuqurligini 3-4 darajadan oshirmang — kodni o'qish qiyinlashadi
-& belgisi parent selectorni ifodalaydi — &:hover, &.active, &--modifier
-SCSS o'zgaruvchilari CSS custom properties dan farqli — compile vaqtida ishlanadi
-Mini-Loyiha: Navigatsiya Komponenti
-Maqsad: SCSS o'zgaruvchilari va nesting yordamida to'liq responsive navigatsiya yarating.
+
+// Ishlatish
+.nav {
+  display: flex;
+  gap: 24px;
+
+  @include respond-to('md') {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.hero__title {
+  font-size: 4rem;
+
+  @include respond-to('lg') { font-size: 3rem; }
+  @include respond-to('sm') { font-size: 2rem; }
+}
+Button variant mixin
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+@mixin button-variant($bg, $color: white, $hover-bg: darken($bg, 10%)) {
+  @include button-base;
+  background: $bg;
+  color: $color;
+
+  &:hover {
+    background: $hover-bg;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($bg, 0.4);
+  }
+
+  &:active { transform: translateY(0); }
+}
+
+// Ishlatish
+.btn-primary   { @include button-variant(#6366f1); }
+.btn-success   { @include button-variant(#22c55e); }
+.btn-danger    { @include button-variant(#ef4444); }
+.btn-outline {
+  @include button-base;
+  background: transparent;
+  border: 2px solid #6366f1;
+  color: #6366f1;
+  &:hover { background: #6366f1; color: white; }
+}
+Matn truncate mixin
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// Ishlatish
+.card__title { @include truncate(1); }
+.card__desc  { @include truncate(3); }
+Mini-Loyiha: UI Komponent Kutubxonasi
+Maqsad: Mixinlar asosida to'liq UI komponentlar yarating.
 
 // Starter
-$color-primary: #6366f1;
-$color-text: #1e293b;
-$space-md: 16px;
-
-.nav {
-  // Bu yerni to'ldiring
+@mixin flex($direction: row, $justify: flex-start, $align: center, $gap: 0) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  gap: $gap;
 }
+// Qolgan mixinlarni qo'shing...
 3 ta vazifa:
 
-O'zgaruvchilar faylida kamida 10 ta token aniqlang
-.nav ni nesting bilan yozing: brand, links, link (hover + active holatlari)
-Mobile uchun hamburger menu toggler CSS i yozing (media query ichida)
+respond-to mixin yordamida 3 xil screen size uchun adaptive card grid yarating
+button-variant mixin bilan primary, secondary, danger, ghost — 4 xil tugma yarating
+flex mixin yordamida header komponenti yarating (logo chapda, nav o'rtada, CTA o'ngda)
