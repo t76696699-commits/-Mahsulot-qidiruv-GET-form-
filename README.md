@@ -2,93 +2,117 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Navigatsiya Paneli</title>
+  <title>Kartochkalar</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; }
-
-    nav {
-      background: #0f172a;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      padding: 40px;
     }
-    .nav-container {
+    h1 { text-align: center; color: #1e293b; margin-bottom: 32px; font-size: 28px; }
+
+    .cards-grid {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      width: 280px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    .card-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+    }
+    .card-body { padding: 20px; }
+    .card-badge {
+      display: inline-block;
+      background: #ede9fe;
+      color: #7c3aed;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .card-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px; }
+    .card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 40px;
-      height: 64px;
     }
-    .logo {
-      color: #38bdf8;
-      font-size: 22px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .nav-links {
-      list-style: none;
-      display: flex;
-      gap: 8px;
-    }
-    .nav-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      padding: 8px 16px;
+    .card-price { font-size: 20px; font-weight: 800; color: #7c3aed; }
+    .card-btn {
+      background: #7c3aed;
+      color: white;
+      border: none;
+      padding: 8px 18px;
       border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background 0.2s, color 0.2s;
-    }
-    .nav-links a:hover {
-      background: #1e293b;
-      color: #38bdf8;
-    }
-    .nav-links a.active {
-      background: #38bdf8;
-      color: #0f172a;
-    }
-    .nav-btn {
-      background: #38bdf8;
-      color: #0f172a;
-      padding: 9px 20px;
-      border-radius: 8px;
-      font-weight: 700;
-      text-decoration: none;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
       transition: opacity 0.2s;
     }
-    .nav-btn:hover { opacity: 0.85; }
-
-    /* Sahifa kontenti */
-    section { padding: 80px 40px; min-height: 50vh; }
-    section:nth-child(even) { background: #f8fafc; }
-    h1 { font-size: 36px; color: #0f172a; margin-bottom: 12px; }
-    p { color: #64748b; font-size: 16px; }
+    .card-btn:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="nav-container">
-      <a href="#" class="logo">TechGennis</a>
-      <ul class="nav-links">
-        <li><a href="#bosh" class="active">Bosh sahifa</a></li>
-        <li><a href="#kurslar">Kurslar</a></li>
-        <li><a href="#haqida">Haqimizda</a></li>
-        <li><a href="#aloqa">Aloqa</a></li>
-      </ul>
-      <a href="#" class="nav-btn">Boshlash</a>
+  <h1>🛍️ Mahsulotlar</h1>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-img">💻</div>
+      <div class="card-body">
+        <span class="card-badge">Yangi</span>
+        <div class="card-title">HTML/CSS Kursi</div>
+        <div class="card-desc">Veb-dizayn asoslarini o'rganib, chiroyli sahifalar yarating.</div>
+        <div class="card-footer">
+          <span class="card-price">Bepul</span>
+          <button class="card-btn">Boshlash</button>
+        </div>
+      </div>
     </div>
-  </nav>
-
-  <section id="bosh">
-    <h1>Xush kelibsiz! 👋</h1>
-    <p>Bu navigatsiya paneli mini-loyihasidir. Menyu bo'ylab harakatlaning.</p>
-  </section>
-  <section id="kurslar">
-    <h1>Kurslar 📚</h1>
-    <p>HTML, CSS, JavaScript va Python kurslarimiz mavjud.</p>
-  </section>
+    <div class="card">
+      <div class="card-img">🐍</div>
+      <div class="card-body">
+        <span class="card-badge">Mashhur</span>
+        <div class="card-title">Python Kursi</div>
+        <div class="card-desc">Dasturlash asoslarini Python tili orqali o'rganing.</div>
+        <div class="card-footer">
+          <span class="card-price">Bepul</span>
+          <button class="card-btn">Boshlash</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-img">⚡</div>
+      <div class="card-body">
+        <span class="card-badge">Ilg'or</span>
+        <div class="card-title">JavaScript Kursi</div>
+        <div class="card-desc">Saytingizga interaktivlik qo'shing.</div>
+        <div class="card-footer">
+          <span class="card-price">Bepul</span>
+          <button class="card-btn">Boshlash</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
