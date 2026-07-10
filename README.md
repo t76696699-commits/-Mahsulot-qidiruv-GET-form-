@@ -1,123 +1,92 @@
-Flexbox nima?
-Flexbox (Flexible Box Layout) — CSS-ning zamonaviy joylashuv modeli bo'lib, elementlarni qator yoki ustun bo'ylab moslashuvchan tarzda joylashtirish imkonini beradi. U responsive dizayn yaratishni sezilarli darajada osonlashtiradi va murakkab layoutlarni bir necha qator kod bilan amalga oshirish imkonini beradi.
+CSS Grid asoslari
+CSS Grid — bu ikki o'lchamli (2D) tartib tizimi bo'lib, veb-sahifalarni qator va ustunlar yordamida qulay tarzda joylashtirish imkonini beradi. Flexbox bitta o'qda ishlasa, Grid bir vaqtning o'zida gorizontal va vertikal o'q bo'ylab element joylashishini boshqaradi.
 
-1. display: flex — Flexbox-ni yoqish
-Konteyner elementiga display: flex xususiyatini qo'shish uning barcha to'g'ridan-to'g'ri bolalarini flex elementlarga aylantiradi. Bu Flexbox-dan foydalanishning birinchi va eng muhim qadamidir.
+display: grid
 
 .container {
-  display: flex;
-  background-color: #f5f5f5;
-  padding: 16px;
+  display: grid;
 }
-2. flex-direction — Yo'nalishni belgilash
-flex-direction xususiyati elementlarning asosiy o'q bo'ylab qanday yo'nalishda joylashishini belgilaydi. To'rtta qiymat mavjud:
+grid-template-columns va grid-template-rows
+grid-template-columns ustunlar sonini va har bir ustun kengligini belgilaydi. fr (fraction) birligi mavjud bo'sh joyni mutanosib taqsimlaydi.
 
-row — chapdan o'ngga (standart qiymat)
-row-reverse — o'ngdan chapga
-column — yuqoridan pastga
-column-reverse — pastdan yuqoriga
-.vertical-container {
-  display: flex;
-  flex-direction: column;
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: 80px auto 60px;
 }
+repeat() funksiyasi
 
-.horizontal-container {
-  display: flex;
-  flex-direction: row;
+.container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
 }
-3. justify-content — Asosiy o'q bo'ylab tekislash
-justify-content elementlarni asosiy o'q bo'ylab qanday taqsimlash kerakligini boshqaradi:
-
-flex-start — boshiga tekislash (standart)
-flex-end — oxiriga tekislash
-center — markazga tekislash
-space-between — birinchi va oxirgi element chekkada, qolganlar orasida teng masofa
-space-around — har bir element atrofida teng masofa
-space-evenly — barcha bo'shliqlar teng
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  height: 60px;
-}
-4. align-items — Ko'ndalang o'q bo'ylab tekislash
-align-items elementlarni ko'ndalang o'q bo'ylab tekislaydi.
-
-stretch — konteyner balandligiga cho'zish (standart)
-flex-start — tepaga tekislash
-flex-end — pastga tekislash
-center — vertikal markazga tekislash
-baseline — matn bazasi bo'yicha tekislash
-5. flex-wrap — Ko'p qatorga o'rash
-Standart holda barcha flex elementlar bitta qatorda joylashadi. flex-wrap: wrap ular uchun yangi qatorga o'tish imkonini beradi.
 
 .gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
+gap, row-gap, column-gap
 
-.gallery-item {
-  flex: 1 1 200px;
-}
-6. flex-grow, flex-shrink, flex-basis
-flex-grow — bo'sh joyni qancha o'sib to'ldirish
-flex-shrink — joy yetishmasa qancha kichrayish
-flex-basis — elementning boshlang'ich asosiy o'lchami
-7. gap — Elementlar orasidagi masofa
 .container {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
-Amaliy misol: Karta Layouti
-.cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 24px;
-  padding: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+grid-column va grid-row (span)
+
+.wide-card {
+  grid-column: span 2;
 }
 
-.card {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 280px;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+.header {
+  grid-column: 1 / -1;
+}
+grid-template-areas — Nomli maydonlar
+
+.page {
+  display: grid;
+  grid-template-columns: 220px 1fr 180px;
+  grid-template-rows: 64px 1fr 48px;
+  grid-template-areas:
+    "header  header  header"
+    "sidebar content aside"
+    "footer  footer  footer";
+  min-height: 100vh;
+  gap: 1rem;
 }
 
-.card__text {
-  flex-grow: 1;
-  color: #555;
-  margin-bottom: 16px;
-}
+.page-header  { grid-area: header; }
+.page-sidebar { grid-area: sidebar; }
+.page-content { grid-area: content; }
+.page-aside   { grid-area: aside; }
+.page-footer  { grid-area: footer; }
+Amaliy misol: 3 ustunli Blog Layouti
 
-.card__btn {
-  align-self: flex-start;
-  padding: 10px 20px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+.blog-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  grid-template-rows: 64px 1fr 48px;
+  grid-template-areas:
+    "header  header  header"
+    "sidebar content aside"
+    "footer  footer  footer";
+  min-height: 100vh;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f5f5f5;
 }
-Mini-Loyiha: Flexbox bilan Navigatsiya va Karta Qatori
+Mini-Loyiha: CSS Grid bilan Portfolio Sahifasi
 Quyidagi vazifalarni bajaring:
 
-Flexbox yordamida gorizontal navigatsiya paneli yarating — logotip chapda, menu o'ngda.
-3 ta karta (rasm, sarlavha, matn, tugma) ni bir qatorda, teng kenglikda joylashtiring.
-flex-wrap bilan ekran torayganida kartalar pastga tushsin.
-/* Misol: Flex konteyner */
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
+CSS Grid bilan 3 ustunli portfolio to'ri yarating.
+Birinchi loyihani ikki ustun kengligida (featured) qiling (grid-column: span 2).
+Sarlavha va footer ni to'liq kenglikda (grid-column: 1 / -1) joylashtiring.
+/* Misol: Grid tuzilmasi */
+.portfolio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
-Maqsad: Flexbox bilan real sahifa tartibini qurish.
+.portfolio__featured { grid-column: span 2; }
+Maqsad: Grid bilan murakkab sahifa tartibini qurish.
