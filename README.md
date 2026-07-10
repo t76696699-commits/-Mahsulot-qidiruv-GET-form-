@@ -2,160 +2,136 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>CSS Animatsiya — Asoslar</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #0f172a;
+      color: white;
+      padding: 40px;
+    }
+    h2 { color: #38bdf8; margin: 32px 0 16px; font-size: 18px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+
+    /* ── 1. Fade In (paydo bo'lish) ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-box {
+      background: #1e293b;
+      padding: 20px 28px;
+      border-radius: 12px;
+      border-left: 4px solid #38bdf8;
+      animation: fadeIn 1s ease-out forwards;
     }
 
-    .login-card {
-      background: white;
-      border-radius: 20px;
-      padding: 40px 36px;
-      width: 380px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    /* ── 2. Bounce (sakrash) ── */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-30px); }
+    }
+    .bounce-ball {
+      width: 60px; height: 60px;
+      background: radial-gradient(circle at 35% 35%, #f472b6, #7c3aed);
+      border-radius: 50%;
+      animation: bounce 1s ease-in-out infinite;
     }
 
-    .login-logo {
-      text-align: center;
-      font-size: 40px;
-      margin-bottom: 8px;
+    /* ── 3. Rotate (aylanish) ── */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
     }
-    .login-title {
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-    .login-sub {
-      text-align: center;
-      font-size: 13px;
-      color: #94a3b8;
-      margin-bottom: 28px;
+    .spinner {
+      width: 60px; height: 60px;
+      border: 5px solid #1e293b;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
-    .form-group { margin-bottom: 18px; }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 6px;
+    /* ── 4. Pulse (yurak urishi) ── */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.15); opacity: 0.8; }
     }
-    input[type="email"],
-    input[type="password"],
-    input[type="text"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      color: #1e293b;
-    }
-    input:focus {
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-    }
-    input::placeholder { color: #cbd5e1; }
-
-    .remember-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .remember-row label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: #64748b;
-      font-weight: 400;
-      cursor: pointer;
-    }
-    input[type="checkbox"] { width: auto; accent-color: #7c3aed; }
-    .forgot { font-size: 13px; color: #7c3aed; text-decoration: none; }
-    .forgot:hover { text-decoration: underline; }
-
-    .login-btn {
-      width: 100%;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    .pulse-btn {
+      background: #e94560;
       color: white;
       border: none;
-      padding: 13px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 24px;
+      font-size: 16px;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      animation: pulse 1.5s ease-in-out infinite;
     }
-    .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .login-btn:active { transform: translateY(0); }
 
-    .divider {
-      text-align: center;
-      margin: 20px 0;
-      color: #94a3b8;
-      font-size: 13px;
-      position: relative;
+    /* ── 5. Typing effect ── */
+    @keyframes typing {
+      from { width: 0; }
+      to   { width: 100%; }
     }
-    .divider::before, .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 42%;
-      height: 1px;
-      background: #e2e8f0;
+    @keyframes blink {
+      50% { border-color: transparent; }
     }
-    .divider::before { left: 0; }
-    .divider::after { right: 0; }
+    .typing-text {
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      color: #22c55e;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid #22c55e;
+      width: fit-content;
+      animation: typing 3s steps(30) forwards, blink 0.7s step-end infinite;
+    }
 
-    .register-link {
-      text-align: center;
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 16px;
+    /* ── 6. Gradient background harakat ── */
+    @keyframes gradientMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    .register-link a { color: #7c3aed; font-weight: 600; text-decoration: none; }
+    .gradient-box {
+      padding: 24px 32px;
+      border-radius: 14px;
+      background: linear-gradient(270deg, #6366f1, #8b5cf6, #ec4899, #f43f5e);
+      background-size: 400% 400%;
+      animation: gradientMove 4s ease infinite;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .demo-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="login-logo">🔐</div>
-    <div class="login-title">Xush kelibsiz!</div>
-    <div class="login-sub">Akkauntingizga kiring</div>
+  <h1>🎬 CSS Animatsiya Namunalari</h1>
 
-    <form action="#" method="post">
-      <div class="form-group">
-        <label for="email">Email manzil</label>
-        <input type="email" id="email" name="email" placeholder="email@example.com" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Parol</label>
-        <input type="password" id="password" name="password" placeholder="Parolingizni kiriting" required>
-      </div>
-      <div class="remember-row">
-        <label>
-          <input type="checkbox" name="remember"> Eslab qolish
-        </label>
-        <a href="#" class="forgot">Parolni unutdingizmi?</a>
-      </div>
-      <button type="submit" class="login-btn">Kirish</button>
-    </form>
+  <h2>1. Fade In (paydo bo'lish)</h2>
+  <div class="fade-box">Bu element sekin paydo bo'ldi! ✨</div>
 
-    <div class="divider">yoki</div>
-    <div class="register-link">
-      Akkauntingiz yo'qmi? <a href="#">Ro'yxatdan o'ting</a>
-    </div>
+  <h2>2. Bounce (sakrash)</h2>
+  <div class="demo-row">
+    <div class="bounce-ball"></div>
   </div>
+
+  <h2>3. Spinner (yuklash)</h2>
+  <div class="demo-row">
+    <div class="spinner"></div>
+    <span style="color:#94a3b8">Yuklanmoqda...</span>
+  </div>
+
+  <h2>4. Pulse (nafas olish)</h2>
+  <div class="demo-row">
+    <button class="pulse-btn">❤️ Yoqtirish</button>
+  </div>
+
+  <h2>5. Typing Effect (yozuv)</h2>
+  <div class="typing-text">Salom, men dasturchi bo'lmoqchiman!</div>
+
+  <h2>6. Gradient Harakat</h2>
+  <div class="gradient-box">🌈 Rangli gradient harakatda</div>
 </body>
 </html>
