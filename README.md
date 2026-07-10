@@ -1,102 +1,75 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML va CSS Jadvallar</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Ro'yxat Dizayni</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 30px; background: #1a1a2e; color: #eee; }
+    h2 { color: #e94560; margin-bottom: 20px; }
+
+    /* Oddiy tartibsiz ro'yxat */
+    .simple-list {
+      list-style: none;
+      padding: 0;
+    }
+    .simple-list li {
+      padding: 12px 16px;
+      margin: 6px 0;
+      background: #16213e;
+      border-left: 4px solid #e94560;
+      border-radius: 4px;
+      transition: transform 0.2s;
+    }
+    .simple-list li:hover { transform: translateX(8px); }
+
+    /* Sonli ro'yxat */
+    .numbered-list {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    .numbered-list li {
+      counter-increment: step;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: #16213e;
+      border-radius: 8px;
+    }
+    .numbered-list li::before {
+      content: counter(step);
+      background: #e94560;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+  </style>
 </head>
 <body>
+  <h2>🛠️ Texnologiyalar</h2>
+  <ul class="simple-list">
+    <li>HTML — Sahifa tuzilmasi</li>
+    <li>CSS — Sahifa ko'rinishi</li>
+    <li>JavaScript — Interaktivlik</li>
+    <li>Python — Backend</li>
+  </ul>
 
-    <div class="container">
-        
-        <table class="custom-table simple-table">
-            <caption>Talabalar roʻyxati (Oddiy jadval)</caption>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Ism va Familiya</th>
-                    <th>Yoʻnalish</th>
-                    <th>Stipendiya</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>#1001</td>
-                    <td>Asrorbek Olimov</td>
-                    <td>Dasturlash</td>
-                    <td>750,000 so'm</td>
-                </tr>
-                <tr>
-                    <td>#1002</td>
-                    <td>Dilnoza Toirova</td>
-                    <td>Grafik Dizayn</td>
-                    <td>800,000 so'm</td>
-                </tr>
-                <tr>
-                    <td>#1003</td>
-                    <td>Sardor Rahimov</td>
-                    <td>Ma'lumotlar tahlili</td>
-                    <td>750,000 so'm</td>
-                </tr>
-                <tr>
-                    <td>#1004</td>
-                    <td>Madina Axmedova</td>
-                    <td>Kiberxavfsizlik</td>
-                    <td>900,000 so'm</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <br><br><hr><br><br>
-
-        <table class="custom-table complex-table">
-            <caption>Haftalik Dars Jadvali va Xonalar (Murakkab jadval)</caption>
-            <thead>
-                <tr>
-                    <th>Kun</th>
-                    <th>Vaqt</th>
-                    <th>Fan</th>
-                    <th>O'qituvchi</th>
-                    <th>Xona</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td rowspan="2" class="day-cell">Dushanba</td>
-                    <td>09:00 - 10:30</td>
-                    <td>HTML/CSS Asoslari</td>
-                    <td>Anvar Shokirov</td>
-                    <td>305-xona</td>
-                </tr>
-                <tr>
-                    <td>11:00 - 12:30</td>
-                    <td>JavaScript Intensive</td>
-                    <td>Malika Rixsiyeva</td>
-                    <td>Mavjud emas (Online)</td>
-                </tr>
-                <tr>
-                    <td rowspan="2" class="day-cell">Seshanba</td>
-                    <td>09:00 - 10:30</td>
-                    <td>Ma'lumotlar Bazasi</td>
-                    <td>Bobur Mansurov</td>
-                    <td>102-lab</td>
-                </tr>
-                <tr>
-                    <td>11:00 - 12:30</td>
-                    <td colspan="3" class="break-cell">Mustaqil ish va Amaliyot vaqti</td>
-                </tr>
-                <tr>
-                    <td class="day-cell">Chorshanba</td>
-                    <td>14:00 - 15:30</td>
-                    <td>UX/UI Dizayn</td>
-                    <td>Elena Pak</td>
-                    <td>201-xona</td>
-                </tr>
-            </tbody>
-        </table>
-
-    </div>
-
+  <h2>📚 O'rganish bosqichlari</h2>
+  <ol class="numbered-list">
+    <li>HTML asoslarini o'rgan</li>
+    <li>CSS bilan bezashni o'rgan</li>
+    <li>JavaScript qo'sh</li>
+    <li>Framework o'rgan</li>
+    <li>Loyiha qur</li>
+  </ol>
 </body>
 </html>
