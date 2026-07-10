@@ -2,133 +2,173 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Shaxsiy Kartochka</title>
+  <title>CSS Position — Ilg'or</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      min-height: 100vh;
+    body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; }
+
+    /* ── 1. Dropdown Navigatsiya ── */
+    .nav { background: #1e293b; padding: 0 40px; display: flex; gap: 4px; }
+    .nav-item { position: relative; }
+    .nav-item > a {
+      display: block;
+      color: #cbd5e1; text-decoration: none;
+      padding: 16px 18px; font-size: 14px;
+      transition: background 0.2s;
+    }
+    .nav-item:hover > a { background: #334155; color: white; }
+
+    /* Dropdown panel */
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      min-width: 200px;
+      display: none;
+      z-index: 999;
+    }
+    .nav-item:hover .dropdown { display: block; }
+    .dropdown a {
+      display: block;
+      padding: 12px 20px;
+      color: #374151;
+      text-decoration: none;
+      font-size: 13px;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background 0.15s;
+    }
+    .dropdown a:hover { background: #ede9fe; color: #7c3aed; }
+    .dropdown a:last-child { border-bottom: none; }
+
+    /* ── 2. Overlay kartochka ── */
+    .section { padding: 40px; }
+    h2 { font-size: 20px; color: #1e293b; margin-bottom: 16px; }
+
+    .overlay-card {
+      position: relative;
+      width: 280px;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .overlay-bg {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
+      font-size: 64px;
     }
-
-    .profile-card {
-      background: white;
-      border-radius: 20px;
-      width: 340px;
-      padding-bottom: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      position: relative; /* absolute bola uchun havola */
-      overflow: visible;
-      text-align: center;
-    }
-
-    /* Fon rasmi */
-    .card-cover {
-      height: 120px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border-radius: 20px 20px 0 0;
-      position: relative;
-    }
-
-    /* Avatar — absolute bilan markazga chiqarilgan */
-    .avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #f093fb, #f5576c);
-      border: 4px solid white;
+    .overlay-layer {
       position: absolute;
-      bottom: -45px;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      color: white;
+    }
+    .overlay-card:hover .overlay-layer { opacity: 1; }
+    .overlay-layer h3 { font-size: 20px; }
+    .overlay-layer p { font-size: 13px; color: #ddd; }
+
+    /* ── 3. Tooltip ── */
+    .tooltip-demo { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; }
+    .tooltip-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip-btn {
+      background: #7c3aed; color: white;
+      border: none; padding: 10px 20px;
+      border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 600;
+    }
+    .tooltip-text {
+      position: absolute;
+      bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    /* Online badge — absolute bilan joylashtirilgan */
-    .online-badge {
-      width: 18px;
-      height: 18px;
-      background: #22c55e;
-      border: 3px solid white;
-      border-radius: 50%;
-      position: absolute;
-      bottom: -45px + 8px;
-      right: calc(50% - 52px);
-      z-index: 1;
-    }
-
-    .card-body { padding: 56px 24px 0; }
-    .name { font-size: 22px; font-weight: 700; color: #1e293b; }
-    .role { font-size: 13px; color: #7c3aed; font-weight: 600; margin: 4px 0 12px; }
-    .bio { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
-
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      padding: 16px 0;
-      border-top: 1px solid #f1f5f9;
-      border-bottom: 1px solid #f1f5f9;
-      margin-bottom: 20px;
-    }
-    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .stat-n { font-size: 18px; font-weight: 800; color: #1e293b; }
-    .stat-l { font-size: 11px; color: #94a3b8; }
-
-    .follow-btn {
-      background: #7c3aed;
+      background: #1e293b;
       color: white;
-      border: none;
-      padding: 10px 32px;
-      border-radius: 24px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .follow-btn:hover { opacity: 0.85; }
-
-    /* Fixed badge — ekranning pastida */
-    .fixed-badge {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #7c3aed;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 24px;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
-      box-shadow: 0 4px 15px rgba(124,58,237,0.4);
+      white-space: nowrap;
+      display: none;
+      z-index: 10;
     }
+    .tooltip-text::after {
+      content: '';
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1e293b;
+    }
+    .tooltip-wrap:hover .tooltip-text { display: block; }
   </style>
 </head>
 <body>
-  <div class="profile-card">
-    <div class="card-cover">
-      <div class="avatar">👨‍💻</div>
-      <div class="online-badge"></div>
-    </div>
-    <div class="card-body">
-      <div class="name">Alisher Toshmatov</div>
-      <div class="role">Frontend Developer</div>
-      <div class="bio">HTML, CSS va JavaScript o'rganayapman. Kelajakda Full-Stack developer bo'lishni xohlayman.</div>
-      <div class="stats">
-        <div class="stat"><span class="stat-n">128</span><span class="stat-l">Loyihalar</span></div>
-        <div class="stat"><span class="stat-n">2.4k</span><span class="stat-l">Izlovchilar</span></div>
-        <div class="stat"><span class="stat-n">342</span><span class="stat-l">Izlash</span></div>
+  <!-- Dropdown Navigatsiya -->
+  <nav class="nav">
+    <div class="nav-item">
+      <a href="#">Kurslar ▾</a>
+      <div class="dropdown">
+        <a href="#">HTML / CSS</a>
+        <a href="#">JavaScript</a>
+        <a href="#">Python</a>
+        <a href="#">React</a>
       </div>
-      <button class="follow-btn">Izlash</button>
+    </div>
+    <div class="nav-item">
+      <a href="#">Loyihalar ▾</a>
+      <div class="dropdown">
+        <a href="#">Mini-loyihalar</a>
+        <a href="#">Katta loyihalar</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="#">Haqida</a></div>
+  </nav>
+
+  <!-- Overlay -->
+  <div class="section">
+    <h2>🖼️ Overlay Effekti (hover qiling)</h2>
+    <div class="overlay-card">
+      <div class="overlay-bg">🐍</div>
+      <div class="overlay-layer">
+        <h3>Python Kursi</h3>
+        <p>Boshlang'ich daraja</p>
+      </div>
     </div>
   </div>
 
-  <div class="fixed-badge">📌 position: fixed</div>
+  <!-- Tooltip -->
+  <div class="section">
+    <h2>💬 Tooltip (hover qiling)</h2>
+    <div class="tooltip-demo">
+      <div class="tooltip-wrap">
+        <button class="tooltip-btn">Saqlash</button>
+        <span class="tooltip-text">Ma'lumotni saqlash</span>
+      </div>
+      <div class="tooltip-wrap">
+        <button class="tooltip-btn">O'chirish</button>
+        <span class="tooltip-text">Elementni o'chirish</span>
+      </div>
+      <div class="tooltip-wrap">
+        <button class="tooltip-btn">Tahrirlash</button>
+        <span class="tooltip-text">Elementni tahrirlash</span>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
