@@ -2,93 +2,72 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Ro'yxatdan O'tish</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 40px 20px;
     }
-
-    .login-card {
+    .card {
       background: white;
       border-radius: 20px;
-      padding: 40px 36px;
-      width: 380px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      padding: 36px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
+    h2 { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
 
-    .login-logo {
-      text-align: center;
-      font-size: 40px;
-      margin-bottom: 8px;
-    }
-    .login-title {
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-    .login-sub {
-      text-align: center;
-      font-size: 13px;
-      color: #94a3b8;
-      margin-bottom: 28px;
-    }
+    .row { display: flex; gap: 14px; }
+    .row .form-group { flex: 1; }
 
-    .form-group { margin-bottom: 18px; }
+    .form-group { margin-bottom: 16px; }
     label {
       display: block;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
       color: #374151;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    input[type="email"],
-    input[type="password"],
-    input[type="text"] {
+    input, select, textarea {
       width: 100%;
-      padding: 12px 14px;
+      padding: 11px 13px;
       border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      color: #1e293b;
-    }
-    input:focus {
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-    }
-    input::placeholder { color: #cbd5e1; }
-
-    .remember-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .remember-row label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      border-radius: 9px;
       font-size: 13px;
-      color: #64748b;
-      font-weight: 400;
-      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1e293b;
+      font-family: inherit;
     }
-    input[type="checkbox"] { width: auto; accent-color: #7c3aed; }
-    .forgot { font-size: 13px; color: #7c3aed; text-decoration: none; }
-    .forgot:hover { text-decoration: underline; }
+    input:focus, select:focus, textarea:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+    }
+    input::placeholder, textarea::placeholder { color: #cbd5e1; }
+    textarea { resize: vertical; min-height: 80px; }
 
-    .login-btn {
+    .radio-group { display: flex; gap: 16px; margin-top: 4px; }
+    .radio-opt { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #374151; }
+    input[type="radio"] { width: auto; accent-color: #0ea5e9; }
+
+    .agree-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; }
+    .agree-row input { width: auto; margin-top: 2px; accent-color: #0ea5e9; }
+    .agree-row label { font-size: 12px; color: #64748b; text-transform: none; font-weight: 400; letter-spacing: 0; }
+    .agree-row a { color: #0ea5e9; }
+
+    .submit-btn {
       width: 100%;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
       color: white;
       border: none;
       padding: 13px;
@@ -96,66 +75,83 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      transition: opacity 0.2s;
     }
-    .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .login-btn:active { transform: translateY(0); }
+    .submit-btn:hover { opacity: 0.88; }
 
-    .divider {
-      text-align: center;
-      margin: 20px 0;
-      color: #94a3b8;
-      font-size: 13px;
-      position: relative;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 42%;
-      height: 1px;
-      background: #e2e8f0;
-    }
-    .divider::before { left: 0; }
-    .divider::after { right: 0; }
-
-    .register-link {
-      text-align: center;
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 16px;
-    }
-    .register-link a { color: #7c3aed; font-weight: 600; text-decoration: none; }
+    .login-link { text-align: center; font-size: 13px; color: #64748b; margin-top: 14px; }
+    .login-link a { color: #0ea5e9; font-weight: 600; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="login-logo">🔐</div>
-    <div class="login-title">Xush kelibsiz!</div>
-    <div class="login-sub">Akkauntingizga kiring</div>
+  <div class="card">
+    <h2>Ro'yxatdan O'ting 🚀</h2>
+    <p class="sub">Akkaunt yaratib, o'rganishni boshlang</p>
 
     <form action="#" method="post">
-      <div class="form-group">
-        <label for="email">Email manzil</label>
-        <input type="email" id="email" name="email" placeholder="email@example.com" required>
+      <div class="row">
+        <div class="form-group">
+          <label for="fname">Ism</label>
+          <input type="text" id="fname" name="fname" placeholder="Alijon" required minlength="2">
+        </div>
+        <div class="form-group">
+          <label for="lname">Familiya</label>
+          <input type="text" id="lname" name="lname" placeholder="Toshmatov" required minlength="2">
+        </div>
       </div>
+
       <div class="form-group">
-        <label for="password">Parol</label>
-        <input type="password" id="password" name="password" placeholder="Parolingizni kiriting" required>
+        <label for="reg-email">Email</label>
+        <input type="email" id="reg-email" name="email" placeholder="email@example.com" required>
       </div>
-      <div class="remember-row">
-        <label>
-          <input type="checkbox" name="remember"> Eslab qolish
+
+      <div class="form-group">
+        <label for="phone">Telefon raqam</label>
+        <input type="tel" id="phone" name="phone" placeholder="+998 90 123 45 67">
+      </div>
+
+      <div class="form-group">
+        <label for="reg-pass">Parol</label>
+        <input type="password" id="reg-pass" name="password" placeholder="Kamida 8 ta belgi" required minlength="8">
+      </div>
+
+      <div class="form-group">
+        <label for="city">Shahar</label>
+        <select id="city" name="city">
+          <option value="">Tanlang...</option>
+          <option value="tashkent">Toshkent</option>
+          <option value="samarkand">Samarqand</option>
+          <option value="bukhara">Buxoro</option>
+          <option value="namangan">Namangan</option>
+          <option value="andijan">Andijon</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Jinsi</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="gender" value="male"> Erkak</label>
+          <label class="radio-opt"><input type="radio" name="gender" value="female"> Ayol</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="about">O'zingiz haqingizda</label>
+        <textarea id="about" name="about" placeholder="Qisqacha ma'lumot..."></textarea>
+      </div>
+
+      <div class="agree-row">
+        <input type="checkbox" id="agree" name="agree" required>
+        <label for="agree">
+          <a href="#">Foydalanish shartlari</a> va
+          <a href="#">Maxfiylik siyosati</a> ga roziman
         </label>
-        <a href="#" class="forgot">Parolni unutdingizmi?</a>
       </div>
-      <button type="submit" class="login-btn">Kirish</button>
+
+      <button type="submit" class="submit-btn">Akkaunt Yaratish</button>
     </form>
 
-    <div class="divider">yoki</div>
-    <div class="register-link">
-      Akkauntingiz yo'qmi? <a href="#">Ro'yxatdan o'ting</a>
-    </div>
+    <div class="login-link">Akkauntingiz bormi? <a href="#">Kirish</a></div>
   </div>
 </body>
 </html>
