@@ -2,147 +2,133 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Bugatti — Hashamatli Avtomobillar</title>
+  <title>Shaxsiy Kartochka</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Georgia', serif; background: #0a0a0a; color: white; }
-
-    /* Navigatsiya */
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 60px;
-      background: rgba(0,0,0,0.9);
-      position: fixed;
-      width: 100%;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid #b8860b;
-    }
-    .brand { font-size: 24px; font-weight: 900; letter-spacing: 6px; color: #b8860b; }
-    .nav-menu { display: flex; gap: 32px; list-style: none; }
-    .nav-menu a { color: #ccc; text-decoration: none; letter-spacing: 2px; font-size: 13px; }
-    .nav-menu a:hover { color: #b8860b; }
-
-    /* Hero */
-    .hero {
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
       min-height: 100vh;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a00 50%, #0a0a0a 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
+      padding: 40px;
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 20px;
+      width: 340px;
+      padding-bottom: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative; /* absolute bola uchun havola */
+      overflow: visible;
       text-align: center;
-      padding: 80px 40px 40px;
+    }
+
+    /* Fon rasmi */
+    .card-cover {
+      height: 120px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 20px 20px 0 0;
       position: relative;
-      overflow: hidden;
     }
-    .hero::before {
-      content: '🏎️';
-      font-size: 200px;
+
+    /* Avatar — absolute bilan markazga chiqarilgan */
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      border: 4px solid white;
       position: absolute;
-      right: 5%;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0.15;
-    }
-    .hero-label {
-      letter-spacing: 8px;
-      color: #b8860b;
-      font-size: 13px;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .hero h1 {
-      font-size: 72px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-shadow: 0 0 40px rgba(184,134,11,0.4);
-      margin-bottom: 16px;
-    }
-    .hero p { color: #999; font-size: 18px; max-width: 500px; line-height: 1.6; margin-bottom: 32px; }
-    .hero-btn {
-      border: 2px solid #b8860b;
-      color: #b8860b;
-      padding: 14px 40px;
-      text-decoration: none;
-      letter-spacing: 4px;
-      font-size: 13px;
-      text-transform: uppercase;
-      transition: background 0.3s, color 0.3s;
-    }
-    .hero-btn:hover { background: #b8860b; color: black; }
-
-    /* Specs */
-    .specs {
+      bottom: -45px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 0;
-      background: #111;
-      border-top: 1px solid #b8860b;
-      border-bottom: 1px solid #b8860b;
+      font-size: 36px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
-    .spec-item {
-      flex: 1;
-      padding: 32px;
-      text-align: center;
-      border-right: 1px solid #222;
-    }
-    .spec-item:last-child { border-right: none; }
-    .spec-num { font-size: 40px; font-weight: 900; color: #b8860b; }
-    .spec-unit { font-size: 16px; color: #b8860b; }
-    .spec-label { font-size: 12px; color: #666; letter-spacing: 2px; margin-top: 4px; text-transform: uppercase; }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 30px;
-      background: #050505;
-      color: #444;
-      letter-spacing: 2px;
+    /* Online badge — absolute bilan joylashtirilgan */
+    .online-badge {
+      width: 18px;
+      height: 18px;
+      background: #22c55e;
+      border: 3px solid white;
+      border-radius: 50%;
+      position: absolute;
+      bottom: -45px + 8px;
+      right: calc(50% - 52px);
+      z-index: 1;
+    }
+
+    .card-body { padding: 56px 24px 0; }
+    .name { font-size: 22px; font-weight: 700; color: #1e293b; }
+    .role { font-size: 13px; color: #7c3aed; font-weight: 600; margin: 4px 0 12px; }
+    .bio { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 0;
+      border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 20px;
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-n { font-size: 18px; font-weight: 800; color: #1e293b; }
+    .stat-l { font-size: 11px; color: #94a3b8; }
+
+    .follow-btn {
+      background: #7c3aed;
+      color: white;
+      border: none;
+      padding: 10px 32px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .follow-btn:hover { opacity: 0.85; }
+
+    /* Fixed badge — ekranning pastida */
+    .fixed-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #7c3aed;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 24px;
       font-size: 12px;
-      border-top: 1px solid #b8860b;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(124,58,237,0.4);
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="brand">BUGATTI</div>
-    <ul class="nav-menu">
-      <li><a href="#">Modellar</a></li>
-      <li><a href="#">Texnik</a></li>
-      <li><a href="#">Tarix</a></li>
-      <li><a href="#">Aloqa</a></li>
-    </ul>
-  </nav>
-
-  <div class="hero">
-    <div class="hero-label">Hashamat va tezlik</div>
-    <h1>CHIRON</h1>
-    <p>Dunyoning eng tez va eng hashamatli avtomobili. Muhandislikning cho'qqisi.</p>
-    <a href="#" class="hero-btn">Kashf Etish</a>
-  </div>
-
-  <div class="specs">
-    <div class="spec-item">
-      <div class="spec-num">1500<span class="spec-unit">л.к.</span></div>
-      <div class="spec-label">Quvvat</div>
+  <div class="profile-card">
+    <div class="card-cover">
+      <div class="avatar">👨‍💻</div>
+      <div class="online-badge"></div>
     </div>
-    <div class="spec-item">
-      <div class="spec-num">2.4<span class="spec-unit">s</span></div>
-      <div class="spec-label">0-100 km/h</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-num">420<span class="spec-unit">км/с</span></div>
-      <div class="spec-label">Max tezlik</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-num">3M<span class="spec-unit">€</span></div>
-      <div class="spec-label">Narxi</div>
+    <div class="card-body">
+      <div class="name">Alisher Toshmatov</div>
+      <div class="role">Frontend Developer</div>
+      <div class="bio">HTML, CSS va JavaScript o'rganayapman. Kelajakda Full-Stack developer bo'lishni xohlayman.</div>
+      <div class="stats">
+        <div class="stat"><span class="stat-n">128</span><span class="stat-l">Loyihalar</span></div>
+        <div class="stat"><span class="stat-n">2.4k</span><span class="stat-l">Izlovchilar</span></div>
+        <div class="stat"><span class="stat-n">342</span><span class="stat-l">Izlash</span></div>
+      </div>
+      <button class="follow-btn">Izlash</button>
     </div>
   </div>
 
-  <footer>© 2024 BUGATTI AUTOMOBILES S.A.S.</footer>
+  <div class="fixed-badge">📌 position: fixed</div>
 </body>
 </html>
