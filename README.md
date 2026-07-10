@@ -1,4 +1,12 @@
 CSS O'zgaruvchilari (Custom Properties)
+Урок 4 из 5
+· 2 раздела
+✓ Пройден
+📝
+Текст
+Текст
+#1
+CSS O'zgaruvchilari (Custom Properties)
 CSS o'zgaruvchilari — qayta ishlatiladigan qiymatlarni saqlash va boshqarish imkonini beruvchi zamonaviy xususiyat. Ranglar, o'lchamlar, shriftlarni bir martta belgilab, butun loyiha bo'ylab ishlatish mumkin.
 
 1. :root Ko'lami
