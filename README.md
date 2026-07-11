@@ -1,157 +1,150 @@
-Mixin — qayta ishlatiluvchi CSS kod bloki. Funksiyaga o'xshaydi: parametr qabul qilishi va turli joylarda chaqirilishi mumkin. @mixin bilan e'lon qilinadi, @include bilan chaqiriladi.
+@extend nima?
+@extend bir selectorning barcha CSS xususiyatlarini boshqa selectorda takrorlash imkonini beradi. Compile qilinsa, selectorlar vergul bilan birlashtiriladi.
 
-Oddiy mixin
-// E'lon qilish
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-// Ishlatish
-.hero {
-  @include flex-center;
-  min-height: 100vh;
-}
-
-.card__icon {
-  @include flex-center;
-  width: 48px;
-  height: 48px;
-}
-Parametrli mixin
-// Default qiymat bilan
-@mixin flex($direction: row, $justify: flex-start, $align: stretch, $gap: 0) {
-  display: flex;
-  flex-direction: $direction;
-  justify-content: $justify;
-  align-items: $align;
-  gap: $gap;
-}
-
-// Ishlatish
-.header {
-  @include flex(row, space-between, center, 16px);
-}
-
-.sidebar {
-  @include flex(column, flex-start, stretch, 8px);
-}
-
-.card-grid {
-  @include flex(row, flex-start, stretch, 24px);
-  flex-wrap: wrap;
-}
-Responsive breakpoints mixin
-// _breakpoints.scss
-$breakpoints: (
-  'sm':  576px,
-  'md':  768px,
-  'lg':  1024px,
-  'xl':  1280px,
-  '2xl': 1536px,
-);
-
-@mixin respond-to($name) {
-  $value: map-get($breakpoints, $name);
-  @if $value {
-    @media (max-width: $value) {
-      @content;
-    }
-  } @else {
-    @warn "Breakpoint '#{$name}' topilmadi.";
-  }
-}
-
-// Ishlatish
-.nav {
-  display: flex;
-  gap: 24px;
-
-  @include respond-to('md') {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-.hero__title {
-  font-size: 4rem;
-
-  @include respond-to('lg') { font-size: 3rem; }
-  @include respond-to('sm') { font-size: 2rem; }
-}
-Button variant mixin
-@mixin button-base {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: none;
+Oddiy @extend
+.message {
+  padding: 12px 16px;
   border-radius: 8px;
-  font-weight: 600;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
+  font-weight: 500;
 }
 
-@mixin button-variant($bg, $color: white, $hover-bg: darken($bg, 10%)) {
-  @include button-base;
+.message-success {
+  @extend .message;
+  background: #dcfce7;
+  color: #16a34a;
+  border-left: 4px solid #22c55e;
+}
+
+.message-error {
+  @extend .message;
+  background: #fee2e2;
+  color: #dc2626;
+  border-left: 4px solid #ef4444;
+}
+
+// Compile natijasi:
+// .message, .message-success, .message-error { padding: 12px 16px; ... }
+// .message-success { background: #dcfce7; ... }
+%Placeholder selector
+Placeholder (%) — faqat extend uchun yaratilgan "mavhum" selector. U CSS output da chiqmaydi, faqat extend qilganda kiritiladi:
+
+%card-base {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+%flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+%hover-lift {
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+}
+
+// Ishlatish
+.feature-card {
+  @extend %card-base;
+  @extend %hover-lift;
+  text-align: center;
+}
+
+.pricing-card {
+  @extend %card-base;
+  @extend %hover-lift;
+  border: 2px solid transparent;
+
+  &--featured {
+    border-color: #6366f1;
+  }
+}
+
+.stat-card {
+  @extend %card-base;
+  display: flex;
+  gap: 16px;
+}
+@extend vs @mixin — qachon qaysinisini ishlatish kerak?
+// MIXIN — parametr kerak bo'lganda, har xil qiymatlar bilan
+@mixin button($bg: #6366f1, $color: white) {
+  padding: 10px 20px;
   background: $bg;
   color: $color;
+  border-radius: 8px;
+}
 
-  &:hover {
-    background: $hover-bg;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba($bg, 0.4);
+.btn-primary { @include button(#6366f1); }
+.btn-danger  { @include button(#ef4444); }
+
+// EXTEND/PLACEHOLDER — bir xil CSS ni takrorlash shart bo'lganda
+%card { padding: 24px; border-radius: 12px; background: white; }
+
+.user-card    { @extend %card; }
+.product-card { @extend %card; }
+.stats-card   { @extend %card; }
+// Natija: .user-card, .product-card, .stats-card { padding: 24px; ... }
+// MIXIN ishlatilganda: har birida alohida takrorlanadi
+Haqiqiy loyiha: Alert komponenti
+%alert-base {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.alert {
+  &--info {
+    @extend %alert-base;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #3b82f6;
   }
 
-  &:active { transform: translateY(0); }
-}
+  &--success {
+    @extend %alert-base;
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #22c55e;
+  }
 
-// Ishlatish
-.btn-primary   { @include button-variant(#6366f1); }
-.btn-success   { @include button-variant(#22c55e); }
-.btn-danger    { @include button-variant(#ef4444); }
-.btn-outline {
-  @include button-base;
-  background: transparent;
-  border: 2px solid #6366f1;
-  color: #6366f1;
-  &:hover { background: #6366f1; color: white; }
-}
-Matn truncate mixin
-@mixin truncate($lines: 1) {
-  @if $lines == 1 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  } @else {
-    display: -webkit-box;
-    -webkit-line-clamp: $lines;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  &--warning {
+    @extend %alert-base;
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #f59e0b;
+  }
+
+  &--error {
+    @extend %alert-base;
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #ef4444;
   }
 }
-
-// Ishlatish
-.card__title { @include truncate(1); }
-.card__desc  { @include truncate(3); }
-Mini-Loyiha: UI Komponent Kutubxonasi
-Maqsad: Mixinlar asosida to'liq UI komponentlar yarating.
+Mini-Loyiha: Komponent Sistemi
+Maqsad: Placeholder va @extend yordamida umumiy komponent tizimi yarating.
 
 // Starter
-@mixin flex($direction: row, $justify: flex-start, $align: center, $gap: 0) {
-  display: flex;
-  flex-direction: $direction;
-  justify-content: $justify;
-  align-items: $align;
-  gap: $gap;
+%base-interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
 }
-// Qolgan mixinlarni qo'shing...
+// Placeholder va @extend qo'shing...
 3 ta vazifa:
 
-respond-to mixin yordamida 3 xil screen size uchun adaptive card grid yarating
-button-variant mixin bilan primary, secondary, danger, ghost — 4 xil tugma yarating
-flex mixin yordamida header komponenti yarating (logo chapda, nav o'rtada, CTA o'ngda)
+%card-base, %flex-center, %hover-lift placeholderlarini yarating
+Kamida 3 xil karta komponenti yarating (@extend bilan)
+4 xil alert variantini (.alert--success, --warning, --error, --info) yarating
