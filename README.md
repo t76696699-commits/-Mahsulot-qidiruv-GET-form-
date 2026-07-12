@@ -1,75 +1,255 @@
-Bootstrap 5 nima?
-Bootstrap — dunyodagi eng mashhur CSS framework. U tayyor UI komponentlar, responsive grid system va yuzlab utility klasslarni taqdim etadi. Bootstrap 5 jQuery-dan voz kechib, sof JavaScript bilan ishlaydi.
+Sass utility klasslari va arxitekturasini yaratgandan so'ng, ularni real amaliyotda tekshirish uchun mukammal bir maket (layout) kerak bo'ladi. Siz so'ragan barcha komponentlarni (Navbar collapse, 6 ta mahsulot kartasi, badge va tugmalar, pagination hamda alert) o'z ichiga olgan toza va semantik HTML strukturasini taqdim etaman.
 
-CDN orqali ulash
+Ushbu strukturada yuqorida biz yaratgan .col-1 dan .col-12 gacha bo'lgan grid tizimi hamda .bg-primary, .p-3, .mt-3 kabi utility klasslardan foydalanilgan.
+
+Semantik HTML Maketi (index.html)
+HTML
 <!DOCTYPE html>
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bootstrap Loyiha</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Sass Utilities Amaliy Maket</title>
+  <link rel="stylesheet" href="css/main.css">
 </head>
-<body>
-  <!-- Kontent shu yerda -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-Grid System — 12 ustunli tizim
-Bootstrap grid 12 ustundan iborat. Har bir kontent bloki 1 dan 12 gacha ustun egallashi mumkin. container → row → col ierarxiyasi qat'iy.
+<body class="theme-adaptive bg-light">
 
-Asosiy Grid misoli
-<div class="container">
-  <div class="row">
-    <div class="col-md-4 bg-primary text-white p-3">4 ustun</div>
-    <div class="col-md-4 bg-secondary text-white p-3">4 ustun</div>
-    <div class="col-md-4 bg-success text-white p-3">4 ustun</div>
+  <!-- 1. ALERT XABAR -->
+  <div class="alert bg-warning text-dark p-3 text-center">
+    <strong>Diqqat!</strong> Bugun barcha mahsulotlar uchun 20% gacha chegirmalar mavjud!
   </div>
-</div>
-Responsive Breakpointlar
-<!-- xs: 576px gacha — col (prefikssiz) -->
-<!-- sm: 576px+ — col-sm-* -->
-<!-- md: 768px+ — col-md-* -->
-<!-- lg: 992px+ — col-lg-* -->
-<!-- xl: 1200px+ — col-xl-* -->
-<!-- xxl: 1400px+ — col-xxl-* -->
 
-<div class="container">
-  <div class="row g-3">
-    <!-- Mobilda to'liq, planshetda yarim, desktopda 1/3 -->
-    <div class="col-12 col-sm-6 col-lg-4">Karta 1</div>
-    <div class="col-12 col-sm-6 col-lg-4">Karta 2</div>
-    <div class="col-12 col-sm-6 col-lg-4">Karta 3</div>
-  </div>
-</div>
-Offset va Order
-<div class="row">
-  <div class="col-md-4 offset-md-4">Markazda (offset bilan)</div>
-</div>
+  <!-- 2. NAVBAR COLLAPSE BILAN -->
+  <nav class="navbar bg-dark text-light p-3">
+    <div class="navbar-container">
+      <a href="#" class="navbar-brand text-primary">UzShop</a>
+      
+      <!-- Mobil qurilmalar uchun burger tugma -->
+      <button class="navbar-toggle" onclick="toggleNavbar()">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
 
-<div class="row">
-  <div class="col order-3">Uchinchi ko'rinadi</div>
-  <div class="col order-1">Birinchi ko'rinadi</div>
-  <div class="col order-2">Ikkinchi ko'rinadi</div>
-</div>
-Container turlari
-<div class="container">Har bir breakpointda max-width bor</div>
-<div class="container-fluid">Har doim 100% kenglik</div>
-<div class="container-md">md dan katta bo'lsa max-width, kichikda fluid</div>
-Mini-Loyiha: Responsive Portfolio Grid
-Maqsad: Bootstrap Grid yordamida 6 ta portfolio ishini responsive sathka joylashtiring.
-
-<div class="container py-5">
-  <h2 class="text-center mb-4">Portfolio</h2>
-  <div class="row g-4">
-    <div class="col-12 col-sm-6 col-lg-4">
-      <div class="card">
-        <div class="card-body">Loyiha 1</div>
+      <!-- Collapse bo'ladigan menyu qismi -->
+      <div class="navbar-collapse" id="navbarMenu">
+        <ul class="navbar-nav">
+          <li><a href="#" class="text-light">Bosh sahifa</a></li>
+          <li><a href="#" class="text-light">Mahsulotlar</a></li>
+          <li><a href="#" class="text-light">Biz haqimizda</a></li>
+          <li><a href="#" class="text-light">Aloqa</a></li>
+        </ul>
       </div>
     </div>
-    <!-- Qolgan 5 ta karta -->
-  </div>
-</div>
-1. 6 ta karta yarating, har birida rasm o'rniga rangli placeholder div qo'ying
-2. Mobilda 1 ta, sm da 2 ta, lg da 3 ta ustunda ko'rsating
-3. g-4 gap va har bir kartaga shadow-sm qo'shing
+  </nav>
+
+  <!-- ASOSIY MAZMUN -->
+  <main class="container p-4">
+    <h1 class="text-dark mb-4">Yangi Mahsulotlar</h1>
+
+    <!-- 3. MAHSULOTLAR PANELI (GRID-CONTAINER) -->
+    <div class="row">
+      
+      <!-- KARTA 1 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-danger text-light">Yangi</div>
+          <img src="https://picsum.photos/300/200?random=1" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Smartfon X10</h3>
+          <p class="text-secondary">Ajoyib kamera va tezkor protsessorga ega flagman.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+      <!-- KARTA 2 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-warning text-dark">Chegirma</div>
+          <img src="https://picsum.photos/300/200?random=2" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Simsiz Quloqchin</h3>
+          <p class="text-secondary">Yuqori sifatli ovoz va uzoqqa yetuvchi quvvat.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+      <!-- KARTA 3 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-info text-light">Top</div>
+          <img src="https://picsum.photos/300/200?random=3" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Aqlli Soat S3</h3>
+          <p class="text-secondary">Sog'ligingiz va bildirishnomalaringiz doim nazoratda.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+      <!-- KARTA 4 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-danger text-light">Yangi</div>
+          <img src="https://picsum.photos/300/200?random=4" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Noutbuk Ultra</h3>
+          <p class="text-secondary">Dasturlash va ofis ishlari uchun eng yengil noutbuk.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+      <!-- KARTA 5 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-secondary text-light">Tavsiya</div>
+          <img src="https://picsum.photos/300/200?random=5" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Mexanik Klaviatura</h3>
+          <p class="text-secondary">RGB yoritgichli va tezkor chertiluvchi tugmalar.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+      <!-- KARTA 6 -->
+      <div class="col-4 p-2">
+        <div class="card bg-white p-3 mb-3">
+          <div class="badge bg-warning text-dark">-15% Chegirma</div>
+          <img src="https://picsum.photos/300/200?random=6" alt="Mahsulot" class="img-fluid mt-2">
+          <h3 class="text-dark mt-2">Geymer Sichqonchasi</h3>
+          <p class="text-secondary">Ergonomik dizayn va yuqori aniqlikdagi sensor.</p>
+          <button class="btn-primary mt-3">Sotib olish</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. PAGINATION MAVJUD -->
+    <div class="pagination-container mt-4 mb-5">
+      <ul class="pagination">
+        <li><a href="#" class="page-link disabled">&laquo;</a></li>
+        <li><a href="#" class="page-link active">1</a></li>
+        <li><a href="#" class="page-link">2</a></li>
+        <li><a href="#" class="page-link">3</a></li>
+        <li><a href="#" class="page-link">&raquo;</a></li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Navbar Collapse mexanizmi uchun oddiygina JavaScript eshittiruvchisi -->
+  <script>
+    function toggleNavbar() {
+      const menu = document.getElementById('navbarMenu');
+      menu.classList.toggle('show');
+    }
+  </script>
+</body>
+</html>
+Ushbu komponentlarni qo'llab-quvvatlovchi qo'shimcha Sass Stillari
+Utility klasslardan tashqari, ushbu komponentlarning struktura skeletini (Layout) scss/components/ yoki scss/layouts/ ichida quyidagicha yozib olishingiz tavsiya etiladi:
+
+SCSS
+// Grid strukturasini boshqarish uchun (scss/layouts/_grid.scss)
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+// Navbar collapse logikasi uchun asos (scss/components/_navbar.scss)
+.navbar {
+  .navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .navbar-nav {
+    display: flex;
+    list-style: none;
+    gap: 1.5rem;
+  }
+  
+  .navbar-toggle {
+    display: none; // Kompyuterda yashirin turadi
+    flex-direction: column;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    
+    .icon-bar {
+      width: 25px;
+      height: 3px;
+      background-color: #fff;
+    }
+  }
+
+  // Mobil ekranlarda collapse ishlashi
+  @media (max-width: 768px) {
+    .navbar-toggle { display: flex; }
+    .navbar-collapse {
+      display: none;
+      width: 100%;
+      &.show { display: block; }
+    }
+    .navbar-nav {
+      flex-direction: column;
+      gap: 1rem;
+      padding-top: 1rem;
+    }
+  }
+}
+
+// Karta va Badge dizayni (scss/components/_card.scss)
+.card {
+  position: relative;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  height: 100%;
+  
+  .badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  .img-fluid {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+}
+
+// Pagination (scss/components/_pagination.scss)
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  
+  .pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    gap: 5px;
+    
+    .page-link {
+      display: block;
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      color: #3498db;
+      text-decoration: none;
+      border-radius: 4px;
+      
+      &.active {
+        background-color: #3498db;
+        color: white;
+        border-color: #3498db;
+      }
+      &.disabled {
+        color: #ccc;
+        pointer-events: none;
+      }
+    }
+  }
+}
