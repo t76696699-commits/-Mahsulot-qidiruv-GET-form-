@@ -1,132 +1,152 @@
-Partials nima?
-SCSS partial — pastki chiziq (_) bilan boshlangan fayl (_variables.scss). Bu fayl mustaqil compile bo'lmaydi — faqat boshqa fayl tomonidan import qilinadi. Katta loyihalarni kichik bo'laklarga bo'lish uchun ishlatiladi.
+Sass arxitekturasida 7-1 Pattern (yoki undan ilhomlangan soddalashtirilgan tuzilmalar) bilan ishlashda zamonaviy @use va @forward qoidalaridan foydalanish kodni modulli va toza saqlashning eng yaxshi usuli hisoblanadi.
 
-@use vs @import
-// ESKI USUL: @import (deprecated)
-@import 'variables';
-@import 'mixins';
-// Muammo: global namespace, har safar yuklanadi
+Eski @import tizimidan farqli o‘laroq, @use har bir faylni alohida modul (namespace) sifatida yuklaydi va global to‘qnashuvlarning oldini oladi.
 
-// YANGI USUL: @use (tavsiya etiladi)
-@use 'abstracts/variables';
-@use 'abstracts/mixins';
+Quyida siz so‘ragan barcha talablar asosida loyiha to‘liq va bosqichma-bosqich yig‘ilgan.
 
-// Namespace bilan ishlatish:
-.btn { color: variables.$color-primary; }
-Haqiqiy loyiha tuzilmasi (7-1 pattern)
+1. Loyiha tuzilmasi (Folder Structure)
+Dastlab, loyihangiz papkalar va fayllar ko‘rinishi quyidagicha shakllanadi. Har bir ichki papkada o‘zining _index.scss fayli bo‘ladi, bu esa main.scss ga fayllarni import qilishni ancha osonlashtiradi:
+
+Plaintext
 scss/
+│
 ├── abstracts/
-│   ├── _variables.scss    // Barcha o'zgaruvchilar
-│   ├── _mixins.scss       // Barcha mixinlar
-│   ├── _functions.scss    // SCSS funksiyalar
-│   └── _index.scss        // @forward bilan birlashtirish
-├── base/
-│   ├── _reset.scss        // CSS reset / normalize
-│   ├── _typography.scss   // Font, heading, paragraph
+│   ├── _variables.scss
+│   ├── _mixins.scss
+│   ├── _functions.scss
 │   └── _index.scss
+│
+├── base/
+│   ├── _reset.scss
+│   ├── _typography.scss
+│   └── _index.scss
+│
 ├── components/
 │   ├── _buttons.scss
-│   ├── _cards.scss
-│   ├── _alerts.scss
+│   ├── _card.scss
 │   └── _index.scss
+│
 ├── layouts/
 │   ├── _header.scss
 │   ├── _footer.scss
-│   ├── _grid.scss
 │   └── _index.scss
+│
 ├── pages/
 │   ├── _home.scss
-│   └── _about.scss
-└── main.scss              // Asosiy fayl
-_index.scss va @forward
-// abstracts/_index.scss
+│   └── _index.scss
+│
+└── main.scss
+2. Abstracts papkasidagi asosiy fayllar
+Bu fayllarda loyihaning global sozlamalari, miksinlar va funksiyalar joylashadi. E'tibor bering, ular alohida yozilganda hech qanday tashqi bog'liqlikka ega emas.
+
+scss/abstracts/_variables.scss
+SCSS
+// Ranglar
+$color-primary: #3498db;
+$color-secondary: #2ecc71;
+$color-dark: #2c3e50;
+$color-light: #ecf0f1;
+
+// Shriftlar
+$font-main: 'Helvetica Neue', sans-serif;
+scss/abstracts/_mixins.scss
+SCSS
+// Flexbox markazlashtirish miksini
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Responsive media so'rovlari uchun miksin
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == "tablet" {
+    @media (max-width: 768px) { @content; }
+  } @else if $breakpoint == "mobile" {
+    @media (max-width: 480px) { @content; }
+  }
+}
+scss/abstracts/_functions.scss
+SCSS
+// Pixellarni Rem ga o'giruvchi funksiya (asos: 16px)
+@function to-rem($pixels) {
+  @return ($pixels / 16) * 1rem;
+}
+3. @forward yordamida _index.scss fayllarini yaratish
+Har bir papkaning ichidagi _index.scss fayli o‘sha papkadagi barcha ichki fayllarni birlashtirib, tashqariga ko‘prik (@forward) vazifasini bajaradi.
+
+scss/abstracts/_index.scss
+Muhim qoida: abstracts ichidagi fayllar bir-biriga bog'liq bo'lishi mumkin (masalan, miksin ichida o'zgaruvchi ishlatilishi mumkin). Shuning uchun ularni avval @use bilan bir-biriga ulab, keyin @forward qilish eng xavfsiz yo'ldir.
+
+SCSS
 @forward 'variables';
 @forward 'mixins';
 @forward 'functions';
+Xuddi shu tartibda qolgan papkalarning ham _index.scss fayllarini yaratib chiqamiz:
 
-// Endi main.scss da bitta @use yetarli:
-// main.scss
-@use 'abstracts';  // _index.scss ni topadi
+scss/base/_index.scss
+SCSS
+@forward 'reset';
+@forward 'typography';
+scss/components/_index.scss
+SCSS
+@forward 'buttons';
+@forward 'card';
+scss/layouts/_index.scss
+SCSS
+@forward 'header';
+@forward 'footer';
+scss/pages/_index.scss
+SCSS
+@forward 'home';
+4. Namespace (Nomlar makoni) orqali abstracts'dan foydalanish
+Endi boshqa har qanday komponent yoki sahifa faylida (masalan, _buttons.scss yoki _home.scss ichida) o'zgaruvchilar va miksinlarni Namespace orqali ishlatamiz.
 
-.btn { color: abstracts.$color-primary; }
-_variables.scss misol
-// abstracts/_variables.scss
+Ushbu fayl abstracts papkasidagi _index.scss ga murojaat qiladi va uning ichidagi hamma narsani bitta abstracts nomli paket qilib oladi.
 
-// Colors
-$color-primary:   #6366f1 !default;
-$color-secondary: #a855f7 !default;
-$color-success:   #22c55e !default;
-$color-warning:   #f59e0b !default;
-$color-danger:    #ef4444 !default;
-$color-text:      #1e293b !default;
-$color-muted:     #64748b !default;
-$color-bg:        #ffffff !default;
+Misol: scss/components/_buttons.scss
+SCSS
+@use '../abstracts'; // Avtomatik ravishda abstracts/_index.scss ni yuklaydi
 
-// Typography
-$font-family:   'Inter', -apple-system, sans-serif !default;
-$font-size-xs:  0.75rem !default;
-$font-size-sm:  0.875rem !default;
-$font-size-md:  1rem !default;
-$font-size-lg:  1.125rem !default;
-$font-size-xl:  1.25rem !default;
-$font-size-2xl: 1.5rem !default;
-$font-size-3xl: 2rem !default;
+.btn-primary {
+  // O'zgaruvchini namespace bilan ishlatish
+  background-color: abstracts.$color-primary; 
+  color: abstracts.$color-light;
+  
+  // Funksiyani namespace bilan ishlatish
+  padding: abstracts.to-rem(10) abstracts.to-rem(20); 
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  
+  // Miksinni namespace bilan ishlatish
+  @include abstracts.flex-center; 
+  
+  &:hover {
+    background-color: darken(abstracts.$color-primary, 10%);
+  }
 
-// Spacing
-$space-1: 4px !default;
-$space-2: 8px !default;
-$space-3: 12px !default;
-$space-4: 16px !default;
-$space-6: 24px !default;
-$space-8: 32px !default;
-$space-12: 48px !default;
-$space-16: 64px !default;
+  @include abstracts.respond-to('mobile') {
+    width: 100%;
+  }
+}
+5. Asosiy yig'uvchi fayl: scss/main.scss
+Loyiha arxitekturasining yakuniy nuqtasi bu main.scss faylidir. Biz barcha papkalarning _index.scss fayllarini @use orqali shu yerda yig'amiz.
 
-// Border radius
-$radius-sm:   4px !default;
-$radius-md:   8px !default;
-$radius-lg:   12px !default;
-$radius-xl:   20px !default;
-$radius-full: 9999px !default;
-main.scss yig'ish
-// main.scss
+Ushbu fayl CSS ga kompiyatsiya bo'lganda tartib buzilmasligi uchun komponentlarni to'g'ri ketma-ketlikda yuklash lozim:
 
-// 1. Abstracts (o'zgaruvchilar, mixinlar)
+SCSS
+// 1. Sozlamalar va instrumentlar (Visual CSS render qilmaydi, faqat yuklanadi)
 @use 'abstracts';
 
-// 2. Base (reset, tipografiya)
+// 2. Asosiy va global stillar (Reset, Typography)
 @use 'base';
 
-// 3. Komponentlar
-@use 'components';
-
-// 4. Layout
+// 3. Maket stillari (Header, Footer, Grid grid-tizimi)
 @use 'layouts';
 
-// 5. Sahifaga xos
-@use 'pages/home';
-namespace bilan qisqartirish
-// namespace o'zgartirish
-@use 'abstracts/variables' as v;
-@use 'abstracts/mixins' as m;
+// 4. Kichik modullar va komponentlar (Buttons, Cards, Inputs)
+@use 'components';
 
-.card {
-  background: v.$color-bg;
-  border-radius: v.$radius-lg;
-  @include m.hover-lift;
-}
-Mini-Loyiha: Modular SCSS Loyiha
-Maqsad: Haqiqiy SCSS loyiha tuzilmasini yarating va barcha oldingi bilimlarni birlashtiring.
-
-// abstracts/_index.scss
-@forward 'variables';
-@forward 'mixins';
-
-// main.scss
-@use 'abstracts';
-// Qolganlarni qo'shing...
-3 ta vazifa:
-
-7-1 pattern asosida papkalar strukturasini yarating va kamida 5 ta partial fayl yozing
-_index.scss fayllarini @forward bilan sozlang
-main.scss da @use bilan hamma narsani yig'ing va haqiqiy Header komponenti yarating
+// 5. Maxsus sahifalar stillari (Home, About, Dashboard)
+@use 'pages';
