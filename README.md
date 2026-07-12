@@ -1,105 +1,140 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" class=""> <!-- Dark mode ishlashi uchun shu yerga 'dark' klassi qo'shiladi -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tailwind CSS Responsive Grid Layout</title>
+  <title>Tailwind CSS Zamonaviy UI Komponentlari</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind uchun dark mode konfiguratsiyasi (class-based)
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
 </head>
-<body class="bg-gray-50 py-12">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen p-8 transition-colors duration-300">
 
-  <!-- 6. Konteyner: maksimal kenglik (max-w-6xl), markazlashtirish (mx-auto) va ichki yon masofa (px-4) -->
-  <main class="max-w-6xl mx-auto px-4">
+  <!-- 3. DARK MODE TOGGLE TUGMASI -->
+  <div class="max-w-5xl mx-auto flex justify-end mb-8">
+    <button onclick="toggleDarkMode()" class="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 transition-all duration-200 active:scale-95">
+      <span class="dark:hidden">🌙 Tungi rejim</span>
+      <span class="hidden dark:inline">☀️ Kunduzgi rejim</span>
+    </button>
+  </div>
+
+  <main class="max-w-5xl mx-auto">
     
-    <div class="mb-8 text-center sm:text-left">
-      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Kashf qiling</h1>
-      <p class="text-gray-500 mt-2">Eng so'nggi va ommabop maqolalar hamda mahsulotlar to'plami.</p>
-    </div>
+    <!-- 1. TUGMALAR BLOCKI (Barcha holatlari bilan: hover, focus, active, disabled) -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8 transition-all duration-300">
+      <h2 class="text-lg font-bold mb-4">1. Tugmalar To'plami (States)</h2>
+      <div class="flex flex-wrap gap-4">
+        
+        <!-- Tugma 1: Primary -->
+        <button class="bg-blue-600 text-white font-medium text-sm py-2.5 px-5 rounded-xl transition-all duration-200 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+          Primary
+        </button>
 
-    <!-- 1. Grid layout: mobilda 1 ta, planshetda 2 ta (md:grid-cols-2), desktopda 3 ta ustun (lg:grid-cols-3) -->
-    <!-- 5. Gap (oraliq): kartalar orasidagi masofa gap-6 (24px) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Tugma 2: Success -->
+        <button class="bg-green-600 text-white font-medium text-sm py-2.5 px-5 rounded-xl transition-all duration-200 hover:bg-green-700 focus:ring-4 focus:ring-green-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+          Success
+        </button>
+
+        <!-- Tugma 3: Outline -->
+        <button class="bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium text-sm py-2.5 px-5 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+          Outline
+        </button>
+
+        <!-- Tugma 4: Danger -->
+        <button class="bg-red-600 text-white font-medium text-sm py-2.5 px-5 rounded-xl transition-all duration-200 hover:bg-red-700 focus:ring-4 focus:ring-red-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+          Danger
+        </button>
+
+        <!-- Tugma 5: Disabled Holati -->
+        <button disabled class="bg-blue-600 text-white font-medium text-sm py-2.5 px-5 rounded-xl transition-all duration-200 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+          Disabled (Qulflangan)
+        </button>
+
+      </div>
+    </section>
+
+    <!-- 5. PRICING KARTA & 4. DARK: PREFIKS -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
       
-      <!-- 3. KAMIDA 6 TA KARTA (Karta 1) -->
-      <!-- 4. Hover effekt: shadow-xl soya va scale-102 (kattalashish) effekti -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <!-- 2. Rasm: balandligi h-48 va proporsiyani saqlovchi object-cover -->
-        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=400&h=300&fit=crop" alt="Tabiat" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <!-- 2. Sarlavha -->
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Sokin tog'lar go'zalligi</h3>
-            <!-- 2. Tavsif -->
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Ertalabki quyosh nurlari ostida yastanib yotgan tog' cho'qqilari inson ruhiga xotirjamlik va cheksiz ilhom bag'ishlaydi.</p>
-          </div>
-          <!-- 2. Tugma -->
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
+      <!-- 2. GROUP MODIFIKATORLI KARTA (Karta ustiga kelganda ichki element o'zgaradi) -->
+      <div class="group bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-md border border-gray-100 dark:border-gray-700 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl uppercase tracking-wider transition-all duration-300 group-hover:bg-indigo-600">
+          Ommabop
         </div>
-      </article>
-
-      <!-- Karta 2 -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400&h=300&fit=crop" alt="Texnologiya" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Kiber-makon va Kelajak</h3>
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Sun'iy intellekt va global tarmoqlar rivojlanishi bizning yashash va ishlash tarzimizni butunlay o'zgartirib yubormoqda.</p>
-          </div>
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
+        
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Pro Reja</h3>
+        <p class="text-gray-400 dark:text-gray-400 text-sm mt-1">Kichik jamoalar va professionallar uchun</p>
+        
+        <div class="my-6">
+          <span class="text-4xl font-extrabold text-gray-950 dark:text-white">$29</span>
+          <span class="text-gray-400 dark:text-gray-400 text-sm">/oyiga</span>
         </div>
-      </article>
 
-      <!-- Karta 3 -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=400&h=300&fit=crop" alt="O'rmon" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Yashil o'rmon sirlari</h3>
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Sayyoramizning o'pkalari hisoblangan yashil o'rmonlar o'z bag'rida minglab noyob flora va fauna turlarini saqlaydi.</p>
-          </div>
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
+        <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-300 mb-8">
+          <li class="flex items-center gap-2">
+            <!-- group-hover bilan ikonka rangini o'zgartirish -->
+            <span class="text-blue-600 dark:text-blue-400 transition-colors duration-300 group-hover:text-indigo-500">✓</span> Cheksiz loyihalar
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="text-blue-600 dark:text-blue-400 transition-colors duration-300 group-hover:text-indigo-500">✓</span> 50GB Bulutli xotira
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="text-blue-600 dark:text-blue-400 transition-colors duration-300 group-hover:text-indigo-500">✓</span> 24/7 Premium qo'llab-quvvatlash
+          </li>
+        </ul>
+
+        <!-- group-hover bilan tugma fonini butunlay boshqa rangga o'tkazish -->
+        <button class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all duration-300 group-hover:bg-indigo-600 focus:ring-4 focus:ring-blue-100 dark:focus:ring-gray-700 active:scale-98">
+          Hozir boshlang
+        </button>
+      </div>
+
+      <!-- Standart Premium Pricing Karta -->
+      <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-md border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Biznes Reja</h3>
+        <p class="text-gray-400 dark:text-gray-400 text-sm mt-1">Yirik korxonalar va tashkilotlar uchun</p>
+        
+        <div class="my-6">
+          <span class="text-4xl font-extrabold text-gray-950 dark:text-white">$99</span>
+          <span class="text-gray-400 dark:text-gray-400 text-sm">/oyiga</span>
         </div>
-      </article>
 
-      <!-- Karta 4 -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=400&h=300&fit=crop" alt="Peyzaj" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Tonggi shabnam sehri</h3>
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Tabiat uyg'onadigan eng go'zal pallada, yam-yashil vodiylar uzra yoyilgan mayin tuman ajoyib manzara hosil qiladi.</p>
-          </div>
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
-        </div>
-      </article>
+        <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-300 mb-8">
+          <li class="flex items-center gap-2"><span class="text-green-600 dark:text-green-400">✓</span> Barcha Pro funksiyalar</li>
+          <li class="flex items-center gap-2"><span class="text-green-600 dark:text-green-400">✓</span> 1TB Bulutli xotira</li>
+          <li class="flex items-center gap-2"><span class="text-green-600 dark:text-green-400">✓</span> Maxsus menejer ajratiladi</li>
+        </ul>
 
-      <!-- Karta 5 -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <img src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=400&h=300&fit=crop" alt="Ekotizim" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Ekologik muvozanat</h3>
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Atrof-muhitni asrash va kelajak avlodga toza ekotizim qoldirish har birimizning fuqarolik burchimizdir.</p>
-          </div>
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
-        </div>
-      </article>
+        <button class="w-full bg-gray-900 dark:bg-gray-700 text-white dark:text-gray-100 font-semibold py-3 px-4 rounded-xl shadow-md transition-all duration-300 hover:bg-gray-800 dark:hover:bg-gray-600 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-600 active:scale-98">
+          Kompaniya uchun olish
+        </button>
+      </div>
 
-      <!-- Karta 6 -->
-      <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <img src="https://images.unsplash.com/photo-1472214222541-d510753a8707?q=80&w=400&h=300&fit=crop" alt="Ufq" class="w-full h-48 object-cover">
-        <div class="p-5 flex flex-col justify-between h-56">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 line-clamp-1 hover:text-indigo-600 transition-colors cursor-pointer">Oltin ufq manzaralari</h3>
-            <p class="text-gray-500 text-sm mt-2 line-clamp-3">Kun botish arafasida osmon bag'rini qoplagan to'q sariq va binafsha ranglar tabiatning eng mukammal san'at asaridir.</p>
-          </div>
-          <button class="w-full mt-4 bg-gray-900 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 rounded-xl transition-colors duration-200">Batafsil</button>
-        </div>
-      </article>
-
-    </div>
+    </section>
   </main>
 
+  <!-- Dark Mode Kontrolleri uchun Logika -->
+  <script>
+    function toggleDarkMode() {
+      const htmlElement = document.documentElement;
+      if (htmlElement.classList.contains('dark')) {
+        htmlElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        htmlElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    // Sahifa yuklanganda foydalanuvchining oldingi tanlovini tekshirish
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
 </body>
 </html>
