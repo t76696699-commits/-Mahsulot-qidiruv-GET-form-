@@ -3,117 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A11y Forma Standartlari</title>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; color: #212529; }
-    .form-group { margin-bottom: 1.5rem; display: flex; flex-direction: column; }
-    label { font-weight: bold; margin-bottom: 0.5rem; }
-    input[type="text"], input[type="email"] { padding: 0.5rem; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
-    input:focus-visible, fieldset:focus-visible { outline: 3px solid #0d6efd; outline-offset: 2px; }
-    
-    /* Xatolik holati uslubi */
-    .error-message { color: #dc3545; font-size: 14px; margin-top: 0.25rem; font-weight: 500; }
-    input[aria-invalid="true"] { border-color: #dc3545; }
-
-    /* Guruhlar uchun uslub */
-    fieldset { border: 1px solid #ccc; border-radius: 4px; padding: 1rem; margin-bottom: 1.5rem; }
-    legend { font-weight: bold; padding: 0 0.5rem; }
-    .radio-group { display: flex; gap: 15px; margin-top: 0.5rem; }
-
-    button { padding: 0.75rem; background: #0d6efd; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
-    
-    /* aria-live hududi vizual yashirin, lekin ekran o'quvchiga eshitiladi */
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
-    .success-alert { background: #d1e7dd; color: #0f5132; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid #badbcc; }
-  </style>
+  <title>CSS Animatsiyalar va Effektlar</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>Ro'yxatdan o'tish</h1>
-  
-  <!-- Muvaffaqiyat xabari uchun dinamik hudud (4-qoida) -->
-  <div id="statusStatus" aria-live="polite"></div>
+  <main class="container">
+    <h1>CSS Vizual Effektlar Namunasi</h1>
 
-  <form id="registrationForm" novalidate>
-    
-    <!-- 1 va 2-QOIDA: for/id bog'liqligi va aria-required -->
-    <div class="form-group">
-      <label綁 for="fullName">To'liq ismingiz <span aria-hidden="true">*</span></label>
-      <input 
-        type="text" 
-        id="fullName" 
-        name="fullName"
-        autocomplete="name" 
-        aria-required="true"
-      >
-      <!-- 6-QOIDA: autocomplete="name" to'g'ri qo'yilgan -->
-    </div>
+    <!-- 1. Transition bilan hover effektli tugma -->
+    <section class="example-section">
+      <h2>1. Silliq Hover Effektli Tugma (Transition)</h2>
+      <button class="animated-btn">O'rganishni boshlash</button>
+    </section>
 
-    <!-- 3-QOIDA: aria-describedby orqali xatoni bog'lash -->
-    <div class="form-group">
-      <label for="userEmail">E-mail manzilingiz <span aria-hidden="true">*</span></label>
-      <input 
-        type="email" 
-        id="userEmail" 
-        name="userEmail"
-        autocomplete="email" 
-        aria-required="true"
-      >
-      <!-- Xato xabari ID'si shu yerga dinamik ulanadi -->
-      <div id="emailError" class="error-message" style="display: none;"></div>
-    </div>
-
-    <!-- 5-QOIDA: fieldset/legend radio guruh uchun -->
-    <fieldset>
-      <legend>Bog'lanish turini tanlang</legend>
-      <div class="radio-group">
-        <label>
-          <input type="radio" name="contactMethod" value="email" checked> E-mail
-        </label>
-        <label>
-          <input type="radio" name="contactMethod" value="phone"> Telefon
-        </label>
+    <!-- 2. @keyframes bilan cheksiz aylanadigan spinner -->
+    <section class="example-section">
+      <h2>2. Cheksiz Aylanadigan Spinner (@keyframes)</h2>
+      <div class="spinner-container">
+        <div class="loading-spinner" aria-label="Yuklanmoqda..."></div>
       </div>
-    </fieldset>
+    </section>
 
-    <button type="submit">Yuborish</button>
-  </form>
-
-  <script>
-    const form = document.getElementById('registrationForm');
-    const emailInput = document.getElementById('userEmail');
-    const emailError = document.getElementById('emailError');
-    const statusStatus = document.getElementById('statusStatus');
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      // Oddiy validatsiya (E-mail bo'sh bo'lmasligi kerak)
-      if (!emailInput.value.trim()) {
-        // 3-QOIDA: Xatolikni bog'lash va e'lon qilish
-        emailInput.setAttribute('aria-invalid', 'true');
-        emailInput.setAttribute('aria-describedby', 'emailError');
-        emailError.textContent = '⚠ E-mail manzilini kiritish majburiy!';
-        emailError.style.display = 'block';
-        emailInput.focus(); // Fokusni xato maydonga olib boramiz
-        return;
-      } else {
-        // Xatoni tozalash
-        emailInput.removeAttribute('aria-invalid');
-        emailInput.removeAttribute('aria-describedby');
-        emailError.style.display = 'none';
-      }
-
-      // 4-QOIDA: Muvaffaqiyatli yuborilganda aria-live orqali bildirishnoma
-      statusStatus.innerHTML = `
-        <div class="success-alert" role="status">
-          <strong>Muvaffaqiyatli!</strong> Formangiz qabul qilindi. Tez orada bog'lanamiz.
+    <!-- 3. Kartaga hover ko'tarilish effekti -->
+    <section class="example-section">
+      <h2>3. Hover Ko'tarilish Effekti (Card Lift)</h2>
+      <div class="card-grid">
+        <div class="interactive-card">
+          <div class="card-image-placeholder"></div>
+          <h3>Interaktiv Karta</h3>
+          <p>Sichqonchani ushbu karta ustiga olib kelib, yuqoriga silliq ko'tarilishi va soya effekti chuqurlashishini ko'ring.</p>
         </div>
-      `;
-      
-      form.reset();
-    });
-  </script>
+      </div>
+    </section>
+  </main>
 
 </body>
 </html>
