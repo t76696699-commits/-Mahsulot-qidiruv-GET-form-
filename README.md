@@ -3,202 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A11y Standartlari Namunasi</title>
+  <title>WCAG Vizual va Harakat Qoidalari</title>
   <style>
+    /* Boshlang'ich o'zgaruvchilar (Ranglar to'g'ri kontrast uchun tanlangan) */
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #212529; /* Oddiy matn uchun kontrast 15.1:1 (4.5:1 dan ancha yuqori) */
+      --text-large-color: #495057; /* Katta matn uchun kontrast 8.1:1 (3:1 dan yuqori) */
+      --error-color: #dc3545;
+      --success-color: #198754;
+      --focus-outline: #0d6efd;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
     /* ---------------------------------------------------- */
-    /* 4-QOIDA: Skip Link (Sahifa boshida yashirin havola)   */
+    /* 1-QOIDA: Oddiy matn kontrasti (16px, 4.5:1 dan yuqori) */
     /* ---------------------------------------------------- */
-    .skip-link {
-      position: absolute;
-      top: -100px;
-      left: 10px;
-      background: #3b82f6;
-      color: white;
-      padding: 10px 20px;
-      z-index: 100;
-      text-decoration: none;
+    .normal-text {
+      font-size: 16px;
+      color: var(--text-color);
+    }
+
+    /* ---------------------------------------------------- */
+    /* 2-QOIDA: Katta matn kontrasti (24px, 3:1 dan yuqori)  */
+    /* ---------------------------------------------------- */
+    .large-text {
+      font-size: 24px;
       font-weight: bold;
+      color: var(--text-large-color);
+      margin-top: 1.5rem;
+    }
+
+    /* ---------------------------------------------------- */
+    /* 3-QOIDA: Rangni yagona ma'lumot manbai qilmaslik    */
+    /* ---------------------------------------------------- */
+    .notification {
+      padding: 1rem;
+      margin: 1rem 0;
       border-radius: 4px;
-      transition: top 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    /* Fokus tushgandagina ekranda ko'rinadi */
-    .skip-link:focus-visible {
-      top: 10px;
-    }
-
-    /* ---------------------------------------------------- */
-    /* 3-QOIDA: :focus-visible (Aniq ko'rinadigan fokus)    */
-    /* ---------------------------------------------------- */
-    button:focus-visible, 
-    a:focus-visible, 
-    [tabindex="0"]:focus-visible {
-      outline: 3px solid #ff5722; /* Aniq ko'rinadigan to'q sariq chiziq */
-      outline-offset: 3px;
-    }
-    /* Sichqoncha bilan bosilganda noqulay ko'rinmasligi uchun eski outline'ni o'chiramiz */
-    button:focus, a:focus {
-      outline: none;
-    }
-
-    /* Umumiy uslublar */
-    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f4f4f9; color: #333; }
-    header { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
     
-    /* Menyu uslubi */
-    .accessible-menu { display: flex; gap: 10px; list-style: none; padding: 0; margin: 10px 0 0 0; }
-    .menu-item { background: #e0e0e0; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    /* Xatolik statusi: Faqat qizil rang emas, ikona va qalin matn ham bor */
+    .notification-error {
+      background-color: #f8d7da;
+      color: var(--error-color);
+      border: 2px solid var(--error-color);
+    }
+    .status-icon {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
 
-    /* Modal uslubi */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    /* ---------------------------------------------------- */
+    /* 4-QOIDA: Barcha interaktiv elementlarda fokus        */
+    /* ---------------------------------------------------- */
+    .btn, .input-field {
+      padding: 0.5rem 1rem;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: auto; }
-    .modal-box {
-      background: white; padding: 30px; border-radius: 8px; width: 400px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;
+    
+    .btn {
+      background-color: #f8f9fa;
+      cursor: pointer;
     }
-    .close-btn { position: absolute; top: 10px; right: 10px; padding: 5px 10px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* Istalgan interaktiv elementga klaviatura kelganda aniq ko'rinishi shart */
+    .btn:focus-visible, 
+    .input-field:focus-visible {
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+    }
+
+    /* ---------------------------------------------------- */
+    /* 5-QOIDA: prefers-reduced-motion media query          */
+    /* ---------------------------------------------------- */
+    /* Standart holatda chiroyli animatsiya */
+    .animated-box {
+      width: 100px;
+      height: 100px;
+      background-color: #6f42c1;
+      margin-top: 2rem;
+      transition: transform 0.6s ease-in-out;
+    }
+    .animated-box:hover {
+      transform: scale(1.2) rotate(45deg);
+    }
+
+    /* Foydalanuvchi tizimda (Windows/Mac/Android) animatsiyalarni o'chirgan bo'lsa */
+    @media (prefers-reduced-motion: reduce) {
+      .animated-box {
+        transition: none; /* Animatsiya vaqtini butunlay o'chiramiz */
+      }
+      .animated-box:hover {
+        transform: none; /* Keskin o'zgarishlar (kattalashish/aylanish) bo'lmaydi */
+      }
+      
+      /* Agar saytda boshqa umumiy animatsiyalar bo'lsa, ularni ham sekinlashtiramiz */
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- 4. Skip Link element -->
-  <a href="#main-content" class="skip-link">Asosiy mazmunga o'tish</a>
-
   <header>
-    <nav aria-label="Asosiy navigatsiya">
-      <h2>Menyu (Strelkalar orqali boshqariladi)</h2>
-      <!-- 2. Strelkalar bilan boshqariladigan menyu -->
-      <ul class="accessible-menu" role="menubar">
-        <li class="menu-item" role="menuitem" tabindex="0">Bosh sahifa</li>
-        <li class="menu-item" role="menuitem" tabindex="-1">Xizmatlar</li>
-        <li class="menu-item" role="menuitem" tabindex="-1">Biz haqimizda</li>
-        <li class="menu-item" role="menuitem" tabindex="-1">Aloqa</li>
-      </ul>
-    </nav>
+    <h1>A11y Dizayn Standartlari</h1>
   </header>
 
-  <!-- Skip link aynan shu yerga olib keladi -->
-  <main id="main-content">
-    <h1>Veb sahifa mazmuni</h1>
-    <p>Klaviaturadagi <b>Tab</b> tugmasini bosib elementlar bo'ylab harakatlanib ko'ring.</p>
+  <main>
+    <!-- 1 va 2-qoidalar: Kontrast -->
+    <p class="normal-text">Bu oddiy matn (16px). Uning rangi to'q kulrang bo'lib, oq fonda kamida 4.5:1 kontrast nisbatini to'liq ta'minlaydi. Odamlar qiynalmay o'qiy olishadi.</p>
     
-    <!-- 1. Modalni ochuvchi tugma -->
-    <button id="openModalBtn">Modal oynani ochish</button>
+    <h2 class="large-text">Bu katta sarlavha matni (24px)</h2>
+    <p class="normal-text">Matn o'lchami katta bo'lgani uchun uning kontrast nisbati biroz yumshoqroq (kamida 3:1) bo'lishi kifoya.</p>
+
+    <hr>
+
+    <!-- 3-qoida: Rangdan tashqari boshqa signal -->
+    <div class="notification notification-error" role="alert">
+      <!-- Diqqat: Rang ko'ra olmaydigan odam uchun [XATO] so'zi va ikona yordam beradi -->
+      <span class="status-icon" aria-hidden="true">⚠</span>
+      <span><strong>Xatolik:</strong> Tizimga kirishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.</span>
+    </div>
+
+    <hr>
+
+    <!-- 4-qoida: Fokus indikatori -->
+    <div style="margin: 1rem 0; display: flex; gap: 10px;">
+      <input type="text" class="input-field" placeholder="Ismingiz...">
+      <button class="btn">Yuborish</button>
+    </div>
+
+    <hr>
+
+    <!-- 5-qoida: Animatsiyani cheklash -->
+    <p class="normal-text">Sichqonchani quyidagi qutining ustiga olib keling (Agar kompyuteringizda "Reduce Motion" yoniq bo'lsa, u aylanmaydi va kattalashmaydi):</p>
+    <div class="animated-box" aria-label="Animatsiyali quti"></div>
   </main>
 
-  <!-- 5. Modal Oyna (Fokus qopqoni shu ichida ishlaydi) -->
-  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
-    <div class="modal-box" id="modalBox">
-      <h2 id="modalTitle">Oyna ochildi</h2>
-      <p>Bu yerda fokus qamalgan (Focus Trap). Tab bosilganda fokus tashqariga chiqib ketmaydi.</p>
-      <p>Yopish uchun <b>Escape</b> tugmasini bosing.</p>
-      
-      <input type="text" placeholder="Ismingizni kiriting...">
-      
-      <div class="modal-actions">
-        <button class="close-btn" id="closeModalBtn" aria-label="Yopish">X</button>
-        <button id="saveBtn">Saqlash</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ====================================================
-    // 2-QOIDA: Menyu ichida strelkalar bilan harakatlanish
-    // ====================================================
-    const menuItems = document.querySelectorAll('.menu-item');
-    let currentMenuIndex = 0;
-
-    menuItems.forEach((item, index) => {
-      item.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          currentMenuIndex = (index + 1) % menuItems.length;
-          menuItems[currentMenuIndex].focus();
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          currentMenuIndex = (index - 1 + menuItems.length) % menuItems.length;
-          menuItems[currentMenuIndex].focus();
-        }
-        // Faqat fokuslangan element klaviatura navigatsiyasida faol bo'ladi
-        menuItems.forEach((mi, i) => mi.setAttribute('tabindex', i === currentMenuIndex ? '0' : '-1'));
-      });
-      
-      // Sichqoncha bilan bosilganda ham indeks yangilanishi uchun
-      item.addEventListener('click', () => {
-        currentMenuIndex = index;
-        menuItems.forEach((mi, i) => mi.setAttribute('tabindex', i === currentMenuIndex ? '0' : '-1'));
-      });
-    });
-
-    // ====================================================
-    // 1 & 5-QOIDA: Modal, Escape va Fokus Qopqoni (Focus Trap)
-    // ====================================================
-    const openModalBtn = document.getElementById('openModalBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const modalOverlay = document.getElementById('modalOverlay');
-    let lastFocusedElement;
-
-    function openModal() {
-      lastFocusedElement = document.activeElement; // Modal ochilishidan oldingi fokusni saqlab qolamiz
-      modalOverlay.removeAttribute('hidden');
-      modalOverlay.classList.add('open');
-      
-      // Fokusni modal ichidagi birinchi elementga yoki yopish tugmasiga beramiz
-      closeModalBtn.focus(); 
-      document.addEventListener('keydown', handleModalKeydown);
-    }
-
-    function closeModal() {
-      modalOverlay.setAttribute('hidden', 'true');
-      modalOverlay.classList.remove('open');
-      document.remove('keydown', handleModalKeydown);
-      
-      // Foydalanuvchi chalg'imasligi uchun fokusni eski joyiga qaytaramiz
-      if (lastFocusedElement) lastFocusedElement.focus();
-    }
-
-    function handleModalKeydown(e) {
-      // 1. Escape orqali yopish
-      if (e.key === 'Escape') {
-        closeModal();
-        return;
-      }
-
-      // 5. Fokus qopqoni (Focus Trap) logikasi
-      if (e.key === 'Tab') {
-        // Modal ichidagi fokuslana oladigan barcha elementlarni yig'amiz
-        const focusableElements = modalOverlay.querySelectorAll('button, input, [tabindex="0"]');
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey) { // Shift + Tab orqaga harakat
-          if (document.activeElement === firstElement) {
-            e.preventDefault();
-            lastElement.focus(); // Birinchidan orqaga o'tsa, oxirgisiga sakraydi
-          }
-        } else { // Shunchaki Tab oldinga harakat
-          if (document.activeElement === lastElement) {
-            e.preventDefault();
-            firstElement.focus(); // Oxirgisidan o'tsa, yana birinchisiga qaytadi
-          }
-        }
-      }
-    }
-
-    openModalBtn.addEventListener('click', openModal);
-    closeModalBtn.addEventListener('click', closeModal);
-    saveBtn.addEventListener('click', closeModal);
-    
-    // Oyna tashqarisiga bosilganda ham yopilishi uchun
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) closeModal();
-    });
-  </script>
 </body>
 </html>
