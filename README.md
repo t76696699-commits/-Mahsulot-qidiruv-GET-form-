@@ -1,202 +1,64 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loyihamiz Tariflari va Aloqa formasi</title>
-</head>
-<body>
+Buni loyihangizning ildizidagi README.md fayliga to'liqligicha joylashtiring:Markdown# CSS Box Model va Kaskad (Cascade) Asoslari
 
-    <!-- 1. Sayt Navigatsiyasi (Header va Nav) -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="#tariflarlar">Tariflarimiz</a></li>
-                <li><a href="#taqqoslash">Taqqoslash Jadvali</a></li>
-                <li><a href="#savol-javob">Ko'p So'raladigan Savollar</a></li>
-                <li><a href="#aloqa-formasi">Ariza Qoldirish</a></li>
-            </ul>
-        </nav>
-    </header>
+Ushbu hujjatda CSS-ning eng muhim fundamental tushunchalari — Box Model, Kaskad tizimi, Specificity (ustunlik darajasi) va elementlarni yashirish usullari nazariy hamda amaliy kod misollari yordamida batafsil yoritilgan.
 
-    <hr>
+---
 
-    <!-- 2. Asosiy Kontent -->
-    <main>
+## 1. CSS Box Model (Quti Modeli) va uning Qatlamlari
 
-        <!-- Tariflar Bo'limi -->
-        <section id="tariflarlar">
-            <header>
-                <h1>Siz uchun qulay tarif rejalari</h1>
-                <p>O'zingizga mos tarifni tanlang va bugunoq ishni boshlang.</p>
-            </header>
+CSS-da har bir HTML elementi to'rtburchak quti (box) sifatida qaraladi. Bu quti ichkaridan tashqariga qarab 4 ta asosiy qatlamdan iborat:
 
-            <!-- Starter Tarif -->
-            <article>
-                <h2>Starter</h2>
-                <p><strong>Narxi:</strong> $19 / oyiga</p>
-                <p>Yangi boshlovchilar va kichik shaxsiy loyihalar uchun mo'ljallangan.</p>
-                <ul>
-                    <li>1 ta faol loyiha</li>
-                    <li>5 GB xavfsiz xotira</li>
-                    <li>Asosiy statistik ma'lumotlar</li>
-                    <li>Hamjamiyat orqali yordam olish</li>
-                </ul>
-                <p><a href="#aloqa-formasi">Sotib olish</a></p>
-            </article>
+### Vizual Box Model Diagrammasi
+┌───────────────────────────────────────────────┐│                   MARGIN                      │  <- 4. Tashqi bo'shliq│   ┌───────────────────────────────────────┐   ││   │               BORDER                  │   │  <- 3. Chegara│   │   ┌───────────────────────────────┐   │   ││   │   │           PADDING             │   │   │  <- 2. Ichki bo'shliq│   │   │   ┌───────────────────────┐   │   │   ││   │   │   │                       │   │   │   ││   │   │   │        CONTENT        │   │   │   │  <- 1. Haqiqiy kontent│   │   │   │                       │   │   │   ││   │   │   └───────────────────────┘   │   │   ││   │   └───────────────────────────────┘   │   ││   └───────────────────────────────────────┘   │└───────────────────────────────────────────────┘
+### Qatlamlarning Tushuntirishi va CSS Misoli:
+1. **Content (Tarkib):** Elementning haqiqiy matni, rasmi yoki boshqa kontenti joylashadigan markaziy maydon.
+2. **Padding (Ichki bo'shliq):** Kontent va uning atrofidagi chegara (Border) orasidagi masofa. Element foni unga ham ta'sir qiladi.
+3. **Border (Chegara):** Padding va Margin o'rtasidagi chiziq. U qalinlik, rang va shaklga ega bo'ladi.
+4. **Margin (Tashqi bo'shliq):** Element chegarasidan tashqaridagi to'liq shaffof maydon. U qo'shni elementlarni bir-biridan itarish uchun xizmat qiladi.
 
-            <hr>
+```css
+.box-example {
+    width: 300px;         /* Content eni */
+    height: 150px;        /* Content bo'yi */
+    padding: 20px;        /* To'rt tomondan 20px ichki bo'shliq */
+    border: 5px solid;    /* 5px qalinlikdagi chegara */
+    margin: 30px;         /* Boshqa elementlardan 30px uzoqlashish */
+}
+2. box-sizing: content-box va border-box FarqiBu xossa elementning umumiy o'lchamlari (eni va bo'yi) brauzerda qanday hisoblanishini belgilaydi.A. content-box (Standart qiymat)Brauzer siz bergan width qiymatiga padding va border qalinligini qo'shimcha ravishda qo'shadi.Formula: $\text{Haqiqiy eni} = \text{width} + \text{chap-o'ng padding} + \text{chap-o'ng border}$CSS.item-content-box {
+    box-sizing: content-box;
+    width: 300px;
+    padding: 20px; /* Chap + o'ng = 40px */
+    border: 5px solid black; /* Chap + o'ng = 10px */
+    /* Ekrandagi haqiqiy eni: 300 + 40 + 10 = 350px bo'lib, maketni buzishi mumkin */
+}
+B. border-box (Tavsiya etilgan amaliyot)Brauzer padding va border-ni siz bergan width o'lchamining ichiga joylashtiradi. Kontent maydoni shunga mos ravishda siqiladi.Formula: $\text{Haqiqiy eni} = \text{Faqat siz bergan width (300px)}$CSS.item-border-box {
+    box-sizing: border-box;
+    width: 300px;
+    padding: 20px;
+    border: 5px solid black;
+    /* Ekrandagi haqiqiy eni: aniq 300px qoladi. Kontent maydoni 250px-ga tenglashadi */
+}
+3. Specificity (CSS Ustunligi) KalkulyatsiyasiKaskad qoidasiga ko'ra, bitta elementga bir nechta har xil selektor stillari yozilsa, g'olibni Specificity ball tizimi aniqlaydi.Ball tizimi iyerarxiyasi: (Inline, ID, Class/Attribute, Element) yoki shartli ravishda [0, 0, 0, 0] ko'rinishida hisoblanadi.5 ta Amaliy Misol Tahlili:div pTarkibi: 2 ta Element (div, p)Ball: [0, 0, 0, 2].card .titleTarkibi: 2 ta Klass (.card, .title)Ball: [0, 0, 2, 0] (Yuqoridagidan ustun)#main-content .text pTarkibi: 1 ta ID (#main-content), 1 ta Klass (.text), 1 ta Element (p)Ball: [0, 1, 1, 1]ul.nav-list li:hoverTarkibi: 2 ta Element (ul, li), 1 ta Klass (.nav-list), 1 ta Pseudo-klass (:hover)Ball: [0, 0, 2, 2]#sidebar div.active a[href]Tarkibi: 1 ta ID (#sidebar), 1 ta Klass (.active), 1 ta Atribut ([href]), 2 ta Element (div, a)Ball: [0, 1, 2, 2] (Ushbu ro'yxatdagi eng yuqori ustunlikka ega selektor)4. display: none, visibility: hidden va opacity: 0 farqlariElementni ekrandan yashirishning ushbu uchta usuli o'zining mexanizmi bilan keskin farq qiladi:CSS/* 1. display: none */
+.hide-completely {
+    display: none;
+    /* Element DOMda qoladi, lekin ekranda mutloq joy egallamaydi (g'oyib bo'ladi). 
+       Interaktiv emas (kliklab bo'lmaydi), animatsiya qilib bo'lmaydi. */
+}
 
-            <!-- Pro Tarif (Ommabop) -->
-            <article>
-                <h2>Pro (Eng ommabop)</h2>
-                <p><strong>Narxi:</strong> $49 / oyiga</p>
-                <p>Kattalashayotgan jamoalar va professional dasturchilar uchun eng yaxshi tanlov.</p>
-                <ul>
-                    <li>10 tagacha faol loyiha</li>
-                    <li>50 GB tezkor SSD xotira</li>
-                    <li>Kengaytirilgan tahlillar (Advanced Analytics)</li>
-                    <li>Texnik guruh tomonidan tezkor yordam</li>
-                </ul>
-                <p><a href="#aloqa-formasi">Sotib olish</a></p>
-            </article>
+/* 2. visibility: hidden */
+.hide-invisible {
+    visibility: hidden;
+    /* Element ekranda ko'rinmaydi, lekin o'z joyini saqlab qoladi (bo'shliq ko'rinadi).
+       Foydalanuvchi u bilan ishlay olmaydi (kliklab bo'lmaydi). */
+}
 
-            <hr>
-
-            <!-- Enterprise Tarif -->
-            <article>
-                <h2>Enterprise</h2>
-                <p><strong>Narxi:</strong> $99 / oyiga</p>
-                <p>Katta kompaniyalar va maxsus talablarga ega bizneslar uchun mukammal yechim.</p>
-                <ul>
-                    <li>Cheksiz loyihalar soni</li>
-                    <li>500 GB bulutli xotira</li>
-                    <li>Barcha integratsiyalar va API ulanishlar</li>
-                    <li>24/7 Shaxsiy menedjer yordami</li>
-                </ul>
-                <p><a href="#aloqa-formasi">Biz bilan bog'lanish</a></p>
-            </article>
-        </section>
-
-        <br><hr><br>
-
-        <!-- 3. Taqqoslash Jadvali Bo'limi -->
-        <section id="taqqoslash">
-            <h2>Tariflar imkoniyatlarini batafsil taqqoslash</h2>
-            
-            <table border="1" cellpadding="10" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Xususiyatlar va Imkoniyatlar</th>
-                        <th>Starter</th>
-                        <th>Pro</th>
-                        <th>Enterprise</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Foydalanuvchilar soni</strong></td>
-                        <td>1 ta</td>
-                        <td>5 tagacha</td>
-                        <td>Cheksiz</td>
-                    </tr>
-                    <tr>
-                        <td><strong>API bilan ishlash</strong></td>
-                        <td>Mavjud emas (✗)</td>
-                        <td>Cheklangan (✓)</td>
-                        <td>To'liq ruxsat (✓)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Xavfsizlik tizimi</strong></td>
-                        <td>Standart</td>
-                        <td>Ikki bosqichli (2FA)</td>
-                        <td>Maksimal (SSL/IP limit)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sinov muddati</strong></td>
-                        <td>7 kun</td>
-                        <td>14 kun</td>
-                        <td>30 kun</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <br><hr><br>
-
-        <!-- 4. FAQ (Savol-javoblar) Bo'limi -->
-        <section id="savol-javob">
-            <h2>Ko'p beriladigan savollar (FAQ)</h2>
-
-            <details>
-                <summary>To'lovni amalga oshirishda qanday usullardan foydalansa bo'ladi?</summary>
-                <p>Biz barcha turdagi xalqaro bank kartalari (Visa, MasterCard), PayPal hamda milliy to'lov tizimlari orqali to'lovlarni qabul qilamiz.</p>
-            </details>
-            <br>
-            <details>
-                <summary>Tarifni istalgan vaqtda o'zgartira olamanmi?</summary>
-                <p>Albatta! Istalgan vaqtda shaxsiy kabinetingiz orqali tarifingizni osonlikcha o'zgartirishingiz yoki butunlay bekor qilishingiz mumkin.</p>
-            </details>
-            <br>
-            <details>
-                <summary>Qo'shimcha maxsus xotira sotib olish imkoni bormi?</summary>
-                <p>Ha, agar sizga standart berilgan xotira hajmi kamlik qilsa, qo'shimcha to'lov evaziga xotirani kengaytirib olishingiz mumkin.</p>
-            </details>
-        </section>
-
-        <br><hr><br>
-
-        <!-- 5. Aloqa va Arizalar uchun Forma (Form) -->
-        <section id="aloqa-formasi">
-            <h2>Bizga ariza yoki savolingizni qoldiring</h2>
-            
-            <form action="#" method="POST">
-                
-                <p>
-                    <label for="ism">Ismingiz (Majburiy):</label><br>
-                    <input type="text" id="ism" name="foydalanuvchi_ismi" placeholder="Ismingizni kiriting" required>
-                </p>
-
-                <p>
-                    <label for="email">Elektron pochta manzilingiz (Majburiy):</label><br>
-                    <input type="email" id="email" name="foydalanuvchi_maili" placeholder="misol@pochta.uz" required>
-                </p>
-
-                <p>
-                    <label for="tarif-tanlash">Sizga qaysi tarif ma'qul keldi?</label><br>
-                    <select id="tarif-tanlash" name="tanlangan_tarif">
-                        <option value="starter">Starter — $19</option>
-                        <option value="pro">Pro — $49</option>
-                        <option value="enterprise">Enterprise — $99</option>
-                    </select>
-                </p>
-
-                <p>
-                    <label for="xabar">Qo'shimcha izoh yoki xabaringiz:</label><br>
-                    <textarea id="xabar" name="xabar_matni" rows="5" cols="40" placeholder="Savollaringiz bo'lsa, bu yerga yozing..."></textarea>
-                </p>
-
-                <p>
-                    <input type="checkbox" id="rozilik" name="shartlarga_rozilik" required>
-                    <label for="rozilik">Xizmat ko'rsatish shartlariga roziman</label>
-                </p>
-
-                <p>
-                    <button type="submit">Arizani yuborish</button>
-                    <button type="reset">Tozalash</button>
-                </p>
-
-            </form>
-        </section>
-
-    </main>
-
-    <hr>
-
-    <!-- 6. Footer (Sayt pastki qismi) -->
-    <footer>
-        <p>&copy; 2026 Biznes Loyihamiz. Barcha huquqlar himoyalangan.</p>
-    </footer>
-
-</body>
-</html>
+/* 3. opacity: 0 */
+.hide-transparent {
+    opacity: 0;
+    /* Element to'liq shaffof (ko'rinmas) holatga keladi va o'z joyini saqlab qoladi.
+       ENG MUHIMI: U hamon interaktiv — ko'rinmas bo'lsa ham uni kliklash mumkin!
+       Transition orqali silliq animatsiyalar (fade-in/fade-out) yaratishga mos keladi. */
+}
+5. !important Qoidasi: Qachon ishlatish kerak va kerak emas?!important kalit so'zi CSS-dagi barcha o'lchov va Specificity qoidalarini chetlab o'tib, stillni mutloq g'olib qiladi.❌ Ishlatish tavsiya etilmaydi (Yomon amaliyot):Oddiy kod yozish jarayonida: Agar klassingiz elementga ta'sir qilmayotgan bo'lsa, unga !important berib majburlash arxitekturani buzadi. Keyinchalik o'sha elementni o'zgartirish juda qiyinlashadi.Global komponentlar yozganda: .btn { color: white !important; } deb yozilsa, keyinchalik loyihada qora rangli tugma yaratish imkonsiz bo'lib qoladi.Ishlatish tavsiya etiladi (Yaxshi amaliyot):Yordamchi (Utility) klasslarda: Global va faqat bitta vazifani o'taydigan klasslar har doim ishonchli ishlashi uchun:CSS.text-center { text-align: center !important; }
+.d-none { display: none !important; }
+Tashqi kutubxonalar (Bootstrap, Tailwind v.h) stillarini majburiy o'zgartirishda: Agar tayyor plugin yoki kutubxonaning chuqur yozilgan kodini o'zgartirishga selektoringizning kuchi yetmayotgan bo'lsa, yagona to'g'ri yo'l sifatida qo'llaniladi.
