@@ -1,64 +1,173 @@
-Buni loyihangizning ildizidagi README.md fayliga to'liqligicha joylashtiring:Markdown# CSS Box Model va Kaskad (Cascade) Asoslari
+1. Divni Markazlash (Centering a Div) — 5 xil usul
+Ichki div elementini (.child) tashqi konteyner (.parent) ichida ham gorizontal, ham vertikal markazlashtirishning eng ommabop usullari:
 
-Ushbu hujjatda CSS-ning eng muhim fundamental tushunchalari — Box Model, Kaskad tizimi, Specificity (ustunlik darajasi) va elementlarni yashirish usullari nazariy hamda amaliy kod misollari yordamida batafsil yoritilgan.
+Usul 1: Flexbox (Zamonaviy va eng oson yo'li)
+Eng ko'p ishlatiladigan va moslashuvchan usul.
 
----
-
-## 1. CSS Box Model (Quti Modeli) va uning Qatlamlari
-
-CSS-da har bir HTML elementi to'rtburchak quti (box) sifatida qaraladi. Bu quti ichkaridan tashqariga qarab 4 ta asosiy qatlamdan iborat:
-
-### Vizual Box Model Diagrammasi
-┌───────────────────────────────────────────────┐│                   MARGIN                      │  <- 4. Tashqi bo'shliq│   ┌───────────────────────────────────────┐   ││   │               BORDER                  │   │  <- 3. Chegara│   │   ┌───────────────────────────────┐   │   ││   │   │           PADDING             │   │   │  <- 2. Ichki bo'shliq│   │   │   ┌───────────────────────┐   │   │   ││   │   │   │                       │   │   │   ││   │   │   │        CONTENT        │   │   │   │  <- 1. Haqiqiy kontent│   │   │   │                       │   │   │   ││   │   │   └───────────────────────┘   │   │   ││   │   └───────────────────────────────┘   │   ││   └───────────────────────────────────────┘   │└───────────────────────────────────────────────┘
-### Qatlamlarning Tushuntirishi va CSS Misoli:
-1. **Content (Tarkib):** Elementning haqiqiy matni, rasmi yoki boshqa kontenti joylashadigan markaziy maydon.
-2. **Padding (Ichki bo'shliq):** Kontent va uning atrofidagi chegara (Border) orasidagi masofa. Element foni unga ham ta'sir qiladi.
-3. **Border (Chegara):** Padding va Margin o'rtasidagi chiziq. U qalinlik, rang va shaklga ega bo'ladi.
-4. **Margin (Tashqi bo'shliq):** Element chegarasidan tashqaridagi to'liq shaffof maydon. U qo'shni elementlarni bir-biridan itarish uchun xizmat qiladi.
-
-```css
-.box-example {
-    width: 300px;         /* Content eni */
-    height: 150px;        /* Content bo'yi */
-    padding: 20px;        /* To'rt tomondan 20px ichki bo'shliq */
-    border: 5px solid;    /* 5px qalinlikdagi chegara */
-    margin: 30px;         /* Boshqa elementlardan 30px uzoqlashish */
+CSS
+.parent {
+    display: flex;
+    justify-content: center; /* Gorizontal markazlash */
+    align-items: center;     /* Vertikal markazlash */
+    height: 300px;           /* Balandlik shart */
 }
-2. box-sizing: content-box va border-box FarqiBu xossa elementning umumiy o'lchamlari (eni va bo'yi) brauzerda qanday hisoblanishini belgilaydi.A. content-box (Standart qiymat)Brauzer siz bergan width qiymatiga padding va border qalinligini qo'shimcha ravishda qo'shadi.Formula: $\text{Haqiqiy eni} = \text{width} + \text{chap-o'ng padding} + \text{chap-o'ng border}$CSS.item-content-box {
-    box-sizing: content-box;
-    width: 300px;
-    padding: 20px; /* Chap + o'ng = 40px */
-    border: 5px solid black; /* Chap + o'ng = 10px */
-    /* Ekrandagi haqiqiy eni: 300 + 40 + 10 = 350px bo'lib, maketni buzishi mumkin */
+Usul 2: CSS Grid (Eng qisqa kod)
+Atigi ikki qator kod bilan mukammal markazlash.
+
+CSS
+.parent {
+    display: grid;
+    place-items: center;     /* Ham gorizontal, ham vertikal */
+    height: 300px;
 }
-B. border-box (Tavsiya etilgan amaliyot)Brauzer padding va border-ni siz bergan width o'lchamining ichiga joylashtiradi. Kontent maydoni shunga mos ravishda siqiladi.Formula: $\text{Haqiqiy eni} = \text{Faqat siz bergan width (300px)}$CSS.item-border-box {
-    box-sizing: border-box;
-    width: 300px;
+Usul 3: Absolute Position + Transform (Dinamik o'lchamlar uchun)
+Agar .child elementining eni va bo'yi aniq bo'lmasa ham mukammal ishlaydi.
+
+CSS
+.parent {
+    position: relative;
+    height: 300px;
+}
+.child {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* O'z eni va bo'yining yarmi miqdorida orqaga suradi */
+}
+Usul 4: Absolute Position + Margin Auto (O'lchamlari aniq elementlar uchun)
+Agar .child elementining eni va bo'yi aniq belgilangan bo'lsa, ushbu klassik usul ajoyib ishlaydi.
+
+CSS
+.parent {
+    position: relative;
+    height: 300px;
+}
+.child {
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+}
+Usul 5: Flexbox + Auto Margin (Ajoyib trik)
+Flex-konteyner ichidagi elementga margin: auto berish uni har tomondan o'rtaga suradi.
+
+CSS
+.parent {
+    display: flex;
+    height: 300px;
+}
+.child {
+    margin: auto; /* Avtomatik ravishda markazlashadi */
+}
+2. Sticky Footer (Yopishqoq Footer)
+Muammo: Agar sahifada kontent kam bo'lsa, footer sahifaning o'rtasiga chiqib qoladi.
+Yechim: Flexbox yordamida sahifa balandligi kamida 100vh bo'lishini ta'minlab, kontent kam bo'lsa ham foterning har doim pastda turishiga erishamiz.
+
+HTML
+<body class="site-wrapper">
+    <header>Header</header>
+    <main class="main-content">Asosiy kontent (bu yerda matn kam bo'lsa ham footer pastda qoladi)</main>
+    <footer>Footer</footer>
+</body>
+CSS
+.site-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ekran balandligini to'liq egallaydi */
+    margin: 0;
+}
+
+.main-content {
+    flex-grow: 1; /* Barcha bo'sh joyni egallab, foterini pastga itaradi */
+}
+3. Holy Grail Layout (Muqaddas Maket)
+Header, chap va o'ng yon panellar (sidebar), asosiy kontent va footerga ega bo'lgan klassik 3 ustunli maket. CSS Grid yordamida buni juda oson va semantik tarzda yaratish mumkin.
+
+HTML
+<div class="holy-grail">
+    <header>Header</header>
+    <aside class="left-sidebar">Chap Sidebar</aside>
+    <main class="content">Asosiy Kontent</main>
+    <aside class="right-sidebar">O'ng Sidebar</aside>
+    <footer>Footer</footer>
+</div>
+CSS
+.holy-grail {
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* Header, Kontent, Footer balandliklari */
+    grid-template-columns: 200px 1fr 200px; /* Sidebar, Asosiy kontent, Sidebar eni */
+    min-height: 100vh;
+}
+
+header {
+    grid-column: 1 / -1; /* To'liq eni bo'ylab cho'ziladi */
+}
+
+footer {
+    grid-column: 1 / -1; /* To'liq eni bo'ylab cho'ziladi */
+}
+
+/* Mobil qurilmalarga moslashtirish (Responsive) */
+@media (max-width: 768px) {
+    .holy-grail {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+    }
+    header, footer, .left-sidebar, .right-sidebar, .content {
+        grid-column: auto;
+    }
+}
+4. Teng Balandlikdagi Ustunlar (Equal Height Columns)
+Muammo: Ustunlar ichidagi matn miqdori turlicha bo'lganda, ularning balandligi har xil bo'lib qoladi va vizual dizayn buziladi.
+Yechim: Flexbox yoki Grid ishlatilganda, uning ichidagi barcha "choild" elementlar tabiiy ravishda eng uzun element balandligiga moslashadi (align-items: stretch xossasi sukut bo'yicha faol bo'ladi).
+
+HTML
+<div class="columns-container">
+    <div class="column">Kamroq matnli ustun.</div>
+    <div class="column">Juda ko'p matnli ustun. Bu ustunning balandligi eng katta bo'ladi va boshqa barcha ustunlar bunga tenglashadi.</div>
+    <div class="column">O'rtacha matnli ustun.</div>
+</div>
+CSS
+.columns-container {
+    display: flex; /* Yoki display: grid; grid-template-columns: repeat(3, 1fr); */
+    gap: 20px;
+}
+
+.column {
+    background-color: #e2e8f0;
     padding: 20px;
-    border: 5px solid black;
-    /* Ekrandagi haqiqiy eni: aniq 300px qoladi. Kontent maydoni 250px-ga tenglashadi */
+    flex: 1; /* Ustunlar eni teng bo'lishi uchun */
 }
-3. Specificity (CSS Ustunligi) KalkulyatsiyasiKaskad qoidasiga ko'ra, bitta elementga bir nechta har xil selektor stillari yozilsa, g'olibni Specificity ball tizimi aniqlaydi.Ball tizimi iyerarxiyasi: (Inline, ID, Class/Attribute, Element) yoki shartli ravishda [0, 0, 0, 0] ko'rinishida hisoblanadi.5 ta Amaliy Misol Tahlili:div pTarkibi: 2 ta Element (div, p)Ball: [0, 0, 0, 2].card .titleTarkibi: 2 ta Klass (.card, .title)Ball: [0, 0, 2, 0] (Yuqoridagidan ustun)#main-content .text pTarkibi: 1 ta ID (#main-content), 1 ta Klass (.text), 1 ta Element (p)Ball: [0, 1, 1, 1]ul.nav-list li:hoverTarkibi: 2 ta Element (ul, li), 1 ta Klass (.nav-list), 1 ta Pseudo-klass (:hover)Ball: [0, 0, 2, 2]#sidebar div.active a[href]Tarkibi: 1 ta ID (#sidebar), 1 ta Klass (.active), 1 ta Atribut ([href]), 2 ta Element (div, a)Ball: [0, 1, 2, 2] (Ushbu ro'yxatdagi eng yuqori ustunlikka ega selektor)4. display: none, visibility: hidden va opacity: 0 farqlariElementni ekrandan yashirishning ushbu uchta usuli o'zining mexanizmi bilan keskin farq qiladi:CSS/* 1. display: none */
-.hide-completely {
-    display: none;
-    /* Element DOMda qoladi, lekin ekranda mutloq joy egallamaydi (g'oyib bo'ladi). 
-       Interaktiv emas (kliklab bo'lmaydi), animatsiya qilib bo'lmaydi. */
+5. Fixed Header bilan To'liq Sahifa Layout
+Header sahifaning tepasida qotib turadi (skrol qilinganda ham), qolgan kontent esa uning ostidan boshlanadi. Bu yerda asosiy e'tibor kontent headerning orqasida yashirinib qolmasligiga qaratiladi.
+
+HTML
+<header class="fixed-header">Logo & Navigatsiya</header>
+<main class="page-content">
+    <h1>Asosiy sarlavha</h1>
+    <p>Sahifaning uzun kontenti shu yerda davom etadi...</p>
+</main>
+CSS
+:root {
+    --header-height: 70px; /* Header balandligini o'zgaruvchida saqlaymiz */
 }
 
-/* 2. visibility: hidden */
-.hide-invisible {
-    visibility: hidden;
-    /* Element ekranda ko'rinmaydi, lekin o'z joyini saqlab qoladi (bo'shliq ko'rinadi).
-       Foydalanuvchi u bilan ishlay olmaydi (kliklab bo'lmaydi). */
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--header-height);
+    background-color: #0f172a;
+    color: white;
+    z-index: 1000; /* Boshqa elementlardan ustun turishi uchun */
 }
 
-/* 3. opacity: 0 */
-.hide-transparent {
-    opacity: 0;
-    /* Element to'liq shaffof (ko'rinmas) holatga keladi va o'z joyini saqlab qoladi.
-       ENG MUHIMI: U hamon interaktiv — ko'rinmas bo'lsa ham uni kliklash mumkin!
-       Transition orqali silliq animatsiyalar (fade-in/fade-out) yaratishga mos keladi. */
+.page-content {
+    /* Eng muhim qism: Kontent fixed header ostida qolib ketmasligi uchun 
+       header balandligicha yuqoridan bo'shliq (margin yoki padding) beramiz */
+    margin-top: var(--header-height);
+    padding: 30px;
+    min-height: calc(100vh - var(--header-height));
 }
-5. !important Qoidasi: Qachon ishlatish kerak va kerak emas?!important kalit so'zi CSS-dagi barcha o'lchov va Specificity qoidalarini chetlab o'tib, stillni mutloq g'olib qiladi.❌ Ishlatish tavsiya etilmaydi (Yomon amaliyot):Oddiy kod yozish jarayonida: Agar klassingiz elementga ta'sir qilmayotgan bo'lsa, unga !important berib majburlash arxitekturani buzadi. Keyinchalik o'sha elementni o'zgartirish juda qiyinlashadi.Global komponentlar yozganda: .btn { color: white !important; } deb yozilsa, keyinchalik loyihada qora rangli tugma yaratish imkonsiz bo'lib qoladi.Ishlatish tavsiya etiladi (Yaxshi amaliyot):Yordamchi (Utility) klasslarda: Global va faqat bitta vazifani o'taydigan klasslar har doim ishonchli ishlashi uchun:CSS.text-center { text-align: center !important; }
-.d-none { display: none !important; }
-Tashqi kutubxonalar (Bootstrap, Tailwind v.h) stillarini majburiy o'zgartirishda: Agar tayyor plugin yoki kutubxonaning chuqur yozilgan kodini o'zgartirishga selektoringizning kuchi yetmayotgan bo'lsa, yagona to'g'ri yo'l sifatida qo'llaniladi.
