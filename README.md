@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Portfolio</title>
+    <title>Tariflar va FAQ</title>
     <style>
-        /* 7. CSS Custom Properties (Dark Professional Scheme) */
+        /* CSS Custom Properties */
         :root {
-            --bg-main: #0f172a;       /* To'q ko'k-kulrang fon */
-            --bg-card: #1e293b;       /* Kartalar uchun ochroq to'q rang */
-            --primary: #38bdf8;       /* Neon havorang (asosiy urg'u) */
-            --primary-hover: #0ea5e9; /* Hover holatidagi havorang */
-            --text-main: #f8fafc;     /* Oq-kumushrang matn */
-            --text-muted: #94a3b8;    /* Xira matn */
-            --border: #334155;        /* Chegaralar */
-            --radius: 12px;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #0f172a;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* 6. Silliq scroll (Smooth Scroll) */
-        html {
-            scroll-behavior: smooth;
         }
 
         * {
@@ -31,558 +30,559 @@
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-main);
+            background-color: var(--bg-light);
             color: var(--text-main);
             line-height: 1.6;
+            padding: 60px 20px;
         }
 
         .container {
-            max-width: 1140px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 0 24px;
         }
 
-        section {
-            padding: 100px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .section-title {
-            font-size: 2.25rem;
-            font-weight: 800;
-            margin-bottom: 45px;
+        .header {
             text-align: center;
-            position: relative;
+            margin-bottom: 50px;
         }
 
-        .section-title span {
-            color: var(--primary);
-        }
-
-        /* 6. Navigatsiya paneli */
-        nav {
-            background-color: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            padding: 20px 0;
-        }
-
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
+        .header h1 {
+            font-size: 2.5rem;
             font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--white);
-            text-decoration: none;
+            color: var(--secondary);
+            margin-bottom: 15px;
         }
 
-        .logo span { color: var(--primary); }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
+        .header p {
             color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        /* Umumiy tugma stili */
-        .btn {
-            display: inline-block;
-            background-color: var(--primary);
-            color: var(--bg-main);
-            padding: 12px 28px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: 700;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--primary);
-            color: var(--bg-main);
-        }
-
-        /* 1. Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding-top: 140px;
-        }
-
-        .hero-content {
-            max-width: 700px;
-        }
-
-        .hero h2 {
-            color: var(--primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 20px;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 35px;
-        }
-
-        /* 2. About Section */
-        .about-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 60px;
-        }
-
-        .about-img {
-            flex-shrink: 0;
-            width: 320px;
-            height: 320px;
-            border-radius: var(--radius);
-            background: linear-gradient(135deg, var(--primary), #a855f7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 5rem;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
-        }
-
-        .about-text p {
-            color: var(--text-muted);
-            margin-bottom: 25px;
             font-size: 1.1rem;
         }
 
-        .experience-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 15px;
-            background-color: var(--bg-card);
-            padding: 16px 28px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-        }
-
-        .exp-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        /* 3. Loyihalar Grid Layout */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .project-card {
-            background-color: var(--bg-card);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            transition: var(--transition);
-        }
-
-        .project-card:hover {
-            transform: translateY(-6px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
-        }
-
-        .project-img-placeholder {
-            height: 200px;
-            background-color: #1e293b;
+        /* 1. Toggle - Oylik/Yillik (Faqat CSS yordamida) */
+        .toggle-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            border-bottom: 1px solid var(--border);
+            gap: 15px;
+            margin-bottom: 50px;
         }
 
-        .project-info {
-            padding: 24px;
-        }
-
-        .project-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 12px;
-        }
-
-        .project-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .tag {
-            background-color: rgba(56, 189, 248, 0.1);
-            color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 50px;
-            font-size: 0.8rem;
+        .toggle-label {
             font-weight: 600;
-        }
-
-        .project-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .project-link:hover {
-            text-decoration: underline;
-        }
-
-        /* 4. Ko'nikmalar (Skills - Badges & Progress Bars) */
-        .skills-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        .skill-group h3 {
-            margin-bottom: 20px;
-            font-size: 1.25rem;
-        }
-
-        .skills-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .skill-badge {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 12px 20px;
-            border-radius: var(--radius);
-            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-muted);
             transition: var(--transition);
         }
 
-        .skill-badge:hover {
-            border-color: var(--primary);
-            background-color: rgba(56, 189, 248, 0.05);
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
         }
 
-        .progress-item {
-            margin-bottom: 20px;
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
 
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: var(--transition);
+            border-radius: 34px;
         }
 
-        .progress-bar-bg {
-            background-color: var(--border);
-            height: 8px;
-            border-radius: 10px;
-            overflow: hidden;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .progress-bar-fill {
+        input:checked + .slider {
             background-color: var(--primary);
-            height: 100%;
-            border-radius: 10px;
         }
 
-        /* 5. Aloqa shakli (Contact Form) */
-        .contact-wrapper {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: var(--bg-card);
-            padding: 40px;
-            border-radius: var(--radius);
+        input:focus-visible + .slider {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Narxlarni almashish mantig'i */
+        .price-yearly {
+            display: none;
+        }
+
+        /* Input belgilanganda oylikni yashirib, yillikni ko'rsatish */
+        #billing-toggle:checked ~ .pricing-grid .price-monthly {
+            display: none;
+        }
+        #billing-toggle:checked ~ .pricing-grid .price-yearly {
+            display: inline-block;
+        }
+
+        /* Aktiv holatdagi tekst rangini o'zgartirish */
+        #billing-toggle:not(:checked) ~ .toggle-wrapper .label-monthly {
+            color: var(--secondary);
+        }
+        #billing-toggle:checked ~ .toggle-wrapper .label-yearly {
+            color: var(--secondary);
+        }
+
+        /* 2. 3 ta tarif kartasi (Grid Layout) */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 40px 30px;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        /* 7. Hover & Focus animatsiyalari kartalarda */
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
         }
 
-        .form-group label {
+        /* 4. Pro karta vizual ajratilgan */
+        .card.featured {
+            border-color: var(--primary);
+            border-width: 2px;
+            transform: scale(1.03);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.1);
+        }
+
+        .card.featured:hover {
+            transform: scale(1.03) translateY(-8px);
+        }
+
+        .badge-popular {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-header h3 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .card-header .description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+            height: 48px;
+        }
+
+        .card-price {
+            margin-bottom: 25px;
+        }
+
+        .amount {
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .period {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 35px;
+            flex-grow: 1;
+        }
+
+        .features-list li {
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list li.unavailable {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .icon-check { color: #10b981; font-weight: bold; }
+        .icon-x { color: #ef4444; font-weight: bold; }
+
+        /* CTA Tugmalari */
+        .btn-pricing {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
+            text-align: center;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: var(--transition);
+            border: 2px solid var(--primary);
+            background-color: transparent;
+            color: var(--primary);
+        }
+
+        .btn-pricing:hover, .btn-pricing:focus-visible {
+            background-color: var(--primary);
+            color: var(--white);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+
+        .featured .btn-pricing {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .featured .btn-pricing:hover, .featured .btn-pricing:focus-visible {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        /* 5. Xususiyatlar taqqoslash jadvali */
+        .table-section {
+            margin-bottom: 80px;
+        }
+
+        .table-section h2 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 35px;
+            color: var(--secondary);
+        }
+
+        .comparison-table-wrapper {
+            background-color: var(--white);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
             font-size: 0.95rem;
         }
 
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            background-color: var(--bg-main);
+        th {
+            background-color: #f1f5f9;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        tr:hover td {
+            background-color: var(--bg-light);
+        }
+
+        /* 6. FAQ Section (details/summary) */
+        .faq-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 35px;
+            color: var(--secondary);
+        }
+
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        details {
+            background-color: var(--white);
             border: 1px solid var(--border);
-            padding: 14px;
-            border-radius: 8px;
-            color: var(--text-main);
-            font-family: inherit;
-            outline: none;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
             transition: var(--transition);
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
+        details[open] {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
         }
 
-        .contact-wrapper .btn {
-            width: 100%;
+        summary {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            outline: none;
         }
 
-        /* Footer */
-        footer {
-            padding: 40px 0;
-            text-align: center;
+        summary::-webkit-details-marker {
+            display: none; /* Safari uchun standart o'qchani olib tashlash */
+        }
+
+        summary::after {
+            content: "+";
+            font-size: 1.5rem;
+            font-weight: bold;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            transition: var(--transition);
         }
 
-        /* Responsive Layout */
-        @media (max-width: 992px) {
-            .about-wrapper {
-                flex-direction: column;
-                text-align: center;
-            }
-            .skills-container {
-                grid-template-columns: 1fr;
-            }
+        details[open] summary::after {
+            content: "−";
+            transform: rotate(180deg);
+            color: var(--primary);
         }
 
+        details p {
+            margin-top: 15px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Interactive focus support */
+        summary:focus-visible {
+            color: var(--primary);
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.75rem;
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
             }
-            .nav-links {
-                display: none; /* Mobil qurilmalarda menyuni soddalashtirish uchun */
+
+            .card.featured {
+                transform: none;
+            }
+
+            .card.featured:hover {
+                transform: translateY(-8px);
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Navigatsiya paneli -->
-    <nav>
-        <div class="container nav-container">
-            <a href="#" class="logo">Dev<span>Portfolio</span></a>
-            <ul class="nav-links">
-                <li><a href="#hero">Asosiy</a></li>
-                <li><a href="#about">Men haqimda</a></li>
-                <li><a href="#projects">Loyihalar</a></li>
-                <li><a href="#skills">Ko'nikmalar</a></li>
-                <li><a href="#contact">Aloqa</a></li>
-            </ul>
+    <div class="container">
+        
+        <!-- Sarlavha -->
+        <div class="header">
+            <h1>Sizga mos keladigan tarif</h1>
+            <p>Hech qanday yashirin to'lovlarsiz shaffof va qulay narxlar.</p>
         </div>
-    </nav>
 
-    <!-- 1. Hero Section -->
-    <section class="hero" id="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h2>Salom, mening ismim</h2>
-                <h1>Asilbek Kamolov</h1>
-                <p>Men Full-Stack veb-dasturchiman. Zamonaviy, tezkor va foydalanuvchilar uchun qulay bo'lgan veb-ilovalarni noldan boshlab loyihalashtiraman va yarataman.</p>
-                <a href="#" class="btn" download>CV Yuklab Olish</a>
+        <!-- 1. Toggle Element (Narxlar almashishi uchun) -->
+        <input type="checkbox" id="billing-toggle" style="display: none;">
+        
+        <div class="toggle-wrapper">
+            <span class="toggle-label label-monthly">Oylik</span>
+            <label class="switch" for="billing-toggle">
+                <span class="slider"></span>
+            </label>
+            <span class="toggle-label label-yearly">Yillik (20% chegirma)</span>
+        </div>
+
+        <!-- 2. Tarif Kartalari -->
+        <div class="pricing-grid">
+            
+            <!-- Starter karta -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Starter</h3>
+                    <p class="description">Shaxsiy loyihalar va endi boshlovchilar uchun.</p>
+                </div>
+                <div class="card-price">
+                    <span class="amount price-monthly">$19</span>
+                    <span class="amount price-yearly">$15</span>
+                    <span class="period">/ oyiga</span>
+                </div>
+                <ul class="features-list">
+                    <li><span class="icon-check">✓</span> 1 ta foydalanuvchi</li>
+                    <li><span class="icon-check">✓</span> 5 GB xotira</li>
+                    <li><span class="icon-check">✓</span> Asosiy tahlillar (analytics)</li>
+                    <li class="unavailable"><span class="icon-x">✗</span> Hamkorlik asboblari</li>
+                    <li class="unavailable"><span class="icon-x">✗</span> 24/7 Premium qo'llab-quvvatlash</li>
+                </ul>
+                <a href="#" class="btn-pricing">Hozir boshlash</a>
             </div>
-        </div>
-    </section>
 
-    <!-- 2. About Section -->
-    <section id="about">
-        <div class="container">
-            <h2 class="section-title">Men <span>Haqimda</span></h2>
-            <div class="about-wrapper">
-                <div class="about-img">👨‍💻</div>
-                <div class="about-text">
-                    <p>Men raqamli dunyoda chiroyli va mukammal kod yozishga ishtiyoqmand dasturchiman. Oxirgi yillarda ko'plab startap loyihalar va korporativ veb-saytlarni muvaffaqiyatli ishlab chiqishda qatnashdim. Har doim yangi texnologiyalarni o'rganishga va bilimlarimni amalda sinashga tayyorman.</p>
-                    <div class="experience-badge">
-                        <span class="exp-number">4+</span>
-                        <div>
-                            <h4 style="font-weight: 700;">Yillik Tajriba</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">Dasturlash sohasida</p>
-                        </div>
-                    </div>
+            <!-- Pro karta (Featured) -->
+            <div class="card featured">
+                <span class="badge-popular">Eng ommabop</span>
+                <div class="card-header">
+                    <h3>Pro</h3>
+                    <p class="description">Tez rivojlanayotgan jamoalar va professionallar uchun.</p>
                 </div>
+                <div class="card-price">
+                    <span class="amount price-monthly">$49</span>
+                    <span class="amount price-yearly">$39</span>
+                    <span class="period">/ oyiga</span>
+                </div>
+                <ul class="features-list">
+                    <li><span class="icon-check">✓</span> 5 tagacha foydalanuvchi</li>
+                    <li><span class="icon-check">✓</span> 50 GB xotira</li>
+                    <li><span class="icon-check">✓</span> Kengaytirilgan tahlillar</li>
+                    <li><span class="icon-check">✓</span> Jamoaviy hamkorlik</li>
+                    <li class="unavailable"><span class="icon-x">✗</span> 24/7 Premium yordam</li>
+                </ul>
+                <a href="#" class="btn-pricing">Sinab ko'rish</a>
             </div>
-        </div>
-    </section>
 
-    <!-- 3. Loyihalar Grid Section -->
-    <section id="projects">
-        <div class="container">
-            <h2 class="section-title">Mening <span>Loyihalarim</span></h2>
-            <div class="projects-grid">
-                <!-- Loyer 1 -->
-                <div class="project-card">
-                    <div class="project-img-placeholder">🛒</div>
-                    <div class="project-info">
-                        <h3>E-Commerce Platforma</h3>
-                        <div class="project-tags">
-                            <span class="tag">React</span>
-                            <span class="tag">Node.js</span>
-                            <span class="tag">MongoDB</span>
-                        </div>
-                        <a href="#" class="project-link">Loyihani ko'rish →</a>
-                    </div>
+            <!-- Enterprise karta -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Enterprise</h3>
+                    <p class="description">Katta korxonalar va maxsus talablar uchun.</p>
                 </div>
-                <!-- Loyer 2 -->
-                <div class="project-card">
-                    <div class="project-img-placeholder">📊</div>
-                    <div class="project-info">
-                        <h3>SaaS Dashboard</h3>
-                        <div class="project-tags">
-                            <span class="tag">Vue.js</span>
-                            <span class="tag">Tailwind CSS</span>
-                            <span class="tag">Firebase</span>
-                        </div>
-                        <a href="#" class="project-link">Loyihani ko'rish →</a>
-                    </div>
+                <div class="card-price">
+                    <span class="amount price-monthly">$99</span>
+                    <span class="amount price-yearly">$79</span>
+                    <span class="period">/ oyiga</span>
                 </div>
-                <!-- Loyer 3 -->
-                <div class="project-card">
-                    <div class="project-img-placeholder">💬</div>
-                    <div class="project-info">
-                        <h3>Chat Ilovasi</h3>
-                        <div class="project-tags">
-                            <span class="tag">Socket.io</span>
-                            <span class="tag">Express</span>
-                            <span class="tag">JavaScript</span>
-                        </div>
-                        <a href="#" class="project-link">Loyihani ko'rish →</a>
-                    </div>
-                </div>
-                <!-- Loyer 4 -->
-                <div class="project-card">
-                    <div class="project-img-placeholder">📝</div>
-                    <div class="project-info">
-                        <h3>Task Manager App</h3>
-                        <div class="project-tags">
-                            <span class="tag">Next.js</span>
-                            <span class="tag">TypeScript</span>
-                            <span class="tag">PostgreSQL</span>
-                        </div>
-                        <a href="#" class="project-link">Loyihani ko'rish →</a>
-                    </div>
-                </div>
+                <ul class="features-list">
+                    <li><span class="icon-check">✓</span> Cheksiz foydalanuvchi</li>
+                    <li><span class="icon-check">✓</span> 500 GB xotira</li>
+                    <li><span class="icon-check">✓</span> To'liq maxsus tahlillar</li>
+                    <li><span class="icon-check">✓</span> Kengaytirilgan xavfsizlik</li>
+                    <li><span class="icon-check">✓</span> 24/7 Premium yordam</li>
+                </ul>
+                <a href="#" class="btn-pricing">Aloqaga chiqish</a>
             </div>
-        </div>
-    </section>
 
-    <!-- 4. Ko'nikmalar Section -->
-    <section id="skills">
-        <div class="container">
-            <h2 class="section-title">Mening <span>Ko'nikmalarim</span></h2>
-            <div class="skills-container">
-                <!-- Progress bars -->
-                <div class="skill-group">
-                    <h3>Asosiy yo'nalishlar</h3>
-                    <div class="progress-item">
-                        <div class="progress-info"><span>Frontend (React / Vue)</span><span>90%</span></div>
-                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 90%;"></div></div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-info"><span>Backend (Node.js / Python)</span><span>80%</span></div>
-                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 80%;"></div></div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-info"><span>Ma'lumotlar bazasi (SQL / NoSQL)</span><span>75%</span></div>
-                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div>
-                    </div>
-                </div>
-                <!-- Badges -->
-                <div class="skill-group">
-                    <h3>Texnologiyalar & Asboblar</h3>
-                    <div class="skills-badges">
-                        <span class="skill-badge">HTML5 / CSS3</span>
-                        <span class="skill-badge">JavaScript (ES6+)</span>
-                        <span class="skill-badge">TypeScript</span>
-                        <span class="skill-badge">Tailwind CSS</span>
-                        <span class="skill-badge">Git & GitHub</span>
-                        <span class="skill-badge">Docker</span>
-                        <span class="skill-badge">REST API</span>
-                        <span class="skill-badge">GraphQL</span>
-                    </div>
-                </div>
+        </div>
+
+        <!-- 5. Taqqoslash Jadvali -->
+        <section class="table-section">
+            <h2>Imkoniyatlarni taqqoslang</h2>
+            <div class="comparison-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Xususiyat</th>
+                            <th>Starter</th>
+                            <th>Pro</th>
+                            <th>Enterprise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Loyiha soni</td>
+                            <td>3 ta loyiha</td>
+                            <td>15 ta loyiha</td>
+                            <td>Cheksiz</td>
+                        </tr>
+                        <tr>
+                            <td>Ma'lumotlarni saqlash</td>
+                            <td>5 GB</td>
+                            <td>50 GB</td>
+                            <td>500 GB</td>
+                        </tr>
+                        <tr>
+                            <td>API kirish huquqi</td>
+                            <td><span class="icon-x">✗</span> Yo'q</td>
+                            <td><span class="icon-check">✓</span> Bor</td>
+                            <td><span class="icon-check">✓</span> Bor</td>
+                        </tr>
+                        <tr>
+                            <td>Maxsus domen ulanishi</td>
+                            <td><span class="icon-x">✗</span> Yo'q</td>
+                            <td><span class="icon-check">✓</span> Bor</td>
+                            <td><span class="icon-check">✓</span> Bor</td>
+                        </tr>
+                        <tr>
+                            <td>Qo'llab-quvvatlash</td>
+                            <td>Email orqali</td>
+                            <td>Ish vaqtida</td>
+                            <td>24/7 Premium VIP</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- 5. Aloqa shakli Section -->
-    <section id="contact">
-        <div class="container">
-            <h2 class="section-title">Men bilan <span>Bog'lanish</span></h2>
-            <div class="contact-wrapper">
-                <form action="#" onsubmit="event.preventDefault(); alert('Xabaringiz yuborildi! Rahmat.');">
-                    <div class="form-group">
-                        <label for="name">Ismingiz</label>
-                        <input type="text" id="name" required placeholder="Ismingizni kiriting">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email manzilingiz</label>
-                        <input type="email" id="email" required placeholder="example@mail.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Xabaringiz</label>
-                        <textarea id="message" rows="5" required placeholder="Xabaringizni bu yerga yozing..."></textarea>
-                    </div>
-                    <button type="submit" class="btn">Xabarni Yuborish</button>
-                </form>
+        <!-- 6. FAQ Section (Savol-javoblar) -->
+        <section class="faq-section">
+            <h2>Ko'p so'raladigan savollar</h2>
+            <div class="faq-list">
+                
+                <details>
+                    <summary>Sotib olishdan oldin bepul sinab ko'rsam bo'ladimi?</summary>
+                    <p>Ha, albatta! Istalgan tarifimizni 14 kun davomida mutlaqo bepul va hech qanday bank kartasisiz sinab ko'rishingiz mumkin.</p>
+                </details>
+
+                <details>
+                    <summary>Tarifni istalgan vaqtda o'zgartirsam yoki bekor qilsam bo'ladimi?</summary>
+                    <p>Ha, xohlagan vaqtingizda profilingiz orqali tarifingizni oshirishingiz, pasaytirishingiz yoki obunani butunlay bekor qilishingiz mumkin. Hech qanday jarima to'lovlari yo'q.</p>
+                </details>
+
+                <details>
+                    <summary>Yillik to'lovning qanday afzalligi bor?</summary>
+                    <p>Yillik obunani tanlasangiz, jami summadan 20% gacha tejab qolasiz. Bu oylik to'lovga qaraganda ancha foydalidir.</p>
+                </details>
+
+                <details>
+                    <summary>To'lovlar xavfsizligi qanday ta'minlanadi?</summary>
+                    <p>Biz barcha to'lovlarni xalqaro xavfsizlik talablariga javob beradigan va shifrlangan shlyuzlar (Stripe/PayPal) orqali qabul qilamiz. Karta ma'lumotlaringiz bizning serverlarda saqlanmaydi.</p>
+                </details>
+
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 DevPortfolio. Barcha huquqlar himoyalangan.</p>
-        </div>
-    </footer>
+    </div>
 
 </body>
 </html>
