@@ -1,86 +1,86 @@
-// ─── Massiv iteratorlari — to'liq sweep ──────────────────────────────────
+// ─── Template literallar va string metodlari ─────────────────────────────
 
-const sonlar = [1, 5, -3, 8, -2, 11, 0, 7];
+// 1) Template literal asoslari
+const ism = "Ali";
+const yosh = 21;
+const kasb = "frontend dev";
 
-// 1) map — har elementni transformatsiya
-console.log(sonlar.map(x => x * x));
+console.log(`Salom, ${ism}! ${yosh} yoshdagi ${kasb}.`);
 
-// 2) filter — shartga to'g'ri keladiganlar
-console.log(sonlar.filter(x => x > 0));
+// 2) Ichida ifoda — hisob va metod chaqirish
+const ball = 87;
+console.log(`Ball: ${ball}, daraja: ${ball >= 90 ? "A'lo" : ball >= 70 ? "Yaxshi" : "F"}`);
+console.log(`Katta: ${ism.toUpperCase()} (${ism.length} ta harf)`);
 
-// 3) filter + map zanjiri
-const musbat_kvadratlar = sonlar
-    .filter(x => x > 0)
-    .map(x => x * x);
-console.log("Musbat kvadratlar:", musbat_kvadratlar);
+// 3) Ko'p qatorli xat
+const xat = `Salom, ${ism}!
 
-// 4) reduce — yig'indi
-const jami = sonlar.reduce((acc, x) => acc + x, 0);
-console.log("Jami:", jami);
+Bu — sizning yutuqlaringizning oylik hisoboti:
+  • Ball:   ${ball}
+  • Kasb:   ${kasb}
+  • Maqsad: 95+ ball
 
-// 5) reduce — group by (eng kuchli pattern)
-const matnlar = ["olma", "olma", "non", "olma", "non", "sut", "sut"];
-const sanash = matnlar.reduce((acc, m) => {
-    acc[m] = (acc[m] || 0) + 1;
-    return acc;
-}, {});
-console.log("Sanash:", sanash);
+Hurmat bilan,
+Jamoa`;
+console.log(xat);
 
-// 6) reduce — eng katta sonni topish
-const eng_katta = sonlar.reduce((a, b) => (a > b ? a : b));
-console.log("Eng katta:", eng_katta);
+// 4) String metodlari — sweep
+const matn = "   Modern JavaScript juda kuchli!   ";
 
-// 7) Real ma'lumot — talabalar
+console.log(matn.trim());
+console.log(matn.trim().toLowerCase());
+console.log(matn.includes("Java"));
+console.log(matn.startsWith("   Modern"));
+console.log(matn.endsWith("!   "));
+console.log(matn.indexOf("Java"));
+console.log(matn.slice(3, 9));                    // "Modern"
+console.log(matn.replaceAll(" ", "_"));
+
+// 5) split + join — matnni qayta tartiblash
+const teglar = "html, css, js, react, vue";
+const massiv = teglar.split(",").map(t => t.trim());
+console.log(massiv);
+console.log(massiv.join(" | "));
+
+// 6) padStart, padEnd — jadval kabi formatlash
+console.log("Ism".padEnd(15, ".") + "Ball");
+console.log("".padEnd(20, "─"));
+
 const talabalar = [
-    { ism: "Ali",     ball: 87, kasb: "dev" },
-    { ism: "Vali",    ball: 54, kasb: "designer" },
-    { ism: "Gulya",   ball: 92, kasb: "dev" },
-    { ism: "Doniyor", ball: 68, kasb: "qa" },
-    { ism: "Karim",   ball: 95, kasb: "dev" },
+    { ism: "Ali",     ball: 87 },
+    { ism: "Vali",    ball: 54 },
+    { ism: "Gulya",   ball: 92 },
+    { ism: "Doniyor", ball: 68 },
 ];
 
-// find — birinchi yuqori ballini topish
-const a_lo = talabalar.find(t => t.ball >= 90);
-console.log("Birinchi A'lo:", a_lo);
-
-// some / every
-console.log("Bor a'lo:",      talabalar.some(t => t.ball >= 90));
-console.log("Hammasi >50:",   talabalar.every(t => t.ball > 50));
-
-// 8) Chain — TOP 3 dev
-const top3_dev = talabalar
-    .filter(t => t.kasb === "dev")
-    .sort((a, b) => b.ball - a.ball)
-    .slice(0, 3);
-console.log("TOP 3 dev:", top3_dev);
-
-// 9) reduce — kasb bo'yicha guruhlash
-const kasb_guruhlari = talabalar.reduce((acc, t) => {
-    if (!acc[t.kasb]) acc[t.kasb] = [];
-    acc[t.kasb].push(t.ism);
-    return acc;
-}, {});
-console.log("Kasb guruhlari:", kasb_guruhlari);
-
-// 10) reduce — kasb bo'yicha o'rta ball
-const o_rta_per_kasb = Object.entries(kasb_guruhlari).map(([kasb, ismlar]) => {
-    const ballar = ismlar.map(ism =>
-        talabalar.find(t => t.ism === ism).ball,
-    );
-    const o_rta = ballar.reduce((a, b) => a + b, 0) / ballar.length;
-    return { kasb, o_rta };
+talabalar.forEach(t => {
+    console.log(t.ism.padEnd(15, ".") + String(t.ball).padStart(3, "0"));
 });
-console.log("O'rta per kasb:", o_rta_per_kasb);
 
-// 11) Mahsulotlar misoli
-const mahsulotlar = [
-    { nom: "Olma", narx: 12000, soni: 5 },
-    { nom: "Non",  narx: 4000,  soni: 12 },
-    { nom: "Sut",  narx: 9000,  soni: 3 },
-];
+// 7) toLocaleString — sonlarni chiroyli
+const summa = 1_500_000;
+console.log(summa.toLocaleString("uz-UZ"));
+console.log(summa.toLocaleString("uz-UZ", { style: "currency", currency: "UZS" }));
+console.log((0.875).toLocaleString("uz-UZ", { style: "percent" }));
 
-const jami_summa = mahsulotlar.reduce(
-    (acc, m) => acc + m.narx * m.soni,
-    0,
-);
-console.log("Jami:", jami_summa.toLocaleString(), "so'm");
+// 8) Tagged template — kichik HTML highlighter
+function escape_html(s) {
+    return String(s)
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+function html(qismlar, ...qiymatlar) {
+    return qismlar.reduce((acc, q, i) =>
+        acc + q + (i < qiymatlar.length ? escape_html(qiymatlar[i]) : ""),
+    "");
+}
+
+const xavfli = "<script>alert(1)</script>";
+console.log(html`<p>Foydalanuvchi: ${xavfli}</p>`);
+// <p>Foydalanuvchi: &lt;script&gt;alert(1)&lt;/script&gt;</p>
+
+// 9) repeat va string yaratish
+console.log("─".repeat(40));
+console.log(" ".repeat(10) + "Yakuniy hisobot");
+console.log("─".repeat(40));
