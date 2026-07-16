@@ -1,93 +1,86 @@
-// ─── Arrow, destructuring, spread/rest — to'liq sweep ─────────────────────
+// ─── Massiv iteratorlari — to'liq sweep ──────────────────────────────────
 
-// 1) Arrow — barcha shakllar
-const ikkilash = x => x * 2;
-const qosh = (a, b) => a + b;
-const yarat = (id, nom) => ({ id, nom, vaqt: Date.now() });
-const ko_p = (a, b) => {
-    const natija = a * b;
-    return natija;
-};
+const sonlar = [1, 5, -3, 8, -2, 11, 0, 7];
 
-console.log(ikkilash(5));
-console.log(qosh(3, 4));
-console.log(yarat(1, "olma"));
+// 1) map — har elementni transformatsiya
+console.log(sonlar.map(x => x * x));
 
-// 2) Default parametrlar
-const salom = (ism, salom_so_zi = "Salom") => `${salom_so_zi}, ${ism}!`;
-console.log(salom("Ali"));
-console.log(salom("Vali", "Assalomu alaykum"));
+// 2) filter — shartga to'g'ri keladiganlar
+console.log(sonlar.filter(x => x > 0));
 
-// 3) Obyektdan destructuring
-const foydalanuvchi = {
-    ism: "Ali",
-    yosh: 21,
-    manzil: { shahar: "Toshkent", indeks: 100000 },
-    teglar: ["dev", "js"],
-};
+// 3) filter + map zanjiri
+const musbat_kvadratlar = sonlar
+    .filter(x => x > 0)
+    .map(x => x * x);
+console.log("Musbat kvadratlar:", musbat_kvadratlar);
 
-const { ism, yosh } = foydalanuvchi;
-console.log(ism, yosh);
+// 4) reduce — yig'indi
+const jami = sonlar.reduce((acc, x) => acc + x, 0);
+console.log("Jami:", jami);
 
-// Nested + default + nom o'zgartirish
-const {
-    ism: name,
-    kasb = "dev",
-    manzil: { shahar },
-    teglar: [birinchi_teg],
-} = foydalanuvchi;
-console.log(name, kasb, shahar, birinchi_teg);
+// 5) reduce — group by (eng kuchli pattern)
+const matnlar = ["olma", "olma", "non", "olma", "non", "sut", "sut"];
+const sanash = matnlar.reduce((acc, m) => {
+    acc[m] = (acc[m] || 0) + 1;
+    return acc;
+}, {});
+console.log("Sanash:", sanash);
 
-// 4) Funksiya argumentini destructure
-const tasvir = ({ ism, yosh, kasb = "noma'lum" }) =>
-    `${ism} (${yosh} yosh) — ${kasb}`;
-console.log(tasvir(foydalanuvchi));
+// 6) reduce — eng katta sonni topish
+const eng_katta = sonlar.reduce((a, b) => (a > b ? a : b));
+console.log("Eng katta:", eng_katta);
 
-// 5) Massivdan
-const [birinchi, ikkinchi, ...qolgani] = [10, 20, 30, 40, 50];
-console.log(birinchi, ikkinchi, qolgani);
-
-// O'rtasini o'tkazib yuborish
-const [bosh, , uchinchi] = [1, 2, 3];
-console.log(bosh, uchinchi);
-
-// 6) Spread — array
-const a = [1, 2, 3];
-const b = [4, 5];
-console.log([...a, ...b, 100]);
-console.log(Math.max(...a, ...b));
-
-// 7) Spread — obyekt
-const defaults = { theme: "dark", lang: "uz", timeout: 30 };
-const user = { lang: "en", verbose: true };
-console.log({ ...defaults, ...user });
-
-// 8) Rest — funksiya parametri
-const eng_kattasi = (...sonlar) => {
-    if (sonlar.length === 0) return null;
-    return Math.max(...sonlar);
-};
-console.log(eng_kattasi(3, 7, 2, 9, 4));
-
-// 9) Real misol — immutable update (React patterni)
-const eski = { ism: "Ali", yosh: 21, sevimli: ["python"] };
-const yangilangan = {
-    ...eski,
-    yosh: 22,
-    sevimli: [...eski.sevimli, "js", "ts"],
-};
-console.log("Eski:", eski);
-console.log("Yangi:", yangilangan);
-console.log("Eski o'zgarmagan:", eski.yosh === 21);
-
-// 10) Pipeline — talaba ballarini transformatsiya
+// 7) Real ma'lumot — talabalar
 const talabalar = [
-    { ism: "Ali", ball: 87 },
-    { ism: "Vali", ball: 54 },
-    { ism: "Gulya", ball: 92 },
+    { ism: "Ali",     ball: 87, kasb: "dev" },
+    { ism: "Vali",    ball: 54, kasb: "designer" },
+    { ism: "Gulya",   ball: 92, kasb: "dev" },
+    { ism: "Doniyor", ball: 68, kasb: "qa" },
+    { ism: "Karim",   ball: 95, kasb: "dev" },
 ];
 
-const tasvirlar = talabalar.map(({ ism, ball }) =>
-    `${ism}: ${ball >= 70 ? "✅" : "❌"} ${ball}`,
+// find — birinchi yuqori ballini topish
+const a_lo = talabalar.find(t => t.ball >= 90);
+console.log("Birinchi A'lo:", a_lo);
+
+// some / every
+console.log("Bor a'lo:",      talabalar.some(t => t.ball >= 90));
+console.log("Hammasi >50:",   talabalar.every(t => t.ball > 50));
+
+// 8) Chain — TOP 3 dev
+const top3_dev = talabalar
+    .filter(t => t.kasb === "dev")
+    .sort((a, b) => b.ball - a.ball)
+    .slice(0, 3);
+console.log("TOP 3 dev:", top3_dev);
+
+// 9) reduce — kasb bo'yicha guruhlash
+const kasb_guruhlari = talabalar.reduce((acc, t) => {
+    if (!acc[t.kasb]) acc[t.kasb] = [];
+    acc[t.kasb].push(t.ism);
+    return acc;
+}, {});
+console.log("Kasb guruhlari:", kasb_guruhlari);
+
+// 10) reduce — kasb bo'yicha o'rta ball
+const o_rta_per_kasb = Object.entries(kasb_guruhlari).map(([kasb, ismlar]) => {
+    const ballar = ismlar.map(ism =>
+        talabalar.find(t => t.ism === ism).ball,
+    );
+    const o_rta = ballar.reduce((a, b) => a + b, 0) / ballar.length;
+    return { kasb, o_rta };
+});
+console.log("O'rta per kasb:", o_rta_per_kasb);
+
+// 11) Mahsulotlar misoli
+const mahsulotlar = [
+    { nom: "Olma", narx: 12000, soni: 5 },
+    { nom: "Non",  narx: 4000,  soni: 12 },
+    { nom: "Sut",  narx: 9000,  soni: 3 },
+];
+
+const jami_summa = mahsulotlar.reduce(
+    (acc, m) => acc + m.narx * m.soni,
+    0,
 );
-console.log(tasvirlar);
+console.log("Jami:", jami_summa.toLocaleString(), "so'm");
