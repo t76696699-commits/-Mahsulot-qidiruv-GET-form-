@@ -1,313 +1,305 @@
-Promiselar (.then, .catch, Promise.all)
-Урок 9 из 14
-· 4 раздела
-📝
-Текст
-Текст
-#1
-Promiselar — async ish'ning birinchi qatlami
-pending
+async/await — Promise'ni sinxron kabi yozish
+qiyin o'qish
 
-resolve
+await x
 
-reject
+try/catch
 
-.then
+.then ketma-ket
 
-.catch
+chain noise
 
-.finally
+async function
 
-.finally
+xayoldai sinxron
 
-new Promise
+natija — Promise'ning value'si
 
-kutilmoqda
+xato
 
-fulfilled
+sodda xato boshqaruvi
 
-rejected
-
-natijani ishlat
-
-xatoni ushla
-
-tugadi
-
-JS — single-threaded. Lekin server, fayl, timer, animatsiya — vaqt oladi. Promise — kelajakda keladigan natijaning "vakuum kartochkasi". Promise resolved, rejected yoki pending bo'ladi. Bu — async/await va fetch'ning poydevori.
+Promise'lar zo'r, lekin .then chain'lari uzun bo'lib ketadi. async/await — bu chain'larni xuddi sinxron koddek yozish imkonini beradi. Aslida — sintaktik shakar. await ostidagi Promise — to'xtatib turadi, natijani qaytaradi.
 
 🏆 5 daqiqada g'alaba
-BLOKA 1 — Promise yaratish
-const promise = new Promise((resolve, reject) => {
-    // Kechiktirilgan ish
-    setTimeout(() => {
-        const ok = Math.random() > 0.5;
-        if (ok) {
-            resolve("Muvaffaqiyatli!");      // pending -> fulfilled
-        } else {
-            reject(new Error("Xatolik"));     // pending -> rejected
-        }
-    }, 1000);
-});
-
-console.log(promise);    // Promise { <pending> }
-
-promise
-    .then((natija) => console.log("✅", natija))
-    .catch((xato) =>  console.log("❌", xato.message))
-    .finally(()    =>  console.log("Tugadi"));
-BLOKA 2 — Chain — .then ketma-ket
-function kutish(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+BLOKA 1 — .then dan async/await ga
+// Eski stil — .then chain
+function eskiUsul() {
+    return fetch("/api/user")
+        .then(r => r.json())
+        .then(user => fetch(`/api/posts/${user.id}`))
+        .then(r => r.json())
+        .then(posts => ({ user_id: user.id, posts }));    // ⚠️ user yo'q!
 }
 
-kutish(1000)
-    .then(() => { console.log("1 sek o'tdi"); return kutish(1000); })
-    .then(() => { console.log("Yana 1 sek o'tdi"); return kutish(500); })
-    .then(() => console.log("3 sekund jami"));
-
-// Yoki .then ichida qiymat qaytarish
-Promise.resolve(5)
-    .then((x) => x * 2)              // 10
-    .then((x) => x + 1)               // 11
-    .then((x) => console.log(x));     // 11
-BLOKA 3 — Promise.all va Promise.race
-// Hammasini parallel kutish
-const url1 = "https://api.github.com/users/torvalds";
-const url2 = "https://api.github.com/users/gvanrossum";
-
-Promise.all([
-    fetch(url1).then(r => r.json()),
-    fetch(url2).then(r => r.json()),
-])
-    .then(([linus, guido]) => {
-        console.log(`${linus.name} va ${guido.name}`);
-    })
-    .catch((e) => console.log("Bittasi ham yiqilsa — catch"));
-
-// Eng birinchi javob keladigan
-Promise.race([
-    fetch("https://api1.example.com"),
-    fetch("https://api2.example.com"),
-])
-    .then((r) => r.json())
-    .then(console.log);
-🐛 Ataylab xato
-const p = new Promise((resolve) => resolve(42));
-p.then((natija) => {
-    console.log(natija);
-    throw new Error("Ichida xato");
-});
-
-// Konsolda — UnhandledPromiseRejection
-Muammo: .then ichida xato chiqsa va .catch qo'shilmagan bo'lsa — silently fail (lekin Node yangi versiyalarda crash). Qoida: har chain'da DOIM oxirida .catch bo'lsin:
-
-p
-    .then((natija) => {
-        if (notog'ri) throw new Error("...");
-        return natija;
-    })
-    .catch((e) => console.error("Ushladim:", e.message));
-Endi tushuntiramiz
-1. Promise — 3 holat
-Holat	Ma'nosi
-pending	Kutilmoqda — hali tugamagan
-fulfilled	Muvaffaqiyatli tugadi (resolve chaqirilgan)
-rejected	Xato bilan tugadi (reject chaqirilgan)
-Bir marta pending'dan chiqsa — qaytmaydi (immutable). Resolve yoki reject — bitta marta.
-
-2. Promise statik metodlar
-Metod	Maqsadi
-Promise.resolve(x)	Darhol fulfilled Promise
-Promise.reject(e)	Darhol rejected Promise
-Promise.all([p1, p2])	Hammasi tugashini kutadi. Bittasi rejected -> butun array fail
-Promise.allSettled([p1, p2])	Hammasini kutadi — fail bo'lganlari ham natijada
-Promise.race([p1, p2])	Birinchi tugagani (fulfilled yoki rejected)
-Promise.any([p1, p2])	Birinchi fulfilled. Hammasi rejected bo'lsa — AggregateError
-3. Chain'da xato'ni boshqarish
-fetch(url)
-    .then((r) => {
+// Modern — async/await
+async function yangiUsul() {
+    const user = await fetch("/api/user").then(r => r.json());
+    const posts = await fetch(`/api/posts/${user.id}`).then(r => r.json());
+    return { user_id: user.id, posts };          // ✅ user mavjud
+}
+BLOKA 2 — try/catch — xatoni ushlash
+async function olish(url) {
+    try {
+        const r = await fetch(url);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-    })
-    .then((data) => processData(data))
-    .catch((e) => {
-        if (e.message.includes("HTTP")) {
-            // tarmoq xatosi
-        } else {
-            // boshqa
-        }
-    });
-.catch chain'dagi HAR QANDAY xatoni ushlaydi — qaerda yuz berishidan qat'i nazar.
-
-4. Promise.all — paralel
-// 3 ta API chaqiruvi — birgalikda
-const [users, posts, comments] = await Promise.all([
-    fetch("/api/users").then(r => r.json()),
-    fetch("/api/posts").then(r => r.json()),
-    fetch("/api/comments").then(r => r.json()),
-]);
-// Eng sekin so'rovning vaqti — emas barcha vaqtlarning yig'indisi
-5. Promise.allSettled — har biri haqida ma'lumot
-const natijalar = await Promise.allSettled([
-    fetch("/api/a"),
-    fetch("/api/b"),     // bu fail bo'lsin
-    fetch("/api/c"),
-]);
-
-natijalar.forEach((r, i) => {
-    if (r.status === "fulfilled") {
-        console.log(`API ${i}: OK`, r.value);
-    } else {
-        console.log(`API ${i}: FAIL`, r.reason);
+        return await r.json();
+    } catch (e) {
+        console.error("Xato:", e.message);
+        return null;
+    } finally {
+        console.log("Tugadi");
     }
-});
-6. Callback hell vs Promise chain
-// Callback hell — eski stil
-authenticate(user, (err, token) => {
-    if (err) return console.error(err);
-    fetchProfile(token, (err, profile) => {
-        if (err) return console.error(err);
-        fetchPosts(profile.id, (err, posts) => {
-            if (err) return console.error(err);
-            console.log(posts);
-        });
-    });
+}
+
+const data = await olish("/api/users");
+BLOKA 3 — Parallel — Promise.all bilan
+// SEKVENSIAL — ketma-ket, sekinroq
+async function sekin() {
+    const a = await fetch("/api/a").then(r => r.json());
+    const b = await fetch("/api/b").then(r => r.json());
+    const c = await fetch("/api/c").then(r => r.json());
+    return { a, b, c };
+    // Vaqt: a + b + c
+}
+
+// PARALLEL — birgalikda, tezroq
+async function tez() {
+    const [a, b, c] = await Promise.all([
+        fetch("/api/a").then(r => r.json()),
+        fetch("/api/b").then(r => r.json()),
+        fetch("/api/c").then(r => r.json()),
+    ]);
+    return { a, b, c };
+    // Vaqt: max(a, b, c)
+}
+🐛 Ataylab xato
+const ismlar = ["ali", "vali", "gulya"];
+
+ismlar.forEach(async (ism) => {
+    const data = await fetch(`/api/users/${ism}`).then(r => r.json());
+    console.log(data);
 });
 
-// Promise chain — toza
-authenticate(user)
-    .then(fetchProfile)
-    .then((profile) => fetchPosts(profile.id))
-    .then(console.log)
-    .catch(console.error);
+console.log("Hammasi tugadi!");    // ⚠️ Yolg'on
+Muammo: forEach Promise'ni KUTMAYDI. async callback shunchaki Promise qaytaradi va forEach uni e'tiborsiz qoldiradi. "Hammasi tugadi" — async ishlar tugashidan oldin. Yechim:
+
+// 1) for...of — kutadi
+for (const ism of ismlar) {
+    const data = await fetch(`/api/users/${ism}`).then(r => r.json());
+    console.log(data);
+}
+
+// 2) Promise.all + map — parallel
+const datalar = await Promise.all(
+    ismlar.map(ism => fetch(`/api/users/${ism}`).then(r => r.json())),
+);
+Endi tushuntiramiz
+1. async funksiya nima qaytaradi?
+async function f() { return 5; }
+
+const x = f();
+console.log(x);           // Promise { 5 }
+console.log(await x);     // 5
+
+// async funksiya — DOIM Promise qaytaradi
+// `return 5` — Promise.resolve(5) ga ekvivalent
+// `throw err` — Promise.reject(err) ga ekvivalent
+2. await qoidalari
+await — FAQAT async funksiya ichida (yoki top-level modulda)
+Promise resolved bo'lsa — qiymat qaytaradi
+Promise rejected bo'lsa — throw kabi exception
+Promise BO'LMAGAN qiymatga await — darhol shu qiymat
+3. try/catch va Promise xato boshqaruvi
+// async/await — sinxron kodga o'xshash try/catch
+async function v1() {
+    try {
+        const data = await fetch(url);
+        return await data.json();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// .then chain bilan ekvivalent
+function v2() {
+    return fetch(url)
+        .then((r) => r.json())
+        .catch((e) => console.error(e));
+}
+4. Sekvensial vs Parallel — diqqat
+// ⚠️ Sekin (sekvensial) — har biri avvalgisini kutadi
+async function sekin() {
+    const a = await fetchA();    // 1s
+    const b = await fetchB();    // 1s
+    const c = await fetchC();    // 1s
+    return [a, b, c];            // jami 3s
+}
+
+// ✅ Tez (parallel) — birga boshlanadi
+async function tez() {
+    const aP = fetchA();          // 1s (boshlandi)
+    const bP = fetchB();          // 1s (boshlandi)
+    const cP = fetchC();          // 1s (boshlandi)
+    return [await aP, await bP, await cP];    // jami 1s
+}
+
+// Idiomatic — Promise.all
+async function eng_yaxshi() {
+    return Promise.all([fetchA(), fetchB(), fetchC()]);    // jami 1s
+}
+5. Top-level await — modullarda
+// ES2022+ va ESM modullar
+// app.js
+import { fetchConfig } from "./config.js";
+
+const config = await fetchConfig();   // OK — top-level
+console.log(config);
+
+// Funksiya tashqarisida await — faqat modul'da ishlaydi
+6. Async/await va loop ichida
+Tanlov	Behavior
+for...of + await	Sekvensial — biror tartib kerak bo'lganda
+Promise.all + map	Parallel — tartib muhim emas
+forEach + async	❌ Kutmaydi — xato
+for (const p of promises) await p	Sekvensial wait
 📌 Bu darsdan keyin siz bilasizki
-Promise — kelajakdagi natija "vakuum kartochkasi": pending -> fulfilled/rejected
-.then(...) — natija; .catch(...) — xato; .finally(...) — har holatda
-Chain'da xato — har qaysi .then'dan oxirgi .catch ga "tushadi"
-Promise.all — parallel kutish; allSettled — har biri haqida ma'lumot
-Har chain oxirida .catch qo'shing — silently fail oldini olish uchun
+async function — doim Promise qaytaradi
+await — faqat async ichida; Promise tugashini kutadi
+Sinxron stilda try/catch bilan xato boshqarish
+Parallel uchun Promise.all; sekvensial uchun for...of
+forEach + async — KUTMAYDI, xato
 💻
 Код
 Код
 #2
 javascript
  Копировать
-// ─── Promiselar — to'liq sweep ───────────────────────────────────────────
+// ─── async/await — to'liq sweep ──────────────────────────────────────────
 
-// 1) Eng oddiy Promise — kutish
+// 1) Eng oddiy async funksiya
+async function salom() {
+    return "Salom!";
+}
+
+console.log(salom());           // Promise { 'Salom!' }
+salom().then(console.log);      // "Salom!"
+
+// IIFE — async ni top-level'da chaqirish
+(async () => {
+    const xabar = await salom();
+    console.log("await bilan:", xabar);
+})();
+
+// 2) Promise yaratish va await
 function kutish(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-console.log("Boshlandi");
-kutish(500).then(() => console.log("500ms o'tdi"));
-kutish(1000).then(() => console.log("1000ms o'tdi"));
+(async () => {
+    console.log("Boshlandi");
+    await kutish(500);
+    console.log("500ms o'tdi");
+    await kutish(500);
+    console.log("Yana 500ms");
+})();
 
-// 2) Resolve / Reject — tasodifiy
-function shubhali(success_rate = 0.5) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if (Math.random() < success_rate) {
-                resolve({ ok: true, vaqt: Date.now() });
-            } else {
-                reject(new Error("network down"));
-            }
-        }, 200);
-    });
+// 3) try/catch — xato boshqaruvi
+async function olish(url) {
+    try {
+        // fetch yo'q test muhitida — simulyatsiya
+        if (url.includes("bad")) throw new Error("404 Not Found");
+        await kutish(100);
+        return { ok: true, url };
+    } catch (e) {
+        console.log("Xato ushlandi:", e.message);
+        return null;
+    } finally {
+        console.log(`finally: ${url}`);
+    }
 }
 
-shubhali(0.7)
-    .then((r) => console.log("✅", r))
-    .catch((e) => console.log("❌", e.message));
+(async () => {
+    console.log(await olish("/api/users"));
+    console.log(await olish("/api/bad"));
+})();
 
-// 3) Chain — qiymat o'zgaradi
-Promise.resolve(5)
-    .then((x) => x * 2)
-    .then((x) => x + 10)
-    .then((x) => `Natija: ${x}`)
-    .then(console.log);
-
-// 4) Chain ichida Promise qaytarish — keyinchalik kutish
-function olish(id) {
-    return kutish(100).then(() => ({ id, nom: `User ${id}` }));
+// 4) Sekvensial vs Parallel
+async function sekvensial() {
+    const t0 = Date.now();
+    await kutish(100);
+    await kutish(100);
+    await kutish(100);
+    console.log(`Sekvensial: ${Date.now() - t0}ms`);    // ~300
 }
 
-olish(1)
-    .then((u) => {
-        console.log("1-step:", u);
-        return olish(u.id + 1);
-    })
-    .then((u) => {
-        console.log("2-step:", u);
-        return olish(u.id + 1);
-    })
-    .then((u) => console.log("3-step:", u));
+async function parallel() {
+    const t0 = Date.now();
+    await Promise.all([kutish(100), kutish(100), kutish(100)]);
+    console.log(`Parallel: ${Date.now() - t0}ms`);      // ~100
+}
 
-// 5) Promise.all — parallel
-const idlar = [10, 20, 30];
-Promise.all(idlar.map(olish))
-    .then((natijalar) => {
-        console.log("Hammasi parallel:", natijalar.map((u) => u.nom));
+(async () => {
+    await sekvensial();
+    await parallel();
+})();
+
+// 5) Loop bilan — to'g'ri va noto'g'ri
+const idlar = [1, 2, 3];
+
+async function fakeOlish(id) {
+    await kutish(50);
+    return { id, nom: `User ${id}` };
+}
+
+// ✅ for...of — sekvensial wait
+(async () => {
+    console.log("\nfor...of:");
+    for (const id of idlar) {
+        const u = await fakeOlish(id);
+        console.log(u);
+    }
+})();
+
+// ✅ Promise.all + map — parallel
+(async () => {
+    console.log("\nPromise.all:");
+    const users = await Promise.all(idlar.map(fakeOlish));
+    console.log(users);
+})();
+
+// ❌ forEach + async — kutmaydi
+(async () => {
+    console.log("\nforEach (noto'g'ri):");
+    idlar.forEach(async (id) => {
+        const u = await fakeOlish(id);
+        console.log("forEach:", u);
     });
+    console.log("forEach tugadi (lekin user'lar hali kutmoqda!)");
+})();
 
-// 6) Promise.allSettled — fail bo'lsa ham hammasi
-Promise.allSettled([
-    shubhali(0.9),
-    shubhali(0.1),       // ehtimol fail
-    shubhali(0.5),
-]).then((natijalar) => {
-    natijalar.forEach((r, i) => {
-        if (r.status === "fulfilled") {
-            console.log(`#${i}: OK`, r.value);
-        } else {
-            console.log(`#${i}: FAIL`, r.reason.message);
-        }
-    });
-});
+// 6) Real foydalanish — JSON API
+async function repoOlish(nomi) {
+    try {
+        const r = await fetch(`https://api.github.com/repos/${nomi}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        return {
+            nom: data.full_name,
+            stars: data.stargazers_count,
+            til: data.language,
+        };
+    } catch (e) {
+        console.error(`${nomi}: ${e.message}`);
+        return null;
+    }
+}
 
-// 7) Promise.race — eng birinchisi
-function timeout(ms) {
-    return new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout ${ms}ms`)), ms),
+(async () => {
+    console.log("\n=== GitHub repos (parallel) ===");
+    const repos = ["python/cpython", "facebook/react", "vuejs/vue"];
+    const natijalar = await Promise.all(repos.map(repoOlish));
+    natijalar.filter(Boolean).forEach((r) =>
+        console.log(`⭐ ${r.stars.toLocaleString().padStart(8)}  ${r.nom}  [${r.til}]`),
     );
-}
-
-function fetchWithTimeout(promise, ms) {
-    return Promise.race([promise, timeout(ms)]);
-}
-
-fetchWithTimeout(shubhali(0.9), 500)
-    .then((r) => console.log("Tez:", r))
-    .catch((e) => console.log("Timeout/xato:", e.message));
-
-// 8) Retry pattern — Promise bilan
-function retry(funk, marotaba = 3, kutish_ms = 100) {
-    return funk().catch((e) => {
-        if (marotaba <= 1) throw e;
-        return kutish(kutish_ms).then(() => retry(funk, marotaba - 1, kutish_ms));
-    });
-}
-
-retry(() => shubhali(0.2), 5)
-    .then((r) => console.log("Retry muvaffaqiyatli:", r))
-    .catch((e) => console.log("Retry chiqdi:", e.message));
-
-// 9) Promisify — eski callback API'ni Promise'ga aylantirish
-function callback_style(arg, callback) {
-    setTimeout(() => callback(null, arg * 2), 100);
-}
-
-function promisify(funk) {
-    return function (...args) {
-        return new Promise((resolve, reject) => {
-            funk(...args, (err, natija) => {
-                if (err) reject(err);
-                else resolve(natija);
-            });
-        });
-    };
-}
-
-const promised = promisify(callback_style);
-promised(5).then((x) => console.log("Promisified:", x));    // 10
+})();
