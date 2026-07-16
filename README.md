@@ -1,77 +1,93 @@
-1. HTML (Struktura)
-Sidebar va asosiy kontent uchun:
+// ─── Arrow, destructuring, spread/rest — to'liq sweep ─────────────────────
 
-HTML
-<div class="app">
-    <aside class="sidebar">
-        <nav>
-            <a href="#" onclick="showPage('dashboard')">Dashboard</a>
-            <a href="#" onclick="showPage('users')">Foydalanuvchilar</a>
-            <a href="#" onclick="showPage('products')">Mahsulotlar</a>
-        </nav>
-        <button onclick="toggleTheme()">Dark/Light</button>
-    </aside>
+// 1) Arrow — barcha shakllar
+const ikkilash = x => x * 2;
+const qosh = (a, b) => a + b;
+const yarat = (id, nom) => ({ id, nom, vaqt: Date.now() });
+const ko_p = (a, b) => {
+    const natija = a * b;
+    return natija;
+};
 
-    <main id="content">
-        <!-- Sahifalar shu yerga yuklanadi -->
-    </main>
-</div>
-2. JavaScript (SPA Logikasi va State)
-JavaScript
-// Sahifalararo o'tish
-function showPage(pageId) {
-    const content = document.getElementById('content');
-    content.innerHTML = ''; // Tozalash
+console.log(ikkilash(5));
+console.log(qosh(3, 4));
+console.log(yarat(1, "olma"));
 
-    if (pageId === 'dashboard') {
-        content.innerHTML = `<h2>Dashboard</h2><div class="stats-grid">...kartochkalar...</div>`;
-    } else if (pageId === 'users') {
-        // CRUD jadvalini render qiluvchi funksiya
-        renderUsers();
-    } else if (pageId === 'products') {
-        // Filtrlash va qidiruv bilan mahsulotlar
-        renderProducts();
-    }
-}
+// 2) Default parametrlar
+const salom = (ism, salom_so_zi = "Salom") => `${salom_so_zi}, ${ism}!`;
+console.log(salom("Ali"));
+console.log(salom("Vali", "Assalomu alaykum"));
 
-// Dark/Light rejim
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-}
+// 3) Obyektdan destructuring
+const foydalanuvchi = {
+    ism: "Ali",
+    yosh: 21,
+    manzil: { shahar: "Toshkent", indeks: 100000 },
+    teglar: ["dev", "js"],
+};
 
-// Boshlang'ich yuklanishda rejimi o'rnatish
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') document.body.classList.add('dark-mode');
-3. CSS (Responsive va Rejimlar)
-CSS Grid va Flexbox orqali moslashuvchan dizayn:
+const { ism, yosh } = foydalanuvchi;
+console.log(ism, yosh);
 
-CSS
-/* Sidebar mobil uchun */
-.app { display: flex; min-height: 100vh; }
-.sidebar { width: 250px; background: #333; color: white; transition: 0.3s; }
+// Nested + default + nom o'zgartirish
+const {
+    ism: name,
+    kasb = "dev",
+    manzil: { shahar },
+    teglar: [birinchi_teg],
+} = foydalanuvchi;
+console.log(name, kasb, shahar, birinchi_teg);
 
-/* Responsive */
-@media (max-width: 768px) {
-    .app { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; }
-}
+// 4) Funksiya argumentini destructure
+const tasvir = ({ ism, yosh, kasb = "noma'lum" }) =>
+    `${ism} (${yosh} yosh) — ${kasb}`;
+console.log(tasvir(foydalanuvchi));
 
-/* Dark Mode */
-.dark-mode { background: #121212; color: #fff; }
-.dark-mode .sidebar { background: #000; }
+// 5) Massivdan
+const [birinchi, ikkinchi, ...qolgani] = [10, 20, 30, 40, 50];
+console.log(birinchi, ikkinchi, qolgani);
 
-/* Dashboard Kartochkalar uchun Grid */
-.stats-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-    gap: 20px; 
-}
-Loyihani tashkil etish bo'yicha maslahatlar:
-CRUD Jadval (Users): Foydalanuvchilar massivini localStoragedan oling va table elementiga map() orqali dinamik ravishda qo'shib boring. Tahrirlash tugmasiga bosilganda formaga o'sha foydalanuvchi ma'lumotlarini yuklashni unutmang.
+// O'rtasini o'tkazib yuborish
+const [bosh, , uchinchi] = [1, 2, 3];
+console.log(bosh, uchinchi);
 
-Mahsulotlar sahifasi: Qidiruv maydoniga addEventListener('input', ...) qo'shing. Bu foydalanuvchi yozayotgan paytda filter() metodi yordamida mahsulotlar massivini yangilab, jadvalni qayta render qiladi.
+// 6) Spread — array
+const a = [1, 2, 3];
+const b = [4, 5];
+console.log([...a, ...b, 100]);
+console.log(Math.max(...a, ...b));
 
-Mobil Responsive: Sidebar-ni mobil versiyada "hamburger menu" orqali ochiladigan qilish uchun transform: translateX(-100%) va JS orqali active klassini boshqarish tavsiya etiladi.
+// 7) Spread — obyekt
+const defaults = { theme: "dark", lang: "uz", timeout: 30 };
+const user = { lang: "en", verbose: true };
+console.log({ ...defaults, ...user });
 
-LocalStorage: Har bir o'zgarishda (qo'shish, o'chirish, tahrirlash) albatta localStorage.setItem('dataKey', JSON.stringify(dataArray)) ni chaqirib turing.
+// 8) Rest — funksiya parametri
+const eng_kattasi = (...sonlar) => {
+    if (sonlar.length === 0) return null;
+    return Math.max(...sonlar);
+};
+console.log(eng_kattasi(3, 7, 2, 9, 4));
+
+// 9) Real misol — immutable update (React patterni)
+const eski = { ism: "Ali", yosh: 21, sevimli: ["python"] };
+const yangilangan = {
+    ...eski,
+    yosh: 22,
+    sevimli: [...eski.sevimli, "js", "ts"],
+};
+console.log("Eski:", eski);
+console.log("Yangi:", yangilangan);
+console.log("Eski o'zgarmagan:", eski.yosh === 21);
+
+// 10) Pipeline — talaba ballarini transformatsiya
+const talabalar = [
+    { ism: "Ali", ball: 87 },
+    { ism: "Vali", ball: 54 },
+    { ism: "Gulya", ball: 92 },
+];
+
+const tasvirlar = talabalar.map(({ ism, ball }) =>
+    `${ism}: ${ball >= 70 ? "✅" : "❌"} ${ball}`,
+);
+console.log(tasvirlar);
