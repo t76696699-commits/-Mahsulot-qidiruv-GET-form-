@@ -1,86 +1,78 @@
-// ─── Template literallar va string metodlari ─────────────────────────────
+// ─── R1: Sotuvchi statistikasi to'liq misoli ──────────────────────────────
 
-// 1) Template literal asoslari
-const ism = "Ali";
-const yosh = 21;
-const kasb = "frontend dev";
-
-console.log(`Salom, ${ism}! ${yosh} yoshdagi ${kasb}.`);
-
-// 2) Ichida ifoda — hisob va metod chaqirish
-const ball = 87;
-console.log(`Ball: ${ball}, daraja: ${ball >= 90 ? "A'lo" : ball >= 70 ? "Yaxshi" : "F"}`);
-console.log(`Katta: ${ism.toUpperCase()} (${ism.length} ta harf)`);
-
-// 3) Ko'p qatorli xat
-const xat = `Salom, ${ism}!
-
-Bu — sizning yutuqlaringizning oylik hisoboti:
-  • Ball:   ${ball}
-  • Kasb:   ${kasb}
-  • Maqsad: 95+ ball
-
-Hurmat bilan,
-Jamoa`;
-console.log(xat);
-
-// 4) String metodlari — sweep
-const matn = "   Modern JavaScript juda kuchli!   ";
-
-console.log(matn.trim());
-console.log(matn.trim().toLowerCase());
-console.log(matn.includes("Java"));
-console.log(matn.startsWith("   Modern"));
-console.log(matn.endsWith("!   "));
-console.log(matn.indexOf("Java"));
-console.log(matn.slice(3, 9));                    // "Modern"
-console.log(matn.replaceAll(" ", "_"));
-
-// 5) split + join — matnni qayta tartiblash
-const teglar = "html, css, js, react, vue";
-const massiv = teglar.split(",").map(t => t.trim());
-console.log(massiv);
-console.log(massiv.join(" | "));
-
-// 6) padStart, padEnd — jadval kabi formatlash
-console.log("Ism".padEnd(15, ".") + "Ball");
-console.log("".padEnd(20, "─"));
-
-const talabalar = [
-    { ism: "Ali",     ball: 87 },
-    { ism: "Vali",    ball: 54 },
-    { ism: "Gulya",   ball: 92 },
-    { ism: "Doniyor", ball: 68 },
+const savdolar = [
+    { sotuvchi: "Ali",     mahsulot: "noutbuk",    narx: 12_000_000, miqdor: 1 },
+    { sotuvchi: "Vali",    mahsulot: "telefon",    narx: 5_500_000,  miqdor: 2 },
+    { sotuvchi: "Ali",     mahsulot: "klaviatura", narx: 450_000,    miqdor: 3 },
+    { sotuvchi: "Gulya",   mahsulot: "monitor",    narx: 3_200_000,  miqdor: 1 },
+    { sotuvchi: "Vali",    mahsulot: "noutbuk",    narx: 11_800_000, miqdor: 1 },
+    { sotuvchi: "Ali",     mahsulot: "telefon",    narx: 6_200_000,  miqdor: 1 },
+    { sotuvchi: "Doniyor", mahsulot: "monitor",    narx: 3_500_000,  miqdor: 2 },
 ];
 
-talabalar.forEach(t => {
-    console.log(t.ism.padEnd(15, ".") + String(t.ball).padStart(3, "0"));
+// 1) Jami savdo summasi
+const jami = savdolar.reduce((acc, { narx, miqdor }) => acc + narx * miqdor, 0);
+console.log(`Jami savdo: ${jami.toLocaleString("uz-UZ")} so'm`);
+
+// 2) Takrorlanmas sotuvchilar — Set
+const sotuvchilar = [...new Set(savdolar.map(s => s.sotuvchi))].sort();
+console.log("Sotuvchilar:", sotuvchilar);
+
+// 3) Sotuvchi -> jami summa
+const jami_per_sot = savdolar.reduce((acc, { sotuvchi, narx, miqdor }) => {
+    acc[sotuvchi] = (acc[sotuvchi] || 0) + narx * miqdor;
+    return acc;
+}, {});
+console.log("Per sotuvchi:", jami_per_sot);
+
+// 4) TOP 3 sotuvchi
+const top3 = Object.entries(jami_per_sot)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+
+console.log("\n=== TOP 3 SOTUVCHI ===");
+top3.forEach(([ism, summa], i) => {
+    console.log(`${i + 1}. ${ism.padEnd(10)} ${summa.toLocaleString("uz-UZ").padStart(15)} so'm`);
 });
 
-// 7) toLocaleString — sonlarni chiroyli
-const summa = 1_500_000;
-console.log(summa.toLocaleString("uz-UZ"));
-console.log(summa.toLocaleString("uz-UZ", { style: "currency", currency: "UZS" }));
-console.log((0.875).toLocaleString("uz-UZ", { style: "percent" }));
+// 5) Eng katta bitta savdo
+const eng_qimmat = savdolar.reduce((a, b) => (a.narx > b.narx ? a : b));
+console.log(`\nEng qimmat: ${eng_qimmat.sotuvchi} — ${eng_qimmat.mahsulot} (${eng_qimmat.narx.toLocaleString("uz-UZ")} so'm)`);
 
-// 8) Tagged template — kichik HTML highlighter
-function escape_html(s) {
-    return String(s)
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-}
+// 6) Mahsulot bo'yicha guruhlash
+const per_mahsulot = savdolar.reduce((acc, { mahsulot, narx, miqdor }) => {
+    acc[mahsulot] = (acc[mahsulot] || 0) + narx * miqdor;
+    return acc;
+}, {});
 
-function html(qismlar, ...qiymatlar) {
-    return qismlar.reduce((acc, q, i) =>
-        acc + q + (i < qiymatlar.length ? escape_html(qiymatlar[i]) : ""),
-    "");
-}
+console.log("\nMahsulot bo'yicha:");
+Object.entries(per_mahsulot)
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([nom, summa]) => {
+        console.log(`  ${nom.padEnd(12)} ${summa.toLocaleString("uz-UZ").padStart(15)} so'm`);
+    });
 
-const xavfli = "<script>alert(1)</script>";
-console.log(html`<p>Foydalanuvchi: ${xavfli}</p>`);
-// <p>Foydalanuvchi: &lt;script&gt;alert(1)&lt;/script&gt;</p>
+// 7) Pipeline — kategoriya filterlash
+const noutbuk_savdolar = savdolar
+    .filter(s => s.mahsulot === "noutbuk")
+    .map(({ sotuvchi, narx }) => ({ sotuvchi, narx_mln: narx / 1_000_000 }));
 
-// 9) repeat va string yaratish
-console.log("─".repeat(40));
-console.log(" ".repeat(10) + "Yakuniy hisobot");
-console.log("─".repeat(40));
+console.log("\nNoutbuk savdolari (mln):", noutbuk_savdolar);
+
+// 8) every / some
+console.log("Hammasi 100k+:", savdolar.every(s => s.narx >= 100_000));
+console.log("Bor 10M+:    ", savdolar.some(s => s.narx >= 10_000_000));
+
+// 9) Hisobot — bitta katta template literal
+const hisobot = `
+═══════════════════════════════════════
+       SAVDO HISOBOTI
+═══════════════════════════════════════
+Jami savdo:    ${jami.toLocaleString("uz-UZ")} so'm
+Savdo soni:    ${savdolar.length} ta
+O'rtacha:      ${Math.round(jami / savdolar.length).toLocaleString("uz-UZ")} so'm
+
+TOP sotuvchi:  ${top3[0][0]} (${top3[0][1].toLocaleString("uz-UZ")} so'm)
+═══════════════════════════════════════
+`;
+console.log(hisobot);
