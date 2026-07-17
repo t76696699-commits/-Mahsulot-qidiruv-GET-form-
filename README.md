@@ -1,102 +1,79 @@
-// ===================================================
-// Review 2 — AbortController, Workers, Observers birgalikda
-// ===================================================
+// canvas-demo.js — Canvas API asoslari va animatsiya
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 400;
+canvas.height = 300;
 
-// Barcha texnologiyalarni birlashtirgan kontent yuklovchi
-class SmartContentLoader {
-  constructor(containerSelector) {
-    this.container = document.querySelector(containerSelector);
-    this.controllers = new Map(); // AbortController'lar
-    this.worker = null;
-    this.observers = new Map(); // Observer'lar
-  }
+// 1. Oddiy shakllar chizish
+function drawShapes() {
+  // To'rtburchak
+  ctx.fillStyle = '#8b5cf6';
+  ctx.fillRect(20, 20, 120, 80);
 
-  // Web Worker yaratish
-  initWorker() {
-    const workerCode = `
-      self.onmessage = function(e) {
-        const { id, data } = e.data;
-        // Og'ir qayta ishlash (filtrlash, sorting, transform)
-        const processed = data
-          .filter(item => item.active)
-          .map(item => ({ ...item, label: item.name.toUpperCase() }))
-          .sort((a, b) => b.score - a.score);
-        self.postMessage({ id, processed });
-      };
-    `;
-    const blob = new Blob([workerCode], { type: 'text/javascript' });
-    this.worker = new Worker(URL.createObjectURL(blob));
-  }
+  // Chegarali to'rtburchak
+  ctx.strokeStyle = '#06b6d4';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(160, 20, 120, 80);
 
-  // Element ko'rinavchi bo'lganda lazy loading
-  setupLazyLoad(element, itemId) {
-    const io = new IntersectionObserver(async ([entry]) => {
-      if (!entry.isIntersecting) return;
-      io.disconnect();
+  // Aylana
+  ctx.beginPath();
+  ctx.arc(80, 180, 50, 0, Math.PI * 2);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fill();
 
-      // AbortController bilan fetch
-      const controller = new AbortController();
-      this.controllers.set(itemId, controller);
-
-      try {
-        const res = await fetch(`/api/items/${itemId}`, {
-          signal: controller.signal
-        });
-        const rawData = await res.json();
-
-        // Web Worker da qayta ishlash
-        const processed = await this.processInWorker(rawData);
-        this.renderItems(element, processed);
-
-      } catch (err) {
-        if (err.name !== 'AbortError') console.error('Xatolik:', err);
-      } finally {
-        this.controllers.delete(itemId);
-      }
-    }, { rootMargin: '100px', threshold: 0 });
-
-    io.observe(element);
-    this.observers.set(itemId, io);
-  }
-
-  // Web Worker da qayta ishlash
-  processInWorker(data) {
-    return new Promise((resolve, reject) => {
-      const id = Date.now();
-      const handler = (e) => {
-        if (e.data.id === id) {
-          this.worker.removeEventListener('message', handler);
-          resolve(e.data.processed);
-        }
-      };
-      this.worker.addEventListener('message', handler);
-      this.worker.postMessage({ id, data });
-    });
-  }
-
-  renderItems(el, items) {
-    el.innerHTML = items.map(i => `<div>${i.label}: ${i.score}</div>`).join('');
-  }
-
-  // Barcha resurslarni tozalash
-  destroy() {
-    // Barcha fetch so'rovlarini bekor qilish
-    this.controllers.forEach(ctrl => ctrl.abort());
-    // Barcha observer'larni to'xtatish
-    this.observers.forEach(obs => obs.disconnect());
-    // Worker ni to'xtatish
-    if (this.worker) this.worker.terminate();
-  }
+  // Matn
+  ctx.font = '20px sans-serif';
+  ctx.fillStyle = '#111827';
+  ctx.fillText("Salom, Canvas!", 200, 200);
 }
 
-// Ishlatish
-const loader = new SmartContentLoader('#app');
-loader.initWorker();
+// 2. Murakkab yo'l (path) chizish — uchburchak
+function drawTriangle() {
+  ctx.beginPath();
+  ctx.moveTo(300, 250);
+  ctx.lineTo(350, 150);
+  ctx.lineTo(390, 250);
+  ctx.closePath();
+  ctx.fillStyle = '#ef4444';
+  ctx.fill();
+}
 
-// Har bir element uchun lazy loading
-document.querySelectorAll('[data-item-id]').forEach(el => {
-  loader.setupLazyLoad(el, el.dataset.itemId);
+// 3. Sodda animatsiya — sakrab yuruvchi to'p
+let ballX = 50;
+let ballDirection = 1;
+const ballSpeed = 3;
+
+function animateBall() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawShapes();
+  drawTriangle();
+
+  ballX += ballSpeed * ballDirection;
+  if (ballX > canvas.width - 20 || ballX < 20) {
+    ballDirection *= -1;
+  }
+
+  ctx.beginPath();
+  ctx.arc(ballX, 270, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#10b981';
+  ctx.fill();
+
+  requestAnimationFrame(animateBall);
+}
+
+// 4. Sichqoncha bosilgan joyni aniqlash (koordinata hisoblash)
+canvas.addEventListener('click', (event) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  console.log(`Bosilgan koordinata: x=${x}, y=${y}`);
+
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'red';
+  ctx.fill();
 });
 
-// Sahifa o'chirilganda tozalash
-window.addEventListener('unload', () => loader.destroy());
+// Ishga tushirish
+animateBall();
