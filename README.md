@@ -1,118 +1,102 @@
 // ===================================================
-// Observers - Amaliy misollar
+// Review 2 — AbortController, Workers, Observers birgalikda
 // ===================================================
 
-// 1. IntersectionObserver — Lazy Loading
-function setupLazyLoading() {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          // data-src atributidan haqiqiy src ni o'rnatish
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          observer.unobserve(img); // Endi kuzatish shart emas
-          console.log('Rasm yuklandi:', img.src);
+// Barcha texnologiyalarni birlashtirgan kontent yuklovchi
+class SmartContentLoader {
+  constructor(containerSelector) {
+    this.container = document.querySelector(containerSelector);
+    this.controllers = new Map(); // AbortController'lar
+    this.worker = null;
+    this.observers = new Map(); // Observer'lar
+  }
+
+  // Web Worker yaratish
+  initWorker() {
+    const workerCode = `
+      self.onmessage = function(e) {
+        const { id, data } = e.data;
+        // Og'ir qayta ishlash (filtrlash, sorting, transform)
+        const processed = data
+          .filter(item => item.active)
+          .map(item => ({ ...item, label: item.name.toUpperCase() }))
+          .sort((a, b) => b.score - a.score);
+        self.postMessage({ id, processed });
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'text/javascript' });
+    this.worker = new Worker(URL.createObjectURL(blob));
+  }
+
+  // Element ko'rinavchi bo'lganda lazy loading
+  setupLazyLoad(element, itemId) {
+    const io = new IntersectionObserver(async ([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+
+      // AbortController bilan fetch
+      const controller = new AbortController();
+      this.controllers.set(itemId, controller);
+
+      try {
+        const res = await fetch(`/api/items/${itemId}`, {
+          signal: controller.signal
+        });
+        const rawData = await res.json();
+
+        // Web Worker da qayta ishlash
+        const processed = await this.processInWorker(rawData);
+        this.renderItems(element, processed);
+
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Xatolik:', err);
+      } finally {
+        this.controllers.delete(itemId);
+      }
+    }, { rootMargin: '100px', threshold: 0 });
+
+    io.observe(element);
+    this.observers.set(itemId, io);
+  }
+
+  // Web Worker da qayta ishlash
+  processInWorker(data) {
+    return new Promise((resolve, reject) => {
+      const id = Date.now();
+      const handler = (e) => {
+        if (e.data.id === id) {
+          this.worker.removeEventListener('message', handler);
+          resolve(e.data.processed);
         }
-      });
-    },
-    {
-      root: null,        // viewport ishlatiladi
-      rootMargin: '50px', // 50px oldin yuklashni boshlash
-      threshold: 0.1     // 10% ko'ringanda trigger
-    }
-  );
-
-  // Barcha lazy rasmlarni kuzatishga qo'shish
-  document.querySelectorAll('img[data-src]').forEach(img => {
-    observer.observe(img);
-  });
-
-  return observer;
-}
-
-// 2. IntersectionObserver — Infinite Scroll
-function setupInfiniteScroll(container, loadMore) {
-  // Sentinel element — ro'yxat oxiriga qo'yiladi
-  const sentinel = document.createElement('div');
-  container.appendChild(sentinel);
-
-  const observer = new IntersectionObserver(async (entries) => {
-    if (entries[0].isIntersecting) {
-      observer.unobserve(sentinel); // Yuklanayotganda to'xtatish
-      await loadMore();
-      observer.observe(sentinel);   // Tugagach davom etish
-    }
-  }, { threshold: 1.0 });
-
-  observer.observe(sentinel);
-  return () => observer.disconnect();
-}
-
-// 3. ResizeObserver — Responsive Canvas
-function setupResponsiveCanvas(canvas) {
-  const ctx = canvas.getContext('2d');
-
-  const resizeObserver = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const { width, height } = entry.contentRect;
-      canvas.width = width;
-      canvas.height = height;
-      // Canvas qayta chizish
-      drawContent(ctx, width, height);
-      console.log(`Canvas: ${width}x${height}`);
-    }
-  });
-
-  resizeObserver.observe(canvas.parentElement);
-  return () => resizeObserver.disconnect();
-}
-
-function drawContent(ctx, w, h) {
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#4A90D9';
-  ctx.fillRect(w/4, h/4, w/2, h/2);
-}
-
-// 4. MutationObserver — DOM o'zgarishlarini kuzatish
-function watchDOMChanges(targetElement) {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach(mutation => {
-      if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach(node => {
-          console.log('Yangi element qo\'shildi:', node.nodeName);
-        });
-        mutation.removedNodes.forEach(node => {
-          console.log('Element o\'chirildi:', node.nodeName);
-        });
-      }
-
-      if (mutation.type === 'attributes') {
-        console.log(`Atribut o'zgardi: ${mutation.attributeName}`);
-        console.log('  Eski:', mutation.oldValue);
-      }
+      };
+      this.worker.addEventListener('message', handler);
+      this.worker.postMessage({ id, data });
     });
-  });
+  }
 
-  observer.observe(targetElement, {
-    childList: true,       // Bolalar o'zgarishini kuzatish
-    attributes: true,      // Atributlarni kuzatish
-    attributeOldValue: true, // Eski qiymatni saqlash
-    subtree: true          // Barcha ichki elementlarni ham kuzatish
-  });
+  renderItems(el, items) {
+    el.innerHTML = items.map(i => `<div>${i.label}: ${i.score}</div>`).join('');
+  }
 
-  return () => observer.disconnect();
+  // Barcha resurslarni tozalash
+  destroy() {
+    // Barcha fetch so'rovlarini bekor qilish
+    this.controllers.forEach(ctrl => ctrl.abort());
+    // Barcha observer'larni to'xtatish
+    this.observers.forEach(obs => obs.disconnect());
+    // Worker ni to'xtatish
+    if (this.worker) this.worker.terminate();
+  }
 }
 
-// 5. Ko'rish animatsiyasi uchun IntersectionObserver
-function animateOnVisible(elements, animationClass = 'fade-in') {
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(({ target, isIntersecting }) => {
-      target.classList.toggle(animationClass, isIntersecting);
-    });
-  }, { threshold: 0.2 });
+// Ishlatish
+const loader = new SmartContentLoader('#app');
+loader.initWorker();
 
-  elements.forEach(el => io.observe(el));
-  return () => io.disconnect();
-}
+// Har bir element uchun lazy loading
+document.querySelectorAll('[data-item-id]').forEach(el => {
+  loader.setupLazyLoad(el, el.dataset.itemId);
+});
+
+// Sahifa o'chirilganda tozalash
+window.addEventListener('unload', () => loader.destroy());
