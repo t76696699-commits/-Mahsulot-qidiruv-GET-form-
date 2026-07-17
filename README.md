@@ -1,98 +1,80 @@
 // ===================================================
-// Iterator va Generator - Amaliy misollar
+// Proxy va Reflect - Amaliy misollar
 // ===================================================
 
-// 1. Custom Iterator yaratish
-function createRangeIterator(start, end, step = 1) {
-  let current = start;
-  return {
-    next() {
-      if (current <= end) {
-        const value = current;
-        current += step;
-        return { value, done: false };
+// 1. Oddiy get va set traplari
+const person = { name: 'Jasur', age: 28 };
+
+const validatedPerson = new Proxy(person, {
+  // Xossaga murojaat ushlagichi
+  get(target, prop, receiver) {
+    console.log(`'${prop}' o'qilmoqda`);
+    return Reflect.get(target, prop, receiver);
+  },
+  // Xossaga yozish ushlagichi
+  set(target, prop, value, receiver) {
+    // Yosh uchun validatsiya
+    if (prop === 'age') {
+      if (typeof value !== 'number') throw new TypeError('Yosh raqam bo\'lishi kerak!');
+      if (value < 0 || value > 150) throw new RangeError('Yosh 0-150 oraliqda bo\'lishi kerak!');
+    }
+    console.log(`'${prop}' = ${value} o'rnatilmoqda`);
+    return Reflect.set(target, prop, value, receiver);
+  }
+});
+
+console.log(validatedPerson.name);  // 'name' o'qilmoqda -> Jasur
+validatedPerson.age = 30;            // 'age' = 30 o'rnatilmoqda
+// validatedPerson.age = -5;         // RangeError!
+
+// 2. Default qiymatlar uchun Proxy
+function withDefaults(target, defaults) {
+  return new Proxy(target, {
+    get(obj, prop) {
+      return prop in obj ? obj[prop] : defaults[prop];
+    }
+  });
+}
+
+const config = withDefaults(
+  { theme: 'dark' },
+  { theme: 'light', lang: 'en', fontSize: 16 }
+);
+
+console.log(config.theme);    // 'dark' (ob'ektda bor)
+console.log(config.lang);     // 'en' (default)
+console.log(config.fontSize); // 16 (default)
+
+// 3. Kuzatuvchi (Observer) Proxy
+function observable(target, onChange) {
+  return new Proxy(target, {
+    set(obj, prop, value) {
+      const oldValue = obj[prop];
+      const result = Reflect.set(obj, prop, value);
+      if (result && oldValue !== value) {
+        onChange({ prop, oldValue, newValue: value });
       }
-      return { value: undefined, done: true };
-    },
-    // Iterable qilish uchun
-    [Symbol.iterator]() { return this; }
-  };
+      return result;
+    }
+  });
 }
 
-const range = createRangeIterator(1, 10, 2);
-for (const num of range) {
-  console.log(num); // 1, 3, 5, 7, 9
-}
-
-// 2. Generator funksiya
-function* fibonacci() {
-  let a = 0, b = 1;
-  while (true) {
-    yield a;           // Qiymat chiqarib to'xtaydi
-    [a, b] = [b, a + b]; // Keyingi chaqiruvda davom etadi
+const state = observable(
+  { count: 0, name: 'test' },
+  ({ prop, oldValue, newValue }) => {
+    console.log(`O'zgarish: ${prop}: ${oldValue} -> ${newValue}`);
   }
-}
+);
 
-// Cheksiz Fibonacci ketmasidan birinchi 8 ta olish
-const fib = fibonacci();
-const first8 = Array.from({ length: 8 }, () => fib.next().value);
-console.log(first8); // [0, 1, 1, 2, 3, 5, 8, 13]
+state.count = 5;   // O'zgarish: count: 0 -> 5
+state.name = 'ok'; // O'zgarish: name: test -> ok
+state.count = 5;   // Hech narsa chop etilmaydi (qiymat o'zgarmadi)
 
-// 3. Generator bilan diapason yaratish
-function* range(start, end, step = 1) {
-  for (let i = start; i <= end; i += step) {
-    yield i;
-  }
-}
-
-console.log([...range(0, 20, 5)]); // [0, 5, 10, 15, 20]
-
-// 4. yield* delegatsiya
-function* gen1() {
-  yield 'A';
-  yield 'B';
-}
-
-function* gen2() {
-  yield 1;
-  yield* gen1(); // gen1 ni delegatsiya qilish
-  yield 2;
-}
-
-console.log([...gen2()]); // [1, 'A', 'B', 2]
-
-// 5. Generator bilan asinxron simulyatsiya
-function* taskRunner() {
-  console.log('1-vazifa boshlandi');
-  const result1 = yield fetchData('users');
-  console.log('Foydalanuvchilar olindi:', result1);
-
-  console.log('2-vazifa boshlandi');
-  const result2 = yield fetchData('posts');
-  console.log('Postlar olindi:', result2);
-}
-
-// Asinxron generator'ni ishga tushiruvchi
-function run(generatorFn) {
-  const gen = generatorFn();
-  function step(value) {
-    const { value: promise, done } = gen.next(value);
-    if (!done) promise.then(step);
-  }
-  step();
-}
-
-// Oddiy kesh bilan ishlash
-function* memoize(iterable) {
-  const cache = [];
-  for (const item of iterable) {
-    cache.push(item);
-    yield item;
-  }
-  console.log('Kesh:', cache);
-}
-
-for (const v of memoize([10, 20, 30])) {
-  console.log(v); // 10, 20, 30
-}
-// Kesh: [10, 20, 30]
+// 4. Reflect metodlari
+const obj = { x: 1, y: 2 };
+console.log(Reflect.has(obj, 'x'));         // true
+console.log(Reflect.ownKeys(obj));           // ['x', 'y']
+Reflect.set(obj, 'z', 3);
+console.log(obj);                            // { x: 1, y: 2, z: 3 }
+Reflect.deleteProperty(obj, 'x');
+console.log(obj);                            // { y: 2, z: 3 }
