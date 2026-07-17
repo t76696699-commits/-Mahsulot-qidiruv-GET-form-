@@ -1,118 +1,118 @@
-1. worker.js fayli
-Ushbu fayl hisoblash jarayonini asosiy sahifadan ajratib turadi.
+// ===================================================
+// Observers - Amaliy misollar
+// ===================================================
 
-JavaScript
-// worker.js
+// 1. IntersectionObserver — Lazy Loading
+function setupLazyLoading() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          // data-src atributidan haqiqiy src ni o'rnatish
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+          observer.unobserve(img); // Endi kuzatish shart emas
+          console.log('Rasm yuklandi:', img.src);
+        }
+      });
+    },
+    {
+      root: null,        // viewport ishlatiladi
+      rootMargin: '50px', // 50px oldin yuklashni boshlash
+      threshold: 0.1     // 10% ko'ringanda trigger
+    }
+  );
 
-// Fibonacci funksiyasi (og'ir hisob-kitob)
-function fibonacci(n) {
-    if (n < 0) throw new Error("Musbat son kiriting");
-    if (n <= 1) return n;
-    return fibonacci(n - 1) + fibonacci(n - 2);
+  // Barcha lazy rasmlarni kuzatishga qo'shish
+  document.querySelectorAll('img[data-src]').forEach(img => {
+    observer.observe(img);
+  });
+
+  return observer;
 }
 
-// Asosiy sahifadan xabar kelganda
-self.onmessage = function(e) {
-    const n = e.data;
-    try {
-        const result = fibonacci(n);
-        // Natijani qaytarish
-        self.postMessage({ success: true, result: result });
-    } catch (err) {
-        // Xatolik bo'lsa xabar berish
-        self.postMessage({ success: false, error: err.message });
+// 2. IntersectionObserver — Infinite Scroll
+function setupInfiniteScroll(container, loadMore) {
+  // Sentinel element — ro'yxat oxiriga qo'yiladi
+  const sentinel = document.createElement('div');
+  container.appendChild(sentinel);
+
+  const observer = new IntersectionObserver(async (entries) => {
+    if (entries[0].isIntersecting) {
+      observer.unobserve(sentinel); // Yuklanayotganda to'xtatish
+      await loadMore();
+      observer.observe(sentinel);   // Tugagach davom etish
     }
-};
-2. index.html fayli
-Ushbu fayl interfeysni ta'minlaydi va Worker bilan bog'lanadi.
+  }, { threshold: 1.0 });
 
-HTML
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <title>Web Worker Fibonacci</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        #status { color: blue; font-weight: bold; }
-    </style>
-</head>
-<body>
+  observer.observe(sentinel);
+  return () => observer.disconnect();
+}
 
-    <h2>Fibonacci Hisoblagich (Web Workers)</h2>
-    
-    <input type="number" id="numInput" placeholder="n (masalan: 40)">
-    <button id="btnStart">Hisoblash</button>
-    <button id="btnStop">To'xtatish (Terminate)</button>
-    
-    <p id="status"></p>
-    <h3 id="result"></h3>
+// 3. ResizeObserver — Responsive Canvas
+function setupResponsiveCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
 
-    <hr>
-    <p>Interfeys sezgirligini tekshirish uchun quyidagi maydonga yozing:</p>
-    <input type="text" placeholder="Men hali ham ishlayapman...">
+  const resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      canvas.width = width;
+      canvas.height = height;
+      // Canvas qayta chizish
+      drawContent(ctx, width, height);
+      console.log(`Canvas: ${width}x${height}`);
+    }
+  });
 
-    <script>
-        let worker;
-        const btnStart = document.getElementById('btnStart');
-        const btnStop = document.getElementById('btnStop');
-        const status = document.getElementById('status');
-        const resultDisplay = document.getElementById('result');
+  resizeObserver.observe(canvas.parentElement);
+  return () => resizeObserver.disconnect();
+}
 
-        btnStart.addEventListener('click', () => {
-            const n = parseInt(document.getElementById('numInput').value);
-            
-            // Eski worker bo'lsa, uni to'xtatamiz
-            if (worker) worker.terminate();
+function drawContent(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#4A90D9';
+  ctx.fillRect(w/4, h/4, w/2, h/2);
+}
 
-            // Yangi worker yaratish
-            worker = new Worker('worker.js');
-
-            status.textContent = "Hisoblanmoqda...";
-            resultDisplay.textContent = "";
-
-            // Worker dan javob kelganda
-            worker.onmessage = function(e) {
-                if (e.data.success) {
-                    resultDisplay.textContent = `Natija: ${e.data.result}`;
-                    status.textContent = "Hisoblash tugadi.";
-                } else {
-                    status.textContent = "Xatolik: " + e.data.error;
-                }
-            };
-
-            // Xatolarni ushlash (onerror)
-            worker.onerror = function(err) {
-                status.textContent = "Worker da kritik xatolik yuz berdi!";
-                console.error("Worker Error:", err);
-                worker.terminate();
-            };
-
-            // Worker ga n ni yuborish
-            worker.postMessage(n);
+// 4. MutationObserver — DOM o'zgarishlarini kuzatish
+function watchDOMChanges(targetElement) {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach(node => {
+          console.log('Yangi element qo\'shildi:', node.nodeName);
         });
-
-        // Worker ni to'xtatish
-        btnStop.addEventListener('click', () => {
-            if (worker) {
-                worker.terminate();
-                status.textContent = "Hisoblash majburiy to'xtatildi.";
-            }
+        mutation.removedNodes.forEach(node => {
+          console.log('Element o\'chirildi:', node.nodeName);
         });
-    </script>
-</body>
-</html>
-Loyihani qanday ishga tushirish kerak?
-Fayllarni saqlash: worker.js va index.html fayllarini bitta papkaga joylashtiring.
+      }
 
-Server orqali ochish: Web Workers xavfsizlik cheklovlari tufayli brauzerda file:// protokoli orqali ishlamaydi.
+      if (mutation.type === 'attributes') {
+        console.log(`Atribut o'zgardi: ${mutation.attributeName}`);
+        console.log('  Eski:', mutation.oldValue);
+      }
+    });
+  });
 
-Agar VS Code ishlatayotgan bo'lsangiz, "Live Server" kengaytmasini o'rnating va index.html ustiga o'ng tugmani bosib, "Open with Live Server" ni tanlang.
+  observer.observe(targetElement, {
+    childList: true,       // Bolalar o'zgarishini kuzatish
+    attributes: true,      // Atributlarni kuzatish
+    attributeOldValue: true, // Eski qiymatni saqlash
+    subtree: true          // Barcha ichki elementlarni ham kuzatish
+  });
 
-Tekshirish:
+  return () => observer.disconnect();
+}
 
-n qiymatiga 40 yoki 42 kiriting va "Hisoblash" tugmasini bosing.
+// 5. Ko'rish animatsiyasi uchun IntersectionObserver
+function animateOnVisible(elements, animationClass = 'fade-in') {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(({ target, isIntersecting }) => {
+      target.classList.toggle(animationClass, isIntersecting);
+    });
+  }, { threshold: 0.2 });
 
-Hisoblash ketayotgan paytda sahifaning pastidagi "Men hali ham ishlayapman..." maydoniga yozib ko'ring — interfeys "muzlamayotganini" ko'rasiz.
-
-"To'xtatish" tugmasini bosib, jarayonni bekor qilishni sinab ko'ring.
+  elements.forEach(el => io.observe(el));
+  return () => io.disconnect();
+}
