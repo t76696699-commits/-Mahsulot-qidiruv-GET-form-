@@ -1,3 +1,63 @@
+Web Workers
+Урок 9 из 11
+· 3 раздела
+✓ Пройден
+📝
+Текст
+Nazariya
+#1
+Web Workers nima?
+JavaScript asosan bir oqimli (single-threaded) bo'lib, barcha kod bitta asosiy oqimda (main thread) bajariladi. Bu og'ir hisob-kitoblar UI ni «muzlatishiga» olib keladi. Web Workers — bu brauzer API'si bo'lib, JavaScript kodini alohida background thread'da ishga tushirish imkonini beradi. Shunday qilib, asosiy thread erkin qoladi va foydalanuvchi interfeysini boshqaradi.
+
+Web Worker turlari
+Dedicated Worker: Bitta sahifaga bog'liq, eng ko'p ishlatiladigan tur. new Worker('script.js') bilan yaratiladi.
+Shared Worker: Bir nechta sahifa/tab o'rtasida umumlashtirilgan worker. new SharedWorker('script.js') bilan yaratiladi.
+Service Worker: Tarmoq so'rovlarini ushlab oladi, offline rejim, push notifications. PWA asosini tashkil etadi.
+Worker bilan muloqot
+Asosiy thread va Worker o'rtasidagi aloqa xabar almashish (message passing) orqali amalga oshiriladi:
+
+worker.postMessage(data) — ma'lumot yuborish
+worker.onmessage = (e) => {...} — xabar qabul qilish
+worker.terminate() — Worker ni to'xtatish
+Worker ichida: self.postMessage(data) va self.onmessage
+Nima uchun va qachon ishlatish kerak?
+Holat	Worker kerakmi?
+Katta JSON parsing (>1MB)	Ha
+Kriptografik hisob-kitoblar	Ha
+Rasm yoki video qayta ishlash	Ha
+Machine learning inference	Ha
+Oddiy fetch so'rovlari	Yo'q
+UI animatsiyalari	Yo'q
+Worker cheklovlari
+Web Worker'lar ba'zi imkoniyatlarga ega emas:
+
+DOM'ga kirish imkoni yo'q (document, window yo'q)
+UI elementlarini o'zgartira olmaydi
+Ma'lumotlar postMessage orqali Structured Clone algoritmi bilan uzatiladi (funksiyalar, DOM elementlari o'tkazilmaydi)
+Asosiy Thread UI boshqaradi
+
+new Worker worker.js
+
+worker.postMessage data
+
+Worker alohida threadda ishlaydi
+
+Og'ir hisob-kitoblar bajariladi
+
+self.postMessage natija
+
+Asosiy thread onmessage natija oladi
+
+UI yangilanadi - muzlamaydi!
+
+Inline Worker: Alohida fayl o'rniga Worker kodini Blob yoki URL.createObjectURL orqali to'g'ridan-to'g'ri JavaScript ichida yozish ham mumkin. Bu ayniqsa bundler ishlatilmaydigan loyihalarda qulay.
+
+💻
+Код
+Kod namunasi
+#2
+code
+ Копировать
 // ===================================================
 // Web Workers - Amaliy misollar
 // ===================================================
