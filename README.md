@@ -1,86 +1,98 @@
 // ===================================================
-// WeakMap va WeakSet - Amaliy misollar
+// Iterator va Generator - Amaliy misollar
 // ===================================================
 
-// 1. WeakMap asosiy ishlatish
-const weakMap = new WeakMap();
-let user = { name: 'Alisher', age: 25 };
+// 1. Custom Iterator yaratish
+function createRangeIterator(start, end, step = 1) {
+  let current = start;
+  return {
+    next() {
+      if (current <= end) {
+        const value = current;
+        current += step;
+        return { value, done: false };
+      }
+      return { value: undefined, done: true };
+    },
+    // Iterable qilish uchun
+    [Symbol.iterator]() { return this; }
+  };
+}
 
-// Ob'ektni kalit, ma'lumotni qiymat sifatida saqlash
-weakMap.set(user, { lastLogin: new Date(), visits: 42 });
+const range = createRangeIterator(1, 10, 2);
+for (const num of range) {
+  console.log(num); // 1, 3, 5, 7, 9
+}
 
-console.log(weakMap.get(user));  // { lastLogin: ..., visits: 42 }
-console.log(weakMap.has(user));  // true
-
-// Havola o'chirilgach GC WeakMap'ni ham tozalaydi
-user = null;
-// Endi GC ishga tushganda yozuv ham o'chadi
-
-// 2. WeakMap bilan Private ma'lumotlar
-const _privateData = new WeakMap();
-
-class BankAccount {
-  constructor(owner, balance) {
-    // Private ma'lumotlar tashqaridan ko'rinmaydi
-    _privateData.set(this, {
-      owner,
-      balance,
-      transactions: []
-    });
-  }
-
-  getBalance() {
-    return _privateData.get(this).balance;
-  }
-
-  deposit(amount) {
-    if (amount <= 0) throw new Error('Summa musbat bo\'lishi kerak!');
-    const data = _privateData.get(this);
-    data.balance += amount;
-    data.transactions.push({ type: 'kirim', amount, date: new Date() });
-    console.log(`+${amount} so'm. Balans: ${data.balance}`);
-  }
-
-  withdraw(amount) {
-    const data = _privateData.get(this);
-    if (data.balance < amount) throw new Error('Mablag\' yetarli emas!');
-    data.balance -= amount;
-    data.transactions.push({ type: 'chiqim', amount, date: new Date() });
-    console.log(`-${amount} so'm. Balans: ${data.balance}`);
-  }
-
-  getHistory() {
-    return [..._privateData.get(this).transactions];
+// 2. Generator funksiya
+function* fibonacci() {
+  let a = 0, b = 1;
+  while (true) {
+    yield a;           // Qiymat chiqarib to'xtaydi
+    [a, b] = [b, a + b]; // Keyingi chaqiruvda davom etadi
   }
 }
 
-const acc = new BankAccount('Kamola', 500_000);
-acc.deposit(100_000);   // +100000 so'm. Balans: 600000
-acc.withdraw(50_000);   // -50000 so'm. Balans: 550000
-console.log(acc.getBalance()); // 550000
-// acc._privateData ko'rinmaydi — xavfsiz!
+// Cheksiz Fibonacci ketmasidan birinchi 8 ta olish
+const fib = fibonacci();
+const first8 = Array.from({ length: 8 }, () => fib.next().value);
+console.log(first8); // [0, 1, 1, 2, 3, 5, 8, 13]
 
-// 3. WeakSet — Ob'ektlarni belgilash
-const visited = new WeakSet();
-
-function processNode(node) {
-  if (visited.has(node)) {
-    console.log(`Tugun '${node.id}' allaqachon ko'rilgan — o'tkazib yuborildi.`);
-    return;
+// 3. Generator bilan diapason yaratish
+function* range(start, end, step = 1) {
+  for (let i = start; i <= end; i += step) {
+    yield i;
   }
-  visited.add(node);
-  console.log(`Tugun '${node.id}' qayta ishlanmoqda...`);
-  if (node.children) node.children.forEach(processNode);
 }
 
-const tree = {
-  id: 'root',
-  children: [
-    { id: 'A', children: [] },
-    { id: 'B', children: [{ id: 'C', children: [] }] }
-  ]
-};
+console.log([...range(0, 20, 5)]); // [0, 5, 10, 15, 20]
 
-processNode(tree);
-processNode(tree); // Takroriy chaqiruv — o'tkazib yuboriladi
-console.log(visited.has(tree)); // true
+// 4. yield* delegatsiya
+function* gen1() {
+  yield 'A';
+  yield 'B';
+}
+
+function* gen2() {
+  yield 1;
+  yield* gen1(); // gen1 ni delegatsiya qilish
+  yield 2;
+}
+
+console.log([...gen2()]); // [1, 'A', 'B', 2]
+
+// 5. Generator bilan asinxron simulyatsiya
+function* taskRunner() {
+  console.log('1-vazifa boshlandi');
+  const result1 = yield fetchData('users');
+  console.log('Foydalanuvchilar olindi:', result1);
+
+  console.log('2-vazifa boshlandi');
+  const result2 = yield fetchData('posts');
+  console.log('Postlar olindi:', result2);
+}
+
+// Asinxron generator'ni ishga tushiruvchi
+function run(generatorFn) {
+  const gen = generatorFn();
+  function step(value) {
+    const { value: promise, done } = gen.next(value);
+    if (!done) promise.then(step);
+  }
+  step();
+}
+
+// Oddiy kesh bilan ishlash
+function* memoize(iterable) {
+  const cache = [];
+  for (const item of iterable) {
+    cache.push(item);
+    yield item;
+  }
+  console.log('Kesh:', cache);
+}
+
+for (const v of memoize([10, 20, 30])) {
+  console.log(v); // 10, 20, 30
+}
+// Kesh: [10, 20, 30]
