@@ -1,3 +1,194 @@
+fetch va REST API
+Урок 11 из 14
+· 4 раздела
+📝
+Текст
+Текст
+#1
+fetch va REST API'lar
+GET
+
+POST + body
+
+.json
+
+Authorization header
+
+AbortController
+
+fetch url
+
+server
+
+Response: status, headers, body
+
+JS obyekt
+
+auth
+
+bekor qilish
+
+fetch — brauzerga "borib shu URL'ni o'qib kel" deyish. Browser API, hozir Node.js da ham bor. Promise qaytaradi. async/await bilan birga — kuchli kombo.
+
+🏆 5 daqiqada g'alaba
+BLOKA 1 — Eng oddiy GET
+const r = await fetch("https://api.github.com/users/torvalds");
+console.log(r.status);             // 200
+console.log(r.ok);                  // true (2xx bo'lsa)
+
+const user = await r.json();
+console.log(user.name);             // "Linus Torvalds"
+console.log(user.bio);
+
+// Query params — URLSearchParams bilan
+const params = new URLSearchParams({ q: "python", page: 2 });
+const search = await fetch(`https://api.github.com/search/users?${params}`);
+BLOKA 2 — POST + JSON body
+const r = await fetch("https://api.example.com/users", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer XXX",
+    },
+    body: JSON.stringify({ ism: "Ali", yosh: 21 }),
+});
+
+if (!r.ok) {
+    throw new Error(`HTTP ${r.status}`);
+}
+
+const created = await r.json();
+console.log(created.id);
+BLOKA 3 — Xato boshqaruvi va bekor qilish
+// AbortController — so'rovni to'xtatish
+const controller = new AbortController();
+
+setTimeout(() => controller.abort(), 3000);    // 3 sekunddan keyin to'xtat
+
+try {
+    const r = await fetch(url, { signal: controller.signal });
+    const data = await r.json();
+} catch (e) {
+    if (e.name === "AbortError") {
+        console.log("So'rov bekor qilindi");
+    } else {
+        console.log("Xato:", e.message);
+    }
+}
+🐛 Ataylab xato
+const r = await fetch("https://api.example.com/data");
+console.log(r);              // Response obyekt, lekin data emas
+console.log(r.json());       // ⚠️ Promise — to'g'ri ishlatish kerak
+
+// To'g'ri
+const data = await r.json();
+console.log(data);
+Sabab: r.json() Promise qaytaradi (body ni asynchronously parse qiladi). await qo'shilmasa — Promise obyektni ko'rasiz, kerakli data emas. Esda saqlang: fetch 2 ta await oladi:
+
+await fetch(...) — response keladi
+await r.json() — body parse bo'ladi
+Endi tushuntiramiz
+1. fetch ⚠️ — yopiq holatga ham reject qilmaydi
+// HTTP 404 — fetch reject EMAS qiladi
+const r = await fetch("/api/yo'q");
+console.log(r.ok);          // false
+console.log(r.status);       // 404
+
+// Faqat tarmoq xatosi (DNS, offline) Promise'ni reject qiladi
+// 4xx/5xx — Promise resolved! r.ok ni qo'lda tekshirish kerak
+
+if (!r.ok) {
+    throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+}
+2. Response obyekt nimasi bor
+Maydon	Qaytaradi
+r.status	200, 404, 500 ...
+r.statusText	"OK", "Not Found"
+r.ok	true agar 200-299
+r.headers.get("Content-Type")	Header qiymati
+r.url	Final URL (redirect'lardan keyin)
+await r.json()	Body — JSON parse
+await r.text()	Body — string
+await r.blob()	Body — bayt (rasm, fayl)
+await r.formData()	Body — FormData
+3. HTTP metodlar
+Metod	Maqsadi
+GET	O'qish — body yo'q
+POST	Yangi yaratish — body kerak
+PUT	To'liq almashtirish
+PATCH	Qisman yangilash
+DELETE	O'chirish
+4. Authorization patterns
+// Bearer token
+headers: { "Authorization": "Bearer XXXX" }
+
+// API key (header'da)
+headers: { "X-Api-Key": "XXXX" }
+
+// API key (query param'da)
+const url = `https://api.../endpoint?api_key=XXXX`;
+
+// Basic auth (eski stil)
+headers: { "Authorization": "Basic " + btoa("user:pass") }
+
+// Cookie (avtomatik) — credentials sozlamasi bilan
+fetch(url, { credentials: "include" })
+5. Universal xavfsiz wrapper
+async function api(url, options = {}) {
+    const timeout = options.timeout || 10000;
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const r = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+            headers: {
+                "Content-Type": "application/json",
+                ...options.headers,
+            },
+            body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+
+        if (!r.ok) {
+            const xato = await r.text();
+            throw new Error(`HTTP ${r.status}: ${xato}`);
+        }
+
+        return await r.json();
+    } finally {
+        clearTimeout(tid);
+    }
+}
+
+// Foydalanish
+const user = await api("/api/user");
+const created = await api("/api/posts", {
+    method: "POST",
+    body: { title: "Salom", content: "..." },
+});
+6. Qachon fetch, qachon axios / library
+fetch	axios va o'xshashlari
+Native — qo'shimcha kutubxonasiz	Tashqi paket
+4xx/5xx — manual tekshirish	Avtomatik throw
+JSON parse — qo'lda .json()	Avtomatik
+Timeout — AbortController	Sozlama bilan
+Interceptors yo'q	Bor (har so'rovga qo'shimcha logika)
+Brauzer + modern Node	Hammasi
+Default: fetch + kichik wrapper. Katta loyiha + ko'p o'ziga xos so'rovlar — axios qulayroq.
+
+📌 Bu darsdan keyin siz bilasizki
+fetch 4xx/5xx ni rejection qilmaydi — r.ok ni tekshiring
+fetch 2 ta await oladi: response uchun, keyin .json() uchun
+POST/PUT body — JSON.stringify(...) bilan
+AbortController — timeout va manual bekor qilish
+Productionda — wrapper yozish; timeout va xato boshqaruvi har joyda
+💻
+Код
+Код
+#2
+javascript
+ Копировать
 // ─── fetch va REST API'lar — sweep ───────────────────────────────────────
 
 // 1) Eng oddiy GET (Node 18+ / brauzer)
