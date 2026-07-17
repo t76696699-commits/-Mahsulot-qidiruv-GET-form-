@@ -1,87 +1,91 @@
 // ===================================================
-// Event Loop chuqurroq - Amaliy misollar
+// structuredClone va Immutability - Amaliy misollar
 // ===================================================
 
-// 1. Bajarilish tartibini bashorat qiling
-console.log('1 — Sinxron: boshlandi');
+// 1. structuredClone asosiy ishlatish
+const original = {
+  name: 'Zulfiya',
+  scores: [85, 92, 78],
+  meta: { date: new Date('2024-01-15'), active: true },
+  tags: new Set(['js', 'python'])
+};
 
-setTimeout(() => {
-  console.log('4 — Macrotask: setTimeout 0ms');
-}, 0);
+const clone = structuredClone(original);
 
-Promise.resolve()
-  .then(() => console.log('3 — Microtask: Promise.then'));
+// Chuqur nusxa — asl va nusxa mustaqil
+clone.scores.push(99);
+clone.name = 'Malika';
 
-queueMicrotask(() => {
-  console.log('3.5 — Microtask: queueMicrotask');
+console.log(original.scores); // [85, 92, 78] — O'ZGARMAGAN!
+console.log(clone.scores);     // [85, 92, 78, 99]
+console.log(original.name);    // 'Zulfiya'
+console.log(clone.name);       // 'Malika'
+
+// Date to'g'ri nusxalanadi
+console.log(clone.meta.date instanceof Date); // true!
+console.log(clone.meta.date.getFullYear());   // 2024
+
+// 2. JSON.stringify vs structuredClone
+const data = {
+  date: new Date(),
+  map: new Map([['a', 1]]),
+  set: new Set([1, 2, 3]),
+  undef: undefined,
+  fn: () => {} // Funksiyalar nusxalanmaydi!
+};
+
+// JSON yo'li — ko'p narsa yo'qoladi!
+const jsonClone = JSON.parse(JSON.stringify(data));
+console.log(jsonClone.date);  // string! (Date emas)
+console.log(jsonClone.map);   // {} (Map emas)
+console.log(jsonClone.undef); // yo'q (undefined o'chdi)
+
+// structuredClone — to'g'ri nusxalash
+// (funksiya va prototype o'tkazilmaydi — bu cheklash)
+const structClone = structuredClone({ date: new Date(), set: new Set([1,2]) });
+console.log(structClone.date instanceof Date); // true
+console.log(structClone.set instanceof Set);   // true
+
+// 3. Immutability — Noto'g'ri va to'g'ri yondashuv
+
+// ❌ NOTO'G'RI: Asl ob'ektni o'zgartirish (mutation)
+function updateUserBad(user, newName) {
+  user.name = newName; // Asl ob'ektni o'zgartiradi!
+  return user;
+}
+
+// ✅ TO'G'RI: Yangi ob'ekt yaratish (immutable)
+function updateUserGood(user, newName) {
+  return { ...user, name: newName }; // Yangi ob'ekt!
+}
+
+// ✅ TO'G'RI: structuredClone bilan chuqur nusxa
+function updateUserDeep(user, updates) {
+  const copy = structuredClone(user);
+  return Object.assign(copy, updates);
+}
+
+// 4. Object.freeze — sayoz muzlatish
+const config = Object.freeze({
+  API_URL: 'https://api.example.com',
+  MAX_RETRIES: 3,
+  settings: { timeout: 5000 } // Bu qism muzlatilmagan!
 });
 
-console.log('2 — Sinxron: tugadi');
-// Natija: 1, 2, 3, 3.5, 4
+// config.API_URL = 'other'; // Strict modeda xatolik!
+config.settings.timeout = 99999; // Bu ishlaydi! (sayoz freeze)
 
-// 2. Microtask zanjirlari
-console.log('--- Microtask zanjiri ---');
-Promise.resolve()
-  .then(() => {
-    console.log('Microtask 1');
-    return Promise.resolve('2-dan qiymat');
-  })
-  .then((val) => {
-    console.log('Microtask 2:', val);
-  })
-  .then(() => {
-    console.log('Microtask 3');
+// 5. Chuqur freeze funksiyasi
+function deepFreeze(obj) {
+  Object.getOwnPropertyNames(obj).forEach(name => {
+    const value = obj[name];
+    if (typeof value === 'object' && value !== null) {
+      deepFreeze(value);
+    }
   });
-
-setTimeout(() => console.log('Macrotask — bu eng oxirida!'), 0);
-
-// 3. UI muzlatish muammosi
-function heavySync(n) {
-  // Bu Call Stack ni uzoq ushlab turadi — UI muzlaydi!
-  let result = 0;
-  for (let i = 0; i < n; i++) result += i;
-  return result;
+  return Object.freeze(obj);
 }
 
-// Yechim: katta ishni bo'laklarga bo'lish
-async function heavyAsync(n, chunkSize = 100_000) {
-  let result = 0;
-  for (let i = 0; i < n; i += chunkSize) {
-    const end = Math.min(i + chunkSize, n);
-    for (let j = i; j < end; j++) result += j;
-    // Har bo'lakdan keyin Event Loop ga nazorat qaytarish
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-  return result;
-}
-
-// 4. Promise va setTimeout tartibini tahlil qilish
-async function analyzeOrder() {
-  console.log('async funksiya boshlandi (sinxron qism)');
-
-  await Promise.resolve(); // Microtask — keyingi tick ga o'tadi
-
-  console.log('await dan keyin (microtask sifatida bajariladi)');
-}
-
-analyzeOrder();
-console.log('analyzeOrder() dan keyin (sinxron davom etadi)');
-// Natija:
-// 'async funksiya boshlandi'
-// 'analyzeOrder() dan keyin'
-// 'await dan keyin'
-
-// 5. requestAnimationFrame (Brauzerda)
-// requestAnimationFrame — macrotask emas, render frame oldidan chaqiriladi
-// setTimeout(fn, 0) — macrotask (keyingi event loop tick)
-// Promise.then — microtask (joriy tick ichida)
-
-function demoOrder() {
-  console.log('Boshlanish');
-  // requestAnimationFrame(() => console.log('rAF — render oldidan'));
-  setTimeout(() => console.log('setTimeout'), 0);
-  Promise.resolve().then(() => console.log('Promise'));
-  console.log('Oxiri');
-  // Boshlanish -> Oxiri -> Promise -> setTimeout
-}
-demoOrder();
+const frozen = deepFreeze({ a: { b: { c: 42 } } });
+// frozen.a.b.c = 100; // Strict modeda xatolik!
+console.log(frozen.a.b.c); // 42 — o'zgarmagan!
