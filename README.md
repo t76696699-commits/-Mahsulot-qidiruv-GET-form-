@@ -1,70 +1,113 @@
 // ===================================================
-// Review 1 — Barcha mavzularni birlashtirgan misol
+// AbortController - Amaliy misollar
 // ===================================================
 
-// Symbol bilan noyob kalit
-const _cache = Symbol('cache');
-const _privateData = new WeakMap();
+// 1. Asosiy fetch bekor qilish
+async function fetchWithCancel(url) {
+  const controller = new AbortController();
+  const { signal } = controller;
 
-// Generator bilan lazy ma'lumot yuklash
-function* dataLoader(urls) {
-  for (const url of urls) {
-    yield fetch(url).then(r => r.json());
+  // 5 sekunddan keyin avtomatik bekor qilish
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(url, { signal });
+    clearTimeout(timeoutId); // Muvaffaqiyatli bo'lsa timeout ni tozalash
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('So\'rov bekor qilindi (timeout yoki manuel)');
+      return null;
+    }
+    throw error; // Boshqa xatoliklarni yuqoriga uzatish
   }
 }
 
-// Proxy bilan validatsiya va logging
-class DataStore {
-  constructor() {
-    _privateData.set(this, { items: [], [_cache]: new Map() });
-
-    return new Proxy(this, {
-      get(target, prop, receiver) {
-        if (prop === 'size') {
-          return _privateData.get(target).items.length;
-        }
-        return Reflect.get(target, prop, receiver);
-      }
+// 2. AbortSignal.timeout — eng qulay timeout usuli
+async function fetchWithTimeout(url, timeoutMs = 5000) {
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(timeoutMs)
     });
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      throw new Error(`So\'rov ${timeoutMs}ms dan oshdi`);
+    }
+    throw error;
+  }
+}
+
+// 3. Izlash (debounce + AbortController)
+let searchController = null;
+
+async function searchProducts(query) {
+  // Avvalgi so'rovni bekor qilish
+  if (searchController) {
+    searchController.abort();
   }
 
-  add(item) {
-    const data = _privateData.get(this);
-    data.items.push(structuredClone(item));
+  searchController = new AbortController();
+
+  try {
+    const res = await fetch(`/api/search?q=${query}`, {
+      signal: searchController.signal
+    });
+    const data = await res.json();
+    console.log('Natijalar:', data);
+    return data;
+  } catch (err) {
+    if (err.name !== 'AbortError') throw err;
+    // AbortError — bu normal holat, e'tibor bermaslik kerak
+  }
+}
+
+// 4. React komponenti uchun pattern (simulation)
+function ReactLikeComponent() {
+  let isMounted = false;
+  let controller = null;
+
+  function mount() {
+    isMounted = true;
+    controller = new AbortController();
+    loadData();
   }
 
-  // Generator bilan iterable qilish
-  *[Symbol.iterator]() {
-    const items = _privateData.get(this).items;
-    for (const item of items) {
-      yield structuredClone(item); // Immutable chiqarish
+  async function loadData() {
+    try {
+      const data = await fetch('/api/data', {
+        signal: controller.signal
+      });
+      if (!isMounted) return; // Qo'shimcha himoya
+      console.log('Ma\'lumot yuklandi:', await data.json());
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      console.error('Xatolik:', err);
     }
   }
-}
 
-const store = new DataStore();
-store.add({ id: 1, name: 'Ali', date: new Date() });
-store.add({ id: 2, name: 'Vali', date: new Date() });
-
-console.log(store.size); // 2 (Proxy get trap)
-
-for (const item of store) {
-  console.log(item.name); // 'Ali', 'Vali'
-}
-
-// Event Loop bilan asinxron yaratish
-async function loadAllData(store) {
-  console.log('Yuklash boshlandi (sinxron)');
-
-  await Promise.resolve();
-  console.log('Microtask: birinchi yield');
-
-  for (const item of store) {
-    // Har bir element uchun microtask
-    await Promise.resolve();
-    console.log('Qayta ishlandi:', item.id);
+  function unmount() {
+    isMounted = false;
+    controller.abort(); // Komponent o'chirilganda so'rovni bekor qilish
   }
+
+  return { mount, unmount };
 }
 
-loadAllData(store);
-console.log('Bu microtask lardan oldin chiqadi!');
+// 5. Event listener AbortSignal bilan
+function setupEventListeners(element) {
+  const controller = new AbortController();
+  const { signal } = controller;
+
+  // Barcha listenerlar bir signal bilan boshqariladi
+  element.addEventListener('click', handleClick, { signal });
+  element.addEventListener('keydown', handleKey, { signal });
+  document.addEventListener('scroll', handleScroll, { signal });
+
+  // Barcha listenerlarni bir yoki'da o'chirish!
+  return () => controller.abort();
+}
+
+function handleClick(e) { console.log('Bosildi:', e.target); }
+function handleKey(e) { console.log('Tugma:', e.key); }
+function handleScroll() { console.log('Scroll:', window.scrollY); }
