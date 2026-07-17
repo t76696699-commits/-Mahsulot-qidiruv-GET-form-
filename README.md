@@ -1,80 +1,75 @@
-// ===================================================
-// Proxy va Reflect - Amaliy misollar
+ // ===================================================
+// Symbol - Amaliy misollar
 // ===================================================
 
-// 1. Oddiy get va set traplari
-const person = { name: 'Jasur', age: 28 };
+// 1. Symbol noyobligini tekshirish
+const s1 = Symbol('id');
+const s2 = Symbol('id');
+console.log(s1 === s2);        // false — har doim noyob!
+console.log(typeof s1);         // 'symbol'
+console.log(s1.toString());     // 'Symbol(id)'
+console.log(s1.description);    // 'id'
 
-const validatedPerson = new Proxy(person, {
-  // Xossaga murojaat ushlagichi
-  get(target, prop, receiver) {
-    console.log(`'${prop}' o'qilmoqda`);
-    return Reflect.get(target, prop, receiver);
-  },
-  // Xossaga yozish ushlagichi
-  set(target, prop, value, receiver) {
-    // Yosh uchun validatsiya
-    if (prop === 'age') {
-      if (typeof value !== 'number') throw new TypeError('Yosh raqam bo\'lishi kerak!');
-      if (value < 0 || value > 150) throw new RangeError('Yosh 0-150 oraliqda bo\'lishi kerak!');
-    }
-    console.log(`'${prop}' = ${value} o'rnatilmoqda`);
-    return Reflect.set(target, prop, value, receiver);
+// 2. Ob'ekt xossasi kaliti sifatida
+const USER_ID = Symbol('userId');
+const ROLE = Symbol('role');
+
+const user = {
+  name: 'Nodira',
+  [USER_ID]: 12345,    // Symbol kalit
+  [ROLE]: 'admin'
+};
+
+console.log(user[USER_ID]);       // 12345
+console.log(user[ROLE]);           // 'admin'
+console.log(Object.keys(user));    // ['name'] — Symbol ko'rinmaydi!
+console.log(JSON.stringify(user)); // {"name":"Nodira"} — Symbol yo'q
+
+// Symbollarni ko'rish
+const symbols = Object.getOwnPropertySymbols(user);
+console.log(symbols); // [Symbol(userId), Symbol(role)]
+
+// 3. Symbol.for — Global registry
+const globalSym1 = Symbol.for('sharedKey');
+const globalSym2 = Symbol.for('sharedKey');
+console.log(globalSym1 === globalSym2); // true — bir xil!
+console.log(Symbol.keyFor(globalSym1)); // 'sharedKey'
+
+// 4. Well-known Symbol: Symbol.iterator
+class Range {
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
   }
-});
 
-console.log(validatedPerson.name);  // 'name' o'qilmoqda -> Jasur
-validatedPerson.age = 30;            // 'age' = 30 o'rnatilmoqda
-// validatedPerson.age = -5;         // RangeError!
-
-// 2. Default qiymatlar uchun Proxy
-function withDefaults(target, defaults) {
-  return new Proxy(target, {
-    get(obj, prop) {
-      return prop in obj ? obj[prop] : defaults[prop];
-    }
-  });
-}
-
-const config = withDefaults(
-  { theme: 'dark' },
-  { theme: 'light', lang: 'en', fontSize: 16 }
-);
-
-console.log(config.theme);    // 'dark' (ob'ektda bor)
-console.log(config.lang);     // 'en' (default)
-console.log(config.fontSize); // 16 (default)
-
-// 3. Kuzatuvchi (Observer) Proxy
-function observable(target, onChange) {
-  return new Proxy(target, {
-    set(obj, prop, value) {
-      const oldValue = obj[prop];
-      const result = Reflect.set(obj, prop, value);
-      if (result && oldValue !== value) {
-        onChange({ prop, oldValue, newValue: value });
+  // Maxsus iterator yaratish
+  [Symbol.iterator]() {
+    let current = this.start;
+    const end = this.end;
+    return {
+      next() {
+        return current <= end
+          ? { value: current++, done: false }
+          : { value: undefined, done: true };
       }
-      return result;
-    }
-  });
+    };
+  }
 }
 
-const state = observable(
-  { count: 0, name: 'test' },
-  ({ prop, oldValue, newValue }) => {
-    console.log(`O'zgarish: ${prop}: ${oldValue} -> ${newValue}`);
+const r = new Range(1, 5);
+console.log([...r]);              // [1, 2, 3, 4, 5]
+for (const n of r) console.log(n); // 1 2 3 4 5
+
+// 5. Symbol.toPrimitive
+const temperature = {
+  celsius: 25,
+  [Symbol.toPrimitive](hint) {
+    if (hint === 'number') return this.celsius;
+    if (hint === 'string') return `${this.celsius}°C`;
+    return this.celsius;  // default
   }
-);
+};
 
-state.count = 5;   // O'zgarish: count: 0 -> 5
-state.name = 'ok'; // O'zgarish: name: test -> ok
-state.count = 5;   // Hech narsa chop etilmaydi (qiymat o'zgarmadi)
-
-// 4. Reflect metodlari
-const obj = { x: 1, y: 2 };
-console.log(Reflect.has(obj, 'x'));         // true
-console.log(Reflect.ownKeys(obj));           // ['x', 'y']
-Reflect.set(obj, 'z', 3);
-console.log(obj);                            // { x: 1, y: 2, z: 3 }
-Reflect.deleteProperty(obj, 'x');
-console.log(obj);                            // { y: 2, z: 3 }
+console.log(+temperature);        // 25 (number hint)
+console.log(`Harorat: ${temperature}`); // 'Harorat: 25°C' (string hint)
+console.log(temperature + 5);     // 30 (default hint)
