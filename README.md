@@ -1,113 +1,85 @@
 // ===================================================
-// AbortController - Amaliy misollar
+// Web Workers - Amaliy misollar
 // ===================================================
 
-// 1. Asosiy fetch bekor qilish
-async function fetchWithCancel(url) {
-  const controller = new AbortController();
-  const { signal } = controller;
+// === worker.js (alohida fayl) ===
+// self — Worker ichidagi global ob'ekt
+self.onmessage = function(event) {
+  const { type, data } = event.data;
 
-  // 5 sekunddan keyin avtomatik bekor qilish
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-  try {
-    const response = await fetch(url, { signal });
-    clearTimeout(timeoutId); // Muvaffaqiyatli bo'lsa timeout ni tozalash
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('So\'rov bekor qilindi (timeout yoki manuel)');
-      return null;
-    }
-    throw error; // Boshqa xatoliklarni yuqoriga uzatish
+  if (type === 'COMPUTE_PRIMES') {
+    const primes = findPrimes(data.limit);
+    self.postMessage({ type: 'PRIMES_RESULT', primes });
   }
+
+  if (type === 'SORT_ARRAY') {
+    const sorted = [...data.array].sort((a, b) => a - b);
+    self.postMessage({ type: 'SORTED', sorted });
+  }
+};
+
+function findPrimes(limit) {
+  // Sieve of Eratosthenes algoritmi
+  const sieve = new Uint8Array(limit + 1).fill(1);
+  sieve[0] = sieve[1] = 0;
+  for (let i = 2; i * i <= limit; i++) {
+    if (sieve[i]) {
+      for (let j = i * i; j <= limit; j += i) sieve[j] = 0;
+    }
+  }
+  return sieve.reduce((acc, val, idx) => val ? [...acc, idx] : acc, []);
 }
 
-// 2. AbortSignal.timeout — eng qulay timeout usuli
-async function fetchWithTimeout(url, timeoutMs = 5000) {
-  try {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(timeoutMs)
+// === main.js (asosiy fayl) ===
+class WorkerManager {
+  constructor(workerPath) {
+    this.worker = new Worker(workerPath);
+    this.pending = new Map(); // ID -> { resolve, reject }
+    this.nextId = 0;
+
+    this.worker.onmessage = (e) => {
+      const { id, result, error } = e.data;
+      const callbacks = this.pending.get(id);
+      if (!callbacks) return;
+      this.pending.delete(id);
+      error ? callbacks.reject(new Error(error)) : callbacks.resolve(result);
+    };
+
+    this.worker.onerror = (err) => {
+      console.error('Worker xatoligi:', err);
+    };
+  }
+
+  // Promise asosida worker ga vazifa berish
+  run(task, data) {
+    return new Promise((resolve, reject) => {
+      const id = this.nextId++;
+      this.pending.set(id, { resolve, reject });
+      this.worker.postMessage({ id, task, data });
     });
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'TimeoutError') {
-      throw new Error(`So\'rov ${timeoutMs}ms dan oshdi`);
-    }
-    throw error;
+  }
+
+  terminate() {
+    this.worker.terminate();
   }
 }
 
-// 3. Izlash (debounce + AbortController)
-let searchController = null;
-
-async function searchProducts(query) {
-  // Avvalgi so'rovni bekor qilish
-  if (searchController) {
-    searchController.abort();
-  }
-
-  searchController = new AbortController();
-
-  try {
-    const res = await fetch(`/api/search?q=${query}`, {
-      signal: searchController.signal
-    });
-    const data = await res.json();
-    console.log('Natijalar:', data);
-    return data;
-  } catch (err) {
-    if (err.name !== 'AbortError') throw err;
-    // AbortError — bu normal holat, e'tibor bermaslik kerak
-  }
+// Inline Worker — alohida fayl shart emas
+function createInlineWorker(fn) {
+  const blob = new Blob([`(${fn.toString()})()`], { type: 'text/javascript' });
+  return new Worker(URL.createObjectURL(blob));
 }
 
-// 4. React komponenti uchun pattern (simulation)
-function ReactLikeComponent() {
-  let isMounted = false;
-  let controller = null;
+const inlineWorker = createInlineWorker(function() {
+  self.onmessage = (e) => {
+    // Hisob-kitob va natijani qaytarish
+    const result = e.data.numbers.reduce((a, b) => a + b, 0);
+    self.postMessage({ sum: result });
+  };
+});
 
-  function mount() {
-    isMounted = true;
-    controller = new AbortController();
-    loadData();
-  }
-
-  async function loadData() {
-    try {
-      const data = await fetch('/api/data', {
-        signal: controller.signal
-      });
-      if (!isMounted) return; // Qo'shimcha himoya
-      console.log('Ma\'lumot yuklandi:', await data.json());
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      console.error('Xatolik:', err);
-    }
-  }
-
-  function unmount() {
-    isMounted = false;
-    controller.abort(); // Komponent o'chirilganda so'rovni bekor qilish
-  }
-
-  return { mount, unmount };
-}
-
-// 5. Event listener AbortSignal bilan
-function setupEventListeners(element) {
-  const controller = new AbortController();
-  const { signal } = controller;
-
-  // Barcha listenerlar bir signal bilan boshqariladi
-  element.addEventListener('click', handleClick, { signal });
-  element.addEventListener('keydown', handleKey, { signal });
-  document.addEventListener('scroll', handleScroll, { signal });
-
-  // Barcha listenerlarni bir yoki'da o'chirish!
-  return () => controller.abort();
-}
-
-function handleClick(e) { console.log('Bosildi:', e.target); }
-function handleKey(e) { console.log('Tugma:', e.key); }
-function handleScroll() { console.log('Scroll:', window.scrollY); }
+inlineWorker.postMessage({ numbers: [1, 2, 3, 4, 5] });
+inlineWorker.onmessage = (e) => {
+  console.log('Yig\'indi:', e.data.sum); // 15
+  inlineWorker.terminate();
+};
