@@ -1,43 +1,38 @@
-File API nima?
-File API — foydalanuvchi tanlagan (yoki sudrab tashlagan) fayllarni JavaScript orqali o'qish imkonini beruvchi veb interfeys. U <input type="file"> yoki drag-and-drop orqali tanlangan fayllarga kirish, ularning ma'lumotlarini (nomi, hajmi, turi) olish va kontentini o'qishga imkon beradi.
+Geolocation API nima?
+Geolocation API — foydalanuvchining joriy geografik joylashuvini (kenglik va uzunlik) olish imkonini beruvchi brauzer interfeysi. U foydalanuvchidan ruxsat so'raydi va faqat xavfsiz (HTTPS) kontekstda ishlaydi.
 
-Asosiy obyektlar
-File — bitta faylni ifodalaydi (name, size, type, lastModified)
-FileList — bir nechta fayllar to'plami (masalan, ko'p fayl tanlanganda)
-FileReader — fayl kontentini asinxron o'qish uchun
-FileReader metodlari
+Asosiy metodlar
 Metod	Vazifasi
-readAsText(file)	Faylni matn sifatida o'qiydi
-readAsDataURL(file)	Base64 formatida o'qiydi (rasm ko'rsatish uchun)
-readAsArrayBuffer(file)	Ikkilik ma'lumot sifatida o'qiydi
-Drag and Drop API
-Drag and Drop API — foydalanuvchilarga elementlarni sichqoncha yordamida sudrab ko'chirish imkonini beradi. Fayl yuklash uchun eng ko'p qo'llaniladigan holatlardan biri — foydalanuvchi kompyuteridagi faylni brauzer oynasiga sudrab tashlashi.
+getCurrentPosition()	Joriy joylashuvni bir marta oladi
+watchPosition()	Joylashuv o'zgarishini uzluksiz kuzatadi
+clearWatch()	watchPosition kuzatuvini to'xtatadi
+Media API (getUserMedia)
+Media API (aniqrog'i, navigator.mediaDevices.getUserMedia()) — foydalanuvchining kamera va mikrofoniga kirish imkonini beradi. Bu video chat, QR-kod skanerlash, ovoz yozish kabi ilovalarda ishlatiladi.
 
-Muhim drag-drop hodisalari
-dragover — element ustida sudralayotganda (default xatti-harakatni to'xtatish kerak: preventDefault())
-drop — element tashlanganda, event.dataTransfer.files orqali fayllarga kirish mumkin
-Fayl yuklash oqimi
-input type=file
+getUserMedia constraints
+Qaysi qurilmalar kerakligini { video: true, audio: true } kabi obyekt orqali belgilash mumkin. Video uchun kamera tomonini (old/orqa), o'lchamini ham sozlash mumkin.
 
-Drag and Drop
+Ruxsat va xavfsizlik
+Ikkala API ham foydalanuvchi ruxsatisiz ishlamaydi — brauzer avtomatik ravishda ruxsat so'rash oynasini ko'rsatadi. Agar foydalanuvchi rad etsa, error callback chaqiriladi.
 
-Foydalanuvchi faylni tanlaydi yoki sudrab tashlaydi
+Geolocation va Media ishlash jarayoni
+Ruxsat berdi
 
-Usul
+Rad etdi
 
-change hodisasi, input.files
+getCurrentPosition yoki getUserMedia chaqiriladi
 
-drop hodisasi, dataTransfer.files
+Brauzer ruxsat so'raydi
 
-FileReader yaratiladi
+Foydalanuvchi javobi
 
-readAsDataURL yoki readAsText chaqiriladi
+success callback: ma'lumot qaytadi
 
-onload: natija tayyor
+error callback: xato qaytadi
 
-Fayl ko'rsatiladi yoki qayta ishlanadi
+Joylashuv yoki media stream ishlatiladi
 
-Bu ikki API birgalikda zamonaviy fayl yuklash interfeyslarini (masalan, rasm preview, drag-drop fayl yuklash zonasi) yaratishga imkon beradi.
+Bu ikkala API — xarita ilovalari, yaqin atrofdagi joylarni topish, video chat va real vaqtli kamera funksiyalari uchun zamonaviy veb ilovalarning muhim qismidir.
 
 💻
 Код
@@ -45,86 +40,89 @@ Kod namunasi
 #2
 code
  Копировать
-// file-upload.js — File API va Drag-and-Drop birgalikda
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const preview = document.getElementById('preview');
+// location-media.js — Geolocation va Media API birgalikda
+// 1. Joriy joylashuvni bir marta olish
+function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    console.error("Geolocation qo'llab-quvvatlanmaydi");
+    return;
+  }
 
-// 1. Oddiy input orqali fayl tanlash
-fileInput.addEventListener('change', (event) => {
-  const files = event.target.files;
-  handleFiles(files);
-});
-
-// 2. Drag and Drop hodisalari
-dropZone.addEventListener('dragover', (event) => {
-  event.preventDefault(); // Muhim: default xatti-harakatni to'xtatish
-  dropZone.classList.add('drag-active');
-});
-
-dropZone.addEventListener('dragleave', () => {
-  dropZone.classList.remove('drag-active');
-});
-
-dropZone.addEventListener('drop', (event) => {
-  event.preventDefault();
-  dropZone.classList.remove('drag-active');
-
-  const files = event.dataTransfer.files;
-  handleFiles(files);
-});
-
-// 3. Fayllarni qayta ishlash
-function handleFiles(fileList) {
-  const files = Array.from(fileList);
-
-  files.forEach((file) => {
-    console.log(`Fayl: ${file.name}, hajmi: ${formatSize(file.size)}, turi: ${file.type}`);
-
-    if (file.type.startsWith('image/')) {
-      previewImage(file);
-    } else if (file.type === 'text/plain') {
-      previewText(file);
-    } else {
-      console.warn(`Qo'llab-quvvatlanmaydigan fayl turi: ${file.type}`);
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      console.log(`Joylashuv: ${latitude}, ${longitude} (aniqlik: ${accuracy}m)`);
+    },
+    (error) => {
+      console.error("Joylashuvni olishda xato:", error.message);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0,
     }
-  });
+  );
 }
 
-// 4. Rasmni preview qilish (readAsDataURL)
-function previewImage(file) {
-  const reader = new FileReader();
+// 2. Joylashuvni uzluksiz kuzatish
+let watchId = null;
 
-  reader.onload = (event) => {
-    const img = document.createElement('img');
-    img.src = event.target.result;
-    img.style.maxWidth = '200px';
-    preview.appendChild(img);
-  };
-
-  reader.onerror = () => {
-    console.error("Faylni o'qishda xato yuz berdi");
-  };
-
-  reader.readAsDataURL(file);
+function startWatchingLocation() {
+  watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      updateMapMarker(latitude, longitude);
+    },
+    (error) => console.error("Kuzatish xatosi:", error.message)
+  );
 }
 
-// 5. Matn faylini o'qish (readAsText)
-function previewText(file) {
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-    const pre = document.createElement('pre');
-    pre.textContent = event.target.result.slice(0, 500);
-    preview.appendChild(pre);
-  };
-
-  reader.readAsText(file);
+function stopWatchingLocation() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
 }
 
-// 6. Fayl hajmini o'qishga qulay formatga o'tkazish
-function formatSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function updateMapMarker(lat, lng) {
+  console.log(`Xarita belgisi yangilandi: ${lat}, ${lng}`);
 }
+
+// 3. Kamera va mikrofonga kirish (getUserMedia)
+async function startCamera(videoElement) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: 640, height: 480 },
+      audio: true,
+    });
+
+    videoElement.srcObject = stream;
+    console.log('Kamera ulandi');
+
+    return stream;
+  } catch (error) {
+    if (error.name === 'NotAllowedError') {
+      console.error("Foydalanuvchi ruxsat bermadi");
+    } else if (error.name === 'NotFoundError') {
+      console.error("Kamera yoki mikrofon topilmadi");
+    } else {
+      console.error("Xato:", error.message);
+    }
+    return null;
+  }
+}
+
+// 4. Kamerani to'xtatish (resurslarni bo'shatish)
+function stopCamera(stream) {
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+    console.log('Kamera to\'xtatildi');
+  }
+}
+
+// Foydalanish
+getCurrentLocation();
+const videoEl = document.getElementById('videoPreview');
+startCamera(videoEl).then((stream) => {
+  setTimeout(() => stopCamera(stream), 10000);
+});
