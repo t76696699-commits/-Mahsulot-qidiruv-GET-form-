@@ -1,75 +1,87 @@
- // ===================================================
-// Symbol - Amaliy misollar
+// ===================================================
+// Event Loop chuqurroq - Amaliy misollar
 // ===================================================
 
-// 1. Symbol noyobligini tekshirish
-const s1 = Symbol('id');
-const s2 = Symbol('id');
-console.log(s1 === s2);        // false — har doim noyob!
-console.log(typeof s1);         // 'symbol'
-console.log(s1.toString());     // 'Symbol(id)'
-console.log(s1.description);    // 'id'
+// 1. Bajarilish tartibini bashorat qiling
+console.log('1 — Sinxron: boshlandi');
 
-// 2. Ob'ekt xossasi kaliti sifatida
-const USER_ID = Symbol('userId');
-const ROLE = Symbol('role');
+setTimeout(() => {
+  console.log('4 — Macrotask: setTimeout 0ms');
+}, 0);
 
-const user = {
-  name: 'Nodira',
-  [USER_ID]: 12345,    // Symbol kalit
-  [ROLE]: 'admin'
-};
+Promise.resolve()
+  .then(() => console.log('3 — Microtask: Promise.then'));
 
-console.log(user[USER_ID]);       // 12345
-console.log(user[ROLE]);           // 'admin'
-console.log(Object.keys(user));    // ['name'] — Symbol ko'rinmaydi!
-console.log(JSON.stringify(user)); // {"name":"Nodira"} — Symbol yo'q
+queueMicrotask(() => {
+  console.log('3.5 — Microtask: queueMicrotask');
+});
 
-// Symbollarni ko'rish
-const symbols = Object.getOwnPropertySymbols(user);
-console.log(symbols); // [Symbol(userId), Symbol(role)]
+console.log('2 — Sinxron: tugadi');
+// Natija: 1, 2, 3, 3.5, 4
 
-// 3. Symbol.for — Global registry
-const globalSym1 = Symbol.for('sharedKey');
-const globalSym2 = Symbol.for('sharedKey');
-console.log(globalSym1 === globalSym2); // true — bir xil!
-console.log(Symbol.keyFor(globalSym1)); // 'sharedKey'
+// 2. Microtask zanjirlari
+console.log('--- Microtask zanjiri ---');
+Promise.resolve()
+  .then(() => {
+    console.log('Microtask 1');
+    return Promise.resolve('2-dan qiymat');
+  })
+  .then((val) => {
+    console.log('Microtask 2:', val);
+  })
+  .then(() => {
+    console.log('Microtask 3');
+  });
 
-// 4. Well-known Symbol: Symbol.iterator
-class Range {
-  constructor(start, end) {
-    this.start = start;
-    this.end = end;
-  }
+setTimeout(() => console.log('Macrotask — bu eng oxirida!'), 0);
 
-  // Maxsus iterator yaratish
-  [Symbol.iterator]() {
-    let current = this.start;
-    const end = this.end;
-    return {
-      next() {
-        return current <= end
-          ? { value: current++, done: false }
-          : { value: undefined, done: true };
-      }
-    };
-  }
+// 3. UI muzlatish muammosi
+function heavySync(n) {
+  // Bu Call Stack ni uzoq ushlab turadi — UI muzlaydi!
+  let result = 0;
+  for (let i = 0; i < n; i++) result += i;
+  return result;
 }
 
-const r = new Range(1, 5);
-console.log([...r]);              // [1, 2, 3, 4, 5]
-for (const n of r) console.log(n); // 1 2 3 4 5
-
-// 5. Symbol.toPrimitive
-const temperature = {
-  celsius: 25,
-  [Symbol.toPrimitive](hint) {
-    if (hint === 'number') return this.celsius;
-    if (hint === 'string') return `${this.celsius}°C`;
-    return this.celsius;  // default
+// Yechim: katta ishni bo'laklarga bo'lish
+async function heavyAsync(n, chunkSize = 100_000) {
+  let result = 0;
+  for (let i = 0; i < n; i += chunkSize) {
+    const end = Math.min(i + chunkSize, n);
+    for (let j = i; j < end; j++) result += j;
+    // Har bo'lakdan keyin Event Loop ga nazorat qaytarish
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
-};
+  return result;
+}
 
-console.log(+temperature);        // 25 (number hint)
-console.log(`Harorat: ${temperature}`); // 'Harorat: 25°C' (string hint)
-console.log(temperature + 5);     // 30 (default hint)
+// 4. Promise va setTimeout tartibini tahlil qilish
+async function analyzeOrder() {
+  console.log('async funksiya boshlandi (sinxron qism)');
+
+  await Promise.resolve(); // Microtask — keyingi tick ga o'tadi
+
+  console.log('await dan keyin (microtask sifatida bajariladi)');
+}
+
+analyzeOrder();
+console.log('analyzeOrder() dan keyin (sinxron davom etadi)');
+// Natija:
+// 'async funksiya boshlandi'
+// 'analyzeOrder() dan keyin'
+// 'await dan keyin'
+
+// 5. requestAnimationFrame (Brauzerda)
+// requestAnimationFrame — macrotask emas, render frame oldidan chaqiriladi
+// setTimeout(fn, 0) — macrotask (keyingi event loop tick)
+// Promise.then — microtask (joriy tick ichida)
+
+function demoOrder() {
+  console.log('Boshlanish');
+  // requestAnimationFrame(() => console.log('rAF — render oldidan'));
+  setTimeout(() => console.log('setTimeout'), 0);
+  Promise.resolve().then(() => console.log('Promise'));
+  console.log('Oxiri');
+  // Boshlanish -> Oxiri -> Promise -> setTimeout
+}
+demoOrder();
