@@ -1,3 +1,47 @@
+IndexedDB nima?
+IndexedDB — brauzerda to'liq NoSQL ma'lumotlar bazasini saqlash uchun mo'ljallangan kuchli client-side storage mexanizmi. U localStoragedan farqli o'laroq, katta hajmli strukturaviy ma'lumotlarni (obyektlar, fayllar, blob'lar) saqlashga qodir va asinxron ishlaydi.
+
+IndexedDB va localStorage farqi
+Xususiyat	localStorage	IndexedDB
+Hajm chegarasi	~5-10MB	Yuzlab MB (brauzerga bog'liq)
+Ma'lumot turi	Faqat string	Har qanday obyekt, fayl, blob
+Ishlash usuli	Sinxron	Asinxron (bloklamaydi)
+Qidirish	Yo'q	Index orqali tez qidirish
+Asosiy tushunchalar
+Database — ma'lumotlar bazasining o'zi, nom va versiyaga ega
+Object Store — jadval kabi, obyektlarni saqlaydi
+Index — ma'lum maydon bo'yicha tez qidirish uchun
+Transaction — barcha o'qish/yozish amallari tranzaksiya ichida bajariladi
+Ma'lumotlar bazasini ochish
+indexedDB.open(name, version) chaqirilganda onupgradeneeded hodisasi orqali object store'lar yaratiladi (faqat versiya o'zgarganda ishga tushadi).
+
+IndexedDB ish jarayoni
+Yo'q yoki versiya yangi
+
+Ha
+
+indexedDB.open name, version
+
+Baza mavjudmi?
+
+onupgradeneeded: Object Store yaratiladi
+
+onsuccess: baza ochiladi
+
+transaction yaratiladi
+
+objectStore orqali add/get/put/delete
+
+onsuccess yoki onerror natijasi
+
+IndexedDB — offlayn ishlaydigan ilovalar (masalan, PWA), katta hajmli keshlash va murakkab client-side ma'lumotlarni saqlash uchun ideal yechim hisoblanadi.
+
+💻
+Код
+Kod namunasi
+#2
+code
+ Копировать
 // indexeddb-notes.js — IndexedDB bilan eslatmalar ilovasi
 const DB_NAME = 'NotesApp';
 const DB_VERSION = 1;
