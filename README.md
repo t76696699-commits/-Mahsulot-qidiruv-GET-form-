@@ -1,83 +1,87 @@
-// websocket-chat.js — WebSocket asosida oddiy chat mijozi
-class ChatClient {
-  constructor(url) {
-    this.url = url;
-    this.socket = null;
-    this.reconnectAttempts = 0;
-  }
+// indexeddb-notes.js — IndexedDB bilan eslatmalar ilovasi
+const DB_NAME = 'NotesApp';
+const DB_VERSION = 1;
+const STORE_NAME = 'notes';
 
-  connect() {
-    this.socket = new WebSocket(this.url);
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    this.socket.onopen = () => {
-      console.log('✅ Serverga ulanildi');
-      this.reconnectAttempts = 0;
-      this.send({ type: 'join', user: 'Aziz' });
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+        store.createIndex('by_title', 'title', { unique: false });
+        store.createIndex('by_date', 'createdAt', { unique: false });
+      }
     };
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.handleMessage(data);
-    };
+    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
 
-    this.socket.onerror = (error) => {
-      console.error('❌ WebSocket xatosi:', error);
-    };
+async function addNote(db, title, content) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
 
-    this.socket.onclose = (event) => {
-      console.log(`🔌 Ulanish yopildi (kod: ${event.code})`);
-      this.tryReconnect();
-    };
-  }
+    const note = { title, content, createdAt: new Date().toISOString() };
+    const request = store.add(note);
 
-  handleMessage(data) {
-    switch (data.type) {
-      case 'message':
-        console.log(`${data.user}: ${data.text}`);
-        break;
-      case 'user_joined':
-        console.log(`👋 ${data.user} chatga qo'shildi`);
-        break;
-      case 'user_left':
-        console.log(`👋 ${data.user} chatdan chiqdi`);
-        break;
-      default:
-        console.log('Noma\'lum xabar turi:', data);
-    }
-  }
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
 
-  send(data) {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(data));
-    } else {
-      console.warn('Ulanish ochiq emas, xabar yuborilmadi');
-    }
-  }
+async function getAllNotes(db) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.getAll();
 
-  sendMessage(text) {
-    this.send({ type: 'message', user: 'Aziz', text });
-  }
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
 
-  tryReconnect() {
-    if (this.reconnectAttempts < 5) {
-      this.reconnectAttempts++;
-      const delay = this.reconnectAttempts * 1000;
-      console.log(`Qayta ulanish ${delay}ms dan so'ng...`);
-      setTimeout(() => this.connect(), delay);
-    }
-  }
+async function deleteNote(db, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.delete(id);
 
-  disconnect() {
-    if (this.socket) {
-      this.socket.close(1000, 'Foydalanuvchi chiqdi');
-    }
-  }
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function searchByTitle(db, title) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const index = tx.objectStore(STORE_NAME).index('by_title');
+    const request = index.getAll(title);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
 // Foydalanish
-const chat = new ChatClient('wss://echo.example.com/chat');
-chat.connect();
+async function main() {
+  const db = await openDatabase();
 
-setTimeout(() => {
-  chat.sendMessage("Salom hammaga!");
-}, 2000);
+  const id = await addNote(db, 'Birinchi eslatma', "IndexedDB o'rganish");
+  console.log('Qo\'shildi, ID:', id);
+
+  const allNotes = await getAllNotes(db);
+  console.log('Barcha eslatmalar:', allNotes);
+
+  await deleteNote(db, id);
+  console.log('Eslatma o\'chirildi');
+}
+
+main();
