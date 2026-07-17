@@ -1,87 +1,55 @@
-1. config.js (Sozlamalar)
-Tokenni shu yerda saqlaysiz.
+1. Yangilik Class (Model)
+Ma'lumotlar tuzilmasini standartlashtirish uchun:
 
 JavaScript
-export const CONFIG = {
-  GITHUB_TOKEN: 'YOUR_GITHUB_TOKEN', // GitHub Personal Access Token
-  BASE_URL: 'https://api.github.com'
-};
-2. api.js (Universal Wrapper)
-AbortController (timeout uchun) va retry mexanizmini o‘z ichiga oladi.
+class Yangilik {
+  constructor(id, title, content) {
+    this.id = id;
+    this.title = title;
+    this.content = this.cleanHTML(content);
+  }
+
+  // Regex bilan tozalash
+  cleanHTML(str) {
+    return str
+      .replace(/<[^>]*>/g, '') // HTML teglarini olib tashlash
+      .replace(/\s+/g, ' ')    // Keraksiz bo'shliqlarni tozalash
+      .trim();
+  }
+}
+2. Async Pipeline
+Promise.allSettled yordamida bir nechta manbadan ma'lumot olish va localStorage bilan ishlash:
 
 JavaScript
-import { CONFIG } from './config.js';
-
-export async function api(url, options = {}, retries = 3, timeout = 5000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+async function fetchPipeline(urls) {
+  const container = document.getElementById('news-container');
+  container.innerHTML = '<p>Yuklanmoqda...</p>'; // Loading state
 
   try {
-    const response = await fetch(`${CONFIG.BASE_URL}${url}`, {
-      ...options,
-      headers: {
-        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      signal: controller.signal
-    });
-
-    clearTimeout(id);
+    const results = await Promise.allSettled(urls.map(url => fetch(url).then(r => r.json())));
     
-    // Rate limit tahlili
-    const remaining = response.headers.get('x-ratelimit-remaining');
-    console.log(`[Rate Limit] Qolgan so'rovlar: ${remaining}`);
+    const validData = results
+      .filter(res => res.status === 'fulfilled')
+      .flatMap(res => res.value.map(item => new Yangilik(item.id, item.title, item.body)));
 
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-    return await response.json();
+    localStorage.setItem('news-v1', JSON.stringify(validData));
+    renderNews(validData);
   } catch (error) {
-    if (retries > 0) return api(url, options, retries - 1, timeout);
-    throw error;
+    console.error("Xatolik yuz berdi, keshdan o'qilmoqda...", error);
+    const cached = JSON.parse(localStorage.getItem('news-v1') || '[]');
+    renderNews(cached);
   }
 }
-3. githubService.js (Async Generator)
-Pagination bilan ishlash uchun.
+3. DOM Render
+Ma'lumotlarni brauzer sahifasida ko‘rsatish:
 
 JavaScript
-import { api } from './api.js';
-
-export async function* getUserRepos(username) {
-  let page = 1;
-  while (true) {
-    const repos = await api(`/users/${username}/repos?per_page=100&page=${page}`);
-    if (repos.length === 0) break;
-    yield repos;
-    page++;
-  }
+function renderNews(newsList) {
+  const container = document.getElementById('news-container');
+  container.innerHTML = newsList.map(news => `
+    <article>
+      <h3>${news.title}</h3>
+      <p>${news.content}</p>
+    </article>
+  `).join('');
 }
-4. main.js (Asosiy mantiq)
-Natijani console.table orqali chiqarish.
-
-JavaScript
-import { api } from './api.js';
-import { getUserRepos } from './githubService.js';
-
-async function run(username) {
-  try {
-    const user = await api(`/users/${username}`);
-    console.log(`Foydalanuvchi: ${user.login} (${user.name})`);
-
-    const tableData = [];
-    for await (const page of getUserRepos(username)) {
-      page.forEach(repo => {
-        tableData.push({
-          Name: repo.name,
-          Stars: repo.stargazers_count,
-          Forks: repo.forks_count,
-          Language: repo.language || 'N/A'
-        });
-      });
-    }
-    console.table(tableData);
-  } catch (err) {
-    console.error("Xatolik:", err.message);
-  }
-}
-
-run('uz-dev'); // O'zingizni GitHub usernameni yozing
