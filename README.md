@@ -1,3 +1,39 @@
+HashMap (Hash Table) nima?
+HashMap — kalit-qiymat (key-value) juftliklarini saqlaydigan va ularga o'rtacha O(1) vaqtda kirish imkonini beruvchi ma'lumotlar tuzilmasi. Bu uning eng katta afzalligi — massiv yoki LinkedList'da qidiruv O(n) vaqt olsa, HashMap'da bu deyarli bir zumda amalga oshadi.
+
+Qanday ishlaydi
+HashMap ichida hash funksiyasi har bir kalitni raqamli indeksga aylantiradi, bu indeks esa massiv (bucket'lar to'plami)dagi o'rinni bildiradi. Masalan, "email" kalitini hash funksiyasi 42-indeksga aylantirishi mumkin, va qiymat aynan shu joyga saqlanadi.
+
+Kolliziyalarni hal qilish (Collision Resolution)
+Chaining — bir xil indeksga tushgan barcha elementlar shu bucket ichida LinkedList (yoki massiv) sifatida saqlanadi.
+Open Addressing — kolliziya yuz berganda, algoritm keyingi bo'sh joyni qidiradi (masalan, linear probing).
+Load factor (yuklama koeffitsienti) — elementlar sonining bucket'lar soniga nisbati. Yuqori load factor ko'proq kolliziyaga olib keladi, shuning uchun HashMap odatda ma'lum chegaradan oshganda o'lchamini kattalashtiradi (resize).
+
+Solishtirish jadvali
+Amal	O'rtacha holat	Eng yomon holat
+Qo'shish (set)	O(1)	O(n)
+Qidirish (get)	O(1)	O(n)
+O'chirish (delete)	O(1)	O(n)
+Quyidagi diagramma hash table ichidagi bucket'lar tuzilishini ko'rsatadi (chaining usuli bilan):
+
+hash('email')=2
+
+Bucket 0: bo'sh
+
+Bucket 1: bo'sh
+
+Bucket 2: [email -> user@site.com]
+
+Bucket 3: [age -> 25] -> [name -> Ali]
+
+JavaScript'da HashMap tabiati Object va Map orqali amalga oshiriladi. Map obyekti kalit sifatida istalgan turdan foydalanish, qulay iteratsiya va o'lchamni size orqali olish imkonini beradi, shuning uchun zamonaviy kodda Objectdan ko'ra Map afzal ko'riladi.
+
+💻
+Код
+Kod namunasi
+#2
+code
+ Копировать
 // Oddiy HashMap implementatsiyasi (chaining usuli bilan)
 
 class HashMap {
