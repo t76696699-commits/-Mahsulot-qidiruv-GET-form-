@@ -1,80 +1,79 @@
-// Singly LinkedList klassi
-class ListNode {
-  constructor(value) {
-    this.value = value;
-    this.next = null;
+// Stack (LIFO) implementatsiyasi
+class Stack {
+  constructor() {
+    this.items = [];
+  }
+
+  push(value) {
+    this.items.push(value);
+  }
+
+  pop() {
+    return this.items.pop();
+  }
+
+  peek() {
+    return this.items[this.items.length - 1];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
   }
 }
 
-class LinkedList {
+// Queue (FIFO) implementatsiyasi
+class Queue {
   constructor() {
-    this.head = null;
-    this.tail = null;
-    this.length = 0;
+    this.items = [];
   }
-  // Ro'yxat oxiriga qo'shish - O(1)
-  append(value) {
-    const node = new ListNode(value);
-    if (!this.head) {
-      this.head = node;
-      this.tail = node;
-    } else {
-      this.tail.next = node;
-      this.tail = node;
-    }
-    this.length++;
-    return this;
+
+  enqueue(value) {
+    this.items.push(value);
   }
-  // Ro'yxat boshiga qo'shish - O(1)
-  prepend(value) {
-    const node = new ListNode(value);
-    if (!this.head) {
-      this.head = node;
-      this.tail = node;
-    } else {
-      node.next = this.head;
-      this.head = node;
-    }
-    this.length++;
-    return this;
+
+  dequeue() {
+    return this.items.shift();
   }
-  // Elementni o'chirish - O(n)
-  delete(value) {
-    if (!this.head) return false;
-    if (this.head.value === value) {
-      this.head = this.head.next;
-      this.length--;
-      return true;
-    }
-    let current = this.head;
-    while (current.next) {
-      if (current.next.value === value) {
-        current.next = current.next.next;
-        this.length--;
-        return true;
+
+  front() {
+    return this.items[0];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
+  }
+}
+
+// Amaliy misol: Stack yordamida qavslar muvofiqligini tekshirish
+function isBalanced(expression) {
+  const stack = new Stack();
+  const pairs = { ")": "(", "]": "[", "}": "{" };
+
+  for (const char of expression) {
+    if (char === "(" || char === "[" || char === "{") {
+      stack.push(char);
+    } else if (char === ")" || char === "]" || char === "}") {
+      // Yopuvchi qavsga mos ochuvchi qavs stackning tepasida bo'lishi kerak
+      if (stack.isEmpty() || stack.pop() !== pairs[char]) {
+        return false;
       }
-      current = current.next;
     }
-    return false;
   }
-  // Ro'yxatni massivga aylantirish (debug uchun qulay)
-  toArray() {
-    const result = [];
-    let current = this.head;
-    while (current) {
-      result.push(current.value);
-      current = current.next;
-    }
-    return result;
-  }
+  return stack.isEmpty();
 }
 
 // Amaliyot
-const list = new LinkedList();
-list.append(10);
-list.append(20);
-list.prepend(5);
-console.log("Ro'yxat:", list.toArray()); // [5, 10, 20]
-list.delete(10);
-console.log("O'chirilgandan keyin:", list.toArray()); // [5, 20]
-console.log("Uzunlik:", list.length);
+const stack = new Stack();
+stack.push(1);
+stack.push(2);
+stack.push(3);
+console.log("Stack pop:", stack.pop()); // 3 (LIFO)
+
+const queue = new Queue();
+queue.enqueue("A");
+queue.enqueue("B");
+queue.enqueue("C");
+console.log("Queue dequeue:", queue.dequeue()); // A (FIFO)
+
+console.log(isBalanced("{[()]}")); // true
+console.log(isBalanced("{[(])}")); // false
