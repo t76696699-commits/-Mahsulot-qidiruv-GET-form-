@@ -1,27 +1,29 @@
-HashMap Implementatsiyasi
+1-qism: HashMap va Chaining (LinkedList) Implementatsiyasi
+Bu versiyada set, get, delete, keys, values va entries metodlari mavjud. collision (to'qnashuv) holatlari uchun LinkedList (zanjirlash) ishlatilgan.
+
 JavaScript
 class HashMap {
   constructor(size = 53) {
     this.keyMap = new Array(size);
-    this.collisions = 0;
+    this.size = size;
   }
 
   _hash(key) {
     let total = 0;
-    for (let char of key.toString()) {
-      total += char.charCodeAt(0);
+    const PRIME = 31;
+    for (let i = 0; i < Math.min(key.length, 100); i++) {
+      let char = key[i];
+      let value = char.charCodeAt(0) - 96;
+      total = (total * PRIME + value) % this.size;
     }
-    return total % this.keyMap.length;
+    return total;
   }
 
   set(key, value) {
     let index = this._hash(key);
     if (!this.keyMap[index]) {
       this.keyMap[index] = [];
-    } else {
-      this.collisions++; // To'qnashuv sodir bo'ldi
     }
-    
     // Agar kalit mavjud bo'lsa, qiymatni yangilash
     for (let pair of this.keyMap[index]) {
       if (pair[0] === key) {
@@ -56,34 +58,69 @@ class HashMap {
   }
 
   keys() {
-    let keysArr = [];
+    let arr = [];
     for (let bucket of this.keyMap) {
-      if (bucket) for (let pair of bucket) keysArr.push(pair[0]);
+      if (bucket) for (let pair of bucket) arr.push(pair[0]);
     }
-    return keysArr;
+    return arr;
   }
 
   values() {
-    let valuesArr = [];
+    let arr = [];
     for (let bucket of this.keyMap) {
-      if (bucket) for (let pair of bucket) valuesArr.push(pair[1]);
+      if (bucket) for (let pair of bucket) arr.push(pair[1]);
     }
-    return valuesArr;
+    return arr;
+  }
+
+  entries() {
+    let arr = [];
+    for (let bucket of this.keyMap) {
+      if (bucket) for (let pair of bucket) arr.push(pair);
+    }
+    return arr;
+  }
+
+  // To'qnashuvlar tahlili uchun yordamchi metod
+  getCollisionStats() {
+    let stats = { totalCollisions: 0, bucketsWithCollisions: 0 };
+    for (let bucket of this.keyMap) {
+      if (bucket && bucket.length > 1) {
+        stats.totalCollisions += (bucket.length - 1);
+        stats.bucketsWithCollisions++;
+      }
+    }
+    return stats;
   }
 }
-Test va Natijalar
-30 ta so'zdan iborat lug'at yaratib, HashMapni sinovdan o'tkazamiz:
-
+2-qism: So'zlar Lug'ati (30 ta juftlik)
 JavaScript
-const words = ["olma", "anor", "uzum", "shaftoli", "behi", "gilos", "olcha", "tut", "qovun", "tarvuz", 
-               "banan", "limon", "apelsin", "mandarin", "kivi", "ananas", "mango", "qulupnay", "malina", "o'rik", 
-               "yong'oq", "bodom", "pista", "yeryong'oq", "kashtan", "xurmo", "anjir", "olxo'ri", "nok", "kunjut"];
+const dictionary = new HashMap(53);
+const words = [
+  ["apple", "olma"], ["book", "kitob"], ["cat", "mushuk"], ["dog", "it"], ["eye", "ko'z"],
+  ["fish", "baliq"], ["goat", "echki"], ["hat", "shlyapa"], ["ice", "muz"], ["jump", "sakramoq"],
+  ["key", "kalit"], ["lamp", "chiroq"], ["moon", "oy"], ["nest", "uyali"], ["owl", "boyo'g'li"],
+  ["pen", "qalam"], ["queen", "qirolicha"], ["rain", "yomg'ir"], ["sun", "quyosh"], ["tree", "daraxt"],
+  ["umbrella", "soyabon"], ["van", "furgon"], ["water", "suv"], ["xray", "rentgen"], ["yellow", "sariq"],
+  ["zoo", "hayvonot bog'i"], ["bird", "qush"], ["desk", "parta"], ["food", "ovqat"], ["girl", "qiz"]
+];
 
-const myMap = new HashMap(20); // Collision yuzaga kelishi uchun kichikroq o'lcham
+words.forEach(([eng, uzb]) => dictionary.set(eng, uzb));
 
-words.forEach((word, index) => myMap.set(word, index + 1));
+// Tarjima funksiyasi
+const translate = (word) => dictionary.get(word.toLowerCase()) || "Topilmadi";
+console.log("Tarjima ('apple'):", translate("apple"));
+3-qism: Collision Tahlili
+JavaScript
+const stats = dictionary.getCollisionStats();
+console.log("--- Tahlil Natijalari ---");
+console.log("Jami elementlar:", words.length);
+console.log("To'qnashuvlar soni (Collisions):", stats.totalCollisions);
+console.log("To'qnashuv sodir bo'lgan chelaklar (Buckets):", stats.bucketsWithCollisions);
 
-console.log("Keys:", myMap.keys().length);
-console.log("Values:", myMap.values().length);
-console.log("To'qnashuvlar (Collisions) soni:", myMap.collisions);
-console.log("Test so'zi ('anor') qiymati:", myMap.get("anor"));
+// Bucket to'lish tartibi
+dictionary.keyMap.forEach((bucket, i) => {
+  if (bucket && bucket.length > 0) {
+    console.log(`Bucket ${i}: ${bucket.length} ta element -`, bucket.map(p => p[0]));
+  }
+});
