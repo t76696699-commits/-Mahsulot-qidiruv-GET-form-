@@ -1,126 +1,78 @@
-1-qism: HashMap va Chaining (LinkedList) Implementatsiyasi
-Bu versiyada set, get, delete, keys, values va entries metodlari mavjud. collision (to'qnashuv) holatlari uchun LinkedList (zanjirlash) ishlatilgan.
+// Binary Search Tree (BST) implementatsiyasi
 
-JavaScript
-class HashMap {
-  constructor(size = 53) {
-    this.keyMap = new Array(size);
-    this.size = size;
+class TreeNode {
+  constructor(value) {
+    this.value = value;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+class BinarySearchTree {
+  constructor() {
+    this.root = null;
   }
 
-  _hash(key) {
-    let total = 0;
-    const PRIME = 31;
-    for (let i = 0; i < Math.min(key.length, 100); i++) {
-      let char = key[i];
-      let value = char.charCodeAt(0) - 96;
-      total = (total * PRIME + value) % this.size;
+  // Yangi qiymat qo'shish - O(log n) o'rtacha
+  insert(value) {
+    const newNode = new TreeNode(value);
+    if (!this.root) {
+      this.root = newNode;
+      return this;
     }
-    return total;
-  }
 
-  set(key, value) {
-    let index = this._hash(key);
-    if (!this.keyMap[index]) {
-      this.keyMap[index] = [];
-    }
-    // Agar kalit mavjud bo'lsa, qiymatni yangilash
-    for (let pair of this.keyMap[index]) {
-      if (pair[0] === key) {
-        pair[1] = value;
-        return;
-      }
-    }
-    this.keyMap[index].push([key, value]);
-  }
-
-  get(key) {
-    let index = this._hash(key);
-    if (this.keyMap[index]) {
-      for (let pair of this.keyMap[index]) {
-        if (pair[0] === key) return pair[1];
-      }
-    }
-    return undefined;
-  }
-
-  delete(key) {
-    let index = this._hash(key);
-    if (this.keyMap[index]) {
-      for (let i = 0; i < this.keyMap[index].length; i++) {
-        if (this.keyMap[index][i][0] === key) {
-          this.keyMap[index].splice(i, 1);
-          return true;
+    let current = this.root;
+    while (true) {
+      if (value < current.value) {
+        if (!current.left) {
+          current.left = newNode;
+          return this;
         }
+        current = current.left;
+      } else {
+        if (!current.right) {
+          current.right = newNode;
+          return this;
+        }
+        current = current.right;
       }
+    }
+  }
+
+  // Qiymatni qidirish - O(log n) o'rtacha
+  search(value) {
+    let current = this.root;
+    while (current) {
+      if (value === current.value) return true;
+      current = value < current.value ? current.left : current.right;
     }
     return false;
   }
 
-  keys() {
-    let arr = [];
-    for (let bucket of this.keyMap) {
-      if (bucket) for (let pair of bucket) arr.push(pair[0]);
+  // Inorder traversal - o'suvchi tartibda barcha qiymatlarni qaytaradi
+  inorderTraversal(node = this.root, result = []) {
+    if (node) {
+      this.inorderTraversal(node.left, result);
+      result.push(node.value);
+      this.inorderTraversal(node.right, result);
     }
-    return arr;
+    return result;
   }
 
-  values() {
-    let arr = [];
-    for (let bucket of this.keyMap) {
-      if (bucket) for (let pair of bucket) arr.push(pair[1]);
+  // Daraxtning minimal qiymatini topish
+  findMin(node = this.root) {
+    while (node && node.left) {
+      node = node.left;
     }
-    return arr;
-  }
-
-  entries() {
-    let arr = [];
-    for (let bucket of this.keyMap) {
-      if (bucket) for (let pair of bucket) arr.push(pair);
-    }
-    return arr;
-  }
-
-  // To'qnashuvlar tahlili uchun yordamchi metod
-  getCollisionStats() {
-    let stats = { totalCollisions: 0, bucketsWithCollisions: 0 };
-    for (let bucket of this.keyMap) {
-      if (bucket && bucket.length > 1) {
-        stats.totalCollisions += (bucket.length - 1);
-        stats.bucketsWithCollisions++;
-      }
-    }
-    return stats;
+    return node ? node.value : null;
   }
 }
-2-qism: So'zlar Lug'ati (30 ta juftlik)
-JavaScript
-const dictionary = new HashMap(53);
-const words = [
-  ["apple", "olma"], ["book", "kitob"], ["cat", "mushuk"], ["dog", "it"], ["eye", "ko'z"],
-  ["fish", "baliq"], ["goat", "echki"], ["hat", "shlyapa"], ["ice", "muz"], ["jump", "sakramoq"],
-  ["key", "kalit"], ["lamp", "chiroq"], ["moon", "oy"], ["nest", "uyali"], ["owl", "boyo'g'li"],
-  ["pen", "qalam"], ["queen", "qirolicha"], ["rain", "yomg'ir"], ["sun", "quyosh"], ["tree", "daraxt"],
-  ["umbrella", "soyabon"], ["van", "furgon"], ["water", "suv"], ["xray", "rentgen"], ["yellow", "sariq"],
-  ["zoo", "hayvonot bog'i"], ["bird", "qush"], ["desk", "parta"], ["food", "ovqat"], ["girl", "qiz"]
-];
 
-words.forEach(([eng, uzb]) => dictionary.set(eng, uzb));
+// Amaliyot
+const bst = new BinarySearchTree();
+[8, 3, 10, 1, 6, 14, 4, 7].forEach((value) => bst.insert(value));
 
-// Tarjima funksiyasi
-const translate = (word) => dictionary.get(word.toLowerCase()) || "Topilmadi";
-console.log("Tarjima ('apple'):", translate("apple"));
-3-qism: Collision Tahlili
-JavaScript
-const stats = dictionary.getCollisionStats();
-console.log("--- Tahlil Natijalari ---");
-console.log("Jami elementlar:", words.length);
-console.log("To'qnashuvlar soni (Collisions):", stats.totalCollisions);
-console.log("To'qnashuv sodir bo'lgan chelaklar (Buckets):", stats.bucketsWithCollisions);
-
-// Bucket to'lish tartibi
-dictionary.keyMap.forEach((bucket, i) => {
-  if (bucket && bucket.length > 0) {
-    console.log(`Bucket ${i}: ${bucket.length} ta element -`, bucket.map(p => p[0]));
-  }
-});
+console.log("Inorder (tartiblangan):", bst.inorderTraversal());
+console.log("6 ni qidirish:", bst.search(6)); // true
+console.log("100 ni qidirish:", bst.search(100)); // false
+console.log("Minimal qiymat:", bst.findMin());
