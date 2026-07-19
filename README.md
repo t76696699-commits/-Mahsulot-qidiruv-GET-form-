@@ -1,65 +1,67 @@
-// Binary Search - iterativ variant
-function binarySearchIterative(sortedArr, target) {
-  let left = 0;
-  let right = sortedArr.length - 1;
+// Bubble Sort - qo'shni elementlarni solishtirib almashtirish
+function bubbleSort(arr) {
+  const result = [...arr];
+  const n = result.length;
 
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-
-    if (sortedArr[mid] === target) {
-      return mid; // Topildi
-    } else if (sortedArr[mid] < target) {
-      left = mid + 1; // O'ng yarimda davom etish
-    } else {
-      right = mid - 1; // Chap yarimda davom etish
+  for (let i = 0; i < n - 1; i++) {
+    let swapped = false;
+    // Har bir pass'da eng katta element oxiriga "ko'tariladi"
+    for (let j = 0; j < n - 1 - i; j++) {
+      if (result[j] > result[j + 1]) {
+        [result[j], result[j + 1]] = [result[j + 1], result[j]];
+        swapped = true;
+      }
     }
+    // Agar hech qanday almashtirish bo'lmasa, massiv allaqachon tartiblangan
+    if (!swapped) break;
   }
-
-  return -1; // Topilmadi
+  return result;
 }
 
-// Binary Search - rekursiv variant
-function binarySearchRecursive(sortedArr, target, left = 0, right = sortedArr.length - 1) {
-  if (left > right) {
-    return -1; // Baza holati: qidiruv maydoni tugadi
-  }
+// Selection Sort - eng kichik elementni tanlab joylashtirish
+function selectionSort(arr) {
+  const result = [...arr];
+  const n = result.length;
 
-  const mid = Math.floor((left + right) / 2);
-
-  if (sortedArr[mid] === target) {
-    return mid;
-  } else if (sortedArr[mid] < target) {
-    return binarySearchRecursive(sortedArr, target, mid + 1, right);
-  } else {
-    return binarySearchRecursive(sortedArr, target, left, mid - 1);
-  }
-}
-
-// Amaliy misol: birinchi element indeksini topish (lower bound)
-function findFirstOccurrence(sortedArr, target) {
-  let left = 0;
-  let right = sortedArr.length - 1;
-  let result = -1;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (sortedArr[mid] === target) {
-      result = mid;
-      right = mid - 1; // Chapga davom etib, birinchi uchrashni izlaymiz
-    } else if (sortedArr[mid] < target) {
-      left = mid + 1;
-    } else {
-      right = mid - 1;
+  for (let i = 0; i < n - 1; i++) {
+    let minIndex = i;
+    // Tartiblanmagan qismdan eng kichik elementni topish
+    for (let j = i + 1; j < n; j++) {
+      if (result[j] < result[minIndex]) {
+        minIndex = j;
+      }
+    }
+    if (minIndex !== i) {
+      [result[i], result[minIndex]] = [result[minIndex], result[i]];
     }
   }
   return result;
 }
 
-// Amaliyot
-const numbers = [1, 3, 5, 7, 9, 11, 13, 15];
-console.log("Iterativ qidiruv (7):", binarySearchIterative(numbers, 7));
-console.log("Rekursiv qidiruv (13):", binarySearchRecursive(numbers, 13));
-console.log("Topilmagan qiymat (4):", binarySearchIterative(numbers, 4));
+// Insertion Sort - har bir elementni to'g'ri joyga kiritish
+function insertionSort(arr) {
+  const result = [...arr];
 
-const withDuplicates = [1, 2, 2, 2, 3, 4, 5];
-console.log("Birinchi uchrash (2):", findFirstOccurrence(withDuplicates, 2));
+  for (let i = 1; i < result.length; i++) {
+    const current = result[i];
+    let j = i - 1;
+
+    // Current'dan katta elementlarni bir pozitsiyaga suramiz
+    while (j >= 0 && result[j] > current) {
+      result[j + 1] = result[j];
+      j--;
+    }
+    result[j + 1] = current;
+  }
+  return result;
+}
+
+// Amaliyot
+const data = [5, 3, 8, 1, 9, 2, 7];
+console.log("Bubble Sort:", bubbleSort(data));
+console.log("Selection Sort:", selectionSort(data));
+console.log("Insertion Sort:", insertionSort(data));
+
+// Deyarli tartiblangan massivda Insertion Sort tezroq ishlaydi
+const almostSorted = [1, 2, 4, 3, 5, 6, 7];
+console.log("Deyarli tartiblangan:", insertionSort(almostSorted));
