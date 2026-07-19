@@ -1,67 +1,80 @@
-// Bubble Sort - qo'shni elementlarni solishtirib almashtirish
-function bubbleSort(arr) {
-  const result = [...arr];
-  const n = result.length;
+// Merge Sort - divide and conquer
+function mergeSort(arr) {
+  if (arr.length <= 1) return arr; // Baza holati
 
-  for (let i = 0; i < n - 1; i++) {
-    let swapped = false;
-    // Har bir pass'da eng katta element oxiriga "ko'tariladi"
-    for (let j = 0; j < n - 1 - i; j++) {
-      if (result[j] > result[j + 1]) {
-        [result[j], result[j + 1]] = [result[j + 1], result[j]];
-        swapped = true;
-      }
-    }
-    // Agar hech qanday almashtirish bo'lmasa, massiv allaqachon tartiblangan
-    if (!swapped) break;
-  }
-  return result;
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+
+  return merge(left, right);
 }
 
-// Selection Sort - eng kichik elementni tanlab joylashtirish
-function selectionSort(arr) {
-  const result = [...arr];
-  const n = result.length;
+// Ikkita tartiblangan massivni birlashtirish
+function merge(left, right) {
+  const result = [];
+  let i = 0;
+  let j = 0;
 
-  for (let i = 0; i < n - 1; i++) {
-    let minIndex = i;
-    // Tartiblanmagan qismdan eng kichik elementni topish
-    for (let j = i + 1; j < n; j++) {
-      if (result[j] < result[minIndex]) {
-        minIndex = j;
-      }
-    }
-    if (minIndex !== i) {
-      [result[i], result[minIndex]] = [result[minIndex], result[i]];
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {
+      result.push(left[i]);
+      i++;
+    } else {
+      result.push(right[j]);
+      j++;
     }
   }
-  return result;
+
+  // Qolgan elementlarni qo'shish
+  return result.concat(left.slice(i)).concat(right.slice(j));
 }
 
-// Insertion Sort - har bir elementni to'g'ri joyga kiritish
-function insertionSort(arr) {
-  const result = [...arr];
+// Quick Sort - pivot orqali bo'lish (partition)
+function quickSort(arr) {
+  if (arr.length <= 1) return arr; // Baza holati
 
-  for (let i = 1; i < result.length; i++) {
-    const current = result[i];
-    let j = i - 1;
+  const pivot = arr[arr.length - 1];
+  const left = [];
+  const right = [];
 
-    // Current'dan katta elementlarni bir pozitsiyaga suramiz
-    while (j >= 0 && result[j] > current) {
-      result[j + 1] = result[j];
-      j--;
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (arr[i] < pivot) {
+      left.push(arr[i]);
+    } else {
+      right.push(arr[i]);
     }
-    result[j + 1] = current;
   }
-  return result;
+
+  return [...quickSort(left), pivot, ...quickSort(right)];
+}
+
+// Quick Sort - in-place (xotirani tejaydigan) variant
+function quickSortInPlace(arr, low = 0, high = arr.length - 1) {
+  if (low < high) {
+    const pivotIndex = partition(arr, low, high);
+    quickSortInPlace(arr, low, pivotIndex - 1);
+    quickSortInPlace(arr, pivotIndex + 1, high);
+  }
+  return arr;
+}
+
+function partition(arr, low, high) {
+  const pivot = arr[high];
+  let i = low - 1;
+
+  for (let j = low; j < high; j++) {
+    if (arr[j] < pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+  return i + 1;
 }
 
 // Amaliyot
-const data = [5, 3, 8, 1, 9, 2, 7];
-console.log("Bubble Sort:", bubbleSort(data));
-console.log("Selection Sort:", selectionSort(data));
-console.log("Insertion Sort:", insertionSort(data));
+const data = [8, 3, 7, 4, 2, 9, 1, 5, 6];
 
-// Deyarli tartiblangan massivda Insertion Sort tezroq ishlaydi
-const almostSorted = [1, 2, 4, 3, 5, 6, 7];
-console.log("Deyarli tartiblangan:", insertionSort(almostSorted));
+console.log("Merge Sort:", mergeSort(data));
+console.log("Quick Sort:", quickSort(data));
+console.log("Quick Sort (in-place):", quickSortInPlace([...data]));
