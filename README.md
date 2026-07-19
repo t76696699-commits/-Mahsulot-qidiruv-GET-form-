@@ -1,3 +1,5 @@
+HashMap Implementatsiyasi
+JavaScript
 class HashMap {
   constructor(size = 53) {
     this.keyMap = new Array(size);
@@ -69,3 +71,19 @@ class HashMap {
     return valuesArr;
   }
 }
+Test va Natijalar
+30 ta so'zdan iborat lug'at yaratib, HashMapni sinovdan o'tkazamiz:
+
+JavaScript
+const words = ["olma", "anor", "uzum", "shaftoli", "behi", "gilos", "olcha", "tut", "qovun", "tarvuz", 
+               "banan", "limon", "apelsin", "mandarin", "kivi", "ananas", "mango", "qulupnay", "malina", "o'rik", 
+               "yong'oq", "bodom", "pista", "yeryong'oq", "kashtan", "xurmo", "anjir", "olxo'ri", "nok", "kunjut"];
+
+const myMap = new HashMap(20); // Collision yuzaga kelishi uchun kichikroq o'lcham
+
+words.forEach((word, index) => myMap.set(word, index + 1));
+
+console.log("Keys:", myMap.keys().length);
+console.log("Values:", myMap.values().length);
+console.log("To'qnashuvlar (Collisions) soni:", myMap.collisions);
+console.log("Test so'zi ('anor') qiymati:", myMap.get("anor"));
