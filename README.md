@@ -1,80 +1,74 @@
-// Merge Sort - divide and conquer
-function mergeSort(arr) {
-  if (arr.length <= 1) return arr; // Baza holati
+// Oddiy HashMap implementatsiyasi (chaining usuli bilan)
 
-  const mid = Math.floor(arr.length / 2);
-  const left = mergeSort(arr.slice(0, mid));
-  const right = mergeSort(arr.slice(mid));
+class HashMap {
+  constructor(size = 16) {
+    this.size = size;
+    this.buckets = new Array(size).fill(null).map(() => []);
+  }
 
-  return merge(left, right);
-}
+  // Oddiy hash funksiyasi - kalitni raqamli indeksga aylantiradi
+  _hash(key) {
+    let hash = 0;
+    const stringKey = String(key);
+    for (let i = 0; i < stringKey.length; i++) {
+      hash = (hash + stringKey.charCodeAt(i) * (i + 1)) % this.size;
+    }
+    return hash;
+  }
 
-// Ikkita tartiblangan massivni birlashtirish
-function merge(left, right) {
-  const result = [];
-  let i = 0;
-  let j = 0;
+  // Kalit-qiymat juftligini qo'shish yoki yangilash - O(1) o'rtacha
+  set(key, value) {
+    const index = this._hash(key);
+    const bucket = this.buckets[index];
 
-  while (i < left.length && j < right.length) {
-    if (left[i] <= right[j]) {
-      result.push(left[i]);
-      i++;
+    const existing = bucket.find((entry) => entry[0] === key);
+    if (existing) {
+      existing[1] = value; // Mavjud kalitni yangilash
     } else {
-      result.push(right[j]);
-      j++;
+      bucket.push([key, value]); // Yangi juftlik qo'shish
     }
   }
 
-  // Qolgan elementlarni qo'shish
-  return result.concat(left.slice(i)).concat(right.slice(j));
-}
+  // Kalit bo'yicha qiymatni olish - O(1) o'rtacha
+  get(key) {
+    const index = this._hash(key);
+    const bucket = this.buckets[index];
+    const entry = bucket.find((entry) => entry[0] === key);
+    return entry ? entry[1] : undefined;
+  }
 
-// Quick Sort - pivot orqali bo'lish (partition)
-function quickSort(arr) {
-  if (arr.length <= 1) return arr; // Baza holati
+  // Kalitni o'chirish - O(1) o'rtacha
+  delete(key) {
+    const index = this._hash(key);
+    const bucket = this.buckets[index];
+    const entryIndex = bucket.findIndex((entry) => entry[0] === key);
 
-  const pivot = arr[arr.length - 1];
-  const left = [];
-  const right = [];
-
-  for (let i = 0; i < arr.length - 1; i++) {
-    if (arr[i] < pivot) {
-      left.push(arr[i]);
-    } else {
-      right.push(arr[i]);
+    if (entryIndex !== -1) {
+      bucket.splice(entryIndex, 1);
+      return true;
     }
+    return false;
   }
 
-  return [...quickSort(left), pivot, ...quickSort(right)];
-}
-
-// Quick Sort - in-place (xotirani tejaydigan) variant
-function quickSortInPlace(arr, low = 0, high = arr.length - 1) {
-  if (low < high) {
-    const pivotIndex = partition(arr, low, high);
-    quickSortInPlace(arr, low, pivotIndex - 1);
-    quickSortInPlace(arr, pivotIndex + 1, high);
+  has(key) {
+    return this.get(key) !== undefined;
   }
-  return arr;
-}
-
-function partition(arr, low, high) {
-  const pivot = arr[high];
-  let i = low - 1;
-
-  for (let j = low; j < high; j++) {
-    if (arr[j] < pivot) {
-      i++;
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-  [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
-  return i + 1;
 }
 
 // Amaliyot
-const data = [8, 3, 7, 4, 2, 9, 1, 5, 6];
+const map = new HashMap();
+map.set("name", "Ali");
+map.set("age", 25);
+map.set("email", "ali@example.com");
 
-console.log("Merge Sort:", mergeSort(data));
-console.log("Quick Sort:", quickSort(data));
-console.log("Quick Sort (in-place):", quickSortInPlace([...data]));
+console.log("name:", map.get("name")); // Ali
+console.log("age:", map.get("age")); // 25
+console.log("has phone:", map.has("phone")); // false
+
+map.delete("age");
+console.log("age o'chirilgandan keyin:", map.get("age")); // undefined
+
+// JavaScript'ning o'rnatilgan Map obyekti bilan solishtirish
+const builtinMap = new Map();
+builtinMap.set("name", "Ali");
+console.log("Built-in Map:", builtinMap.get("name"));
