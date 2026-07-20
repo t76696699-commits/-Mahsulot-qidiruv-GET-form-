@@ -1,79 +1,59 @@
-// weatherService.js — asinxron funksiyalar
-function getTemperature(city) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (city === 'Toshkent') {
-        resolve(28);
-      } else {
-        reject(new Error("Shahar topilmadi"));
-      }
-    }, 100);
+// TDD misoli: findMax funksiyasini bosqichma-bosqich yaratish
+
+// 1-BOSQICH (RED): Avval testlarni yozamiz — kod hali yo'q
+// findMax.test.js
+const findMax = require('./findMax');
+
+describe('findMax — TDD yondashuvi', () => {
+  test('bitta elementli massiv', () => {
+    expect(findMax([5])).toBe(5);
   });
+
+  test('bir nechta elementli massiv', () => {
+    expect(findMax([3, 7, 2, 9, 4])).toBe(9);
+  });
+
+  test('barchasi manfiy sonlar', () => {
+    expect(findMax([-5, -1, -10])).toBe(-1);
+  });
+
+  test('bo\'sh massiv uchun xato tashlaydi', () => {
+    expect(() => findMax([])).toThrow('Massiv bo\'sh bo\'lmasligi kerak');
+  });
+
+  test('massiv bo\'lmagan qiymat uchun xato tashlaydi', () => {
+    expect(() => findMax(null)).toThrow();
+  });
+});
+
+// 2-BOSQICH (GREEN): Testlarni o'tkazish uchun minimal kod
+// findMax.js — birinchi versiya
+function findMax(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) {
+    throw new Error("Massiv bo'sh bo'lmasligi kerak");
+  }
+  return Math.max(...arr);
 }
 
-async function getTemperatureAsync(city) {
-  const temp = await getTemperature(city);
-  return `${city}: ${temp}°C`;
+module.exports = findMax;
+
+// 3-BOSQICH (REFACTOR): Kodni tozalash va optimallashtirish
+// findMax.js — yakuniy, refaktor qilingan versiya
+function findMaxRefactored(numbers) {
+  validateInput(numbers);
+  return numbers.reduce((max, current) => (current > max ? current : max));
 }
 
-function fetchWithCallback(city, callback) {
-  setTimeout(() => {
-    if (city === 'Toshkent') {
-      callback(null, 28);
-    } else {
-      callback(new Error('Shahar topilmadi'));
-    }
-  }, 100);
+function validateInput(numbers) {
+  if (!Array.isArray(numbers) || numbers.length === 0) {
+    throw new Error("Massiv bo'sh bo'lmasligi kerak");
+  }
 }
 
-module.exports = { getTemperature, getTemperatureAsync, fetchWithCallback };
+module.exports = findMaxRefactored;
 
-// weatherService.test.js — asinxron test usullari
-const {
-  getTemperature,
-  getTemperatureAsync,
-  fetchWithCallback,
-} = require('./weatherService');
+// Testlar refaktordan keyin ham PASS bo'lishi kerak — bu TDD ning
+// asosiy afzalligi: kod ichki tuzilishi o'zgaradi, tashqi xatti-harakat
+// (kontrakt) bir xil qoladi va testlar buni kafolatlaydi.
 
-describe('async/await uslubi', () => {
-  test('Toshkent uchun harorat qaytaradi', async () => {
-    const result = await getTemperatureAsync('Toshkent');
-    expect(result).toBe('Toshkent: 28°C');
-  });
-
-  test('noma\'lum shahar uchun xato tashlaydi', async () => {
-    await expect(getTemperature('Marsx')).rejects.toThrow(
-      'Shahar topilmadi'
-    );
-  });
-});
-
-describe('Promise qaytarish uslubi', () => {
-  test('harorat 28 ga teng', () => {
-    return getTemperature('Toshkent').then((temp) => {
-      expect(temp).toBe(28);
-    });
-  });
-});
-
-describe('resolves/rejects uslubi', () => {
-  test('resolves orqali tekshirish', async () => {
-    await expect(getTemperature('Toshkent')).resolves.toBe(28);
-  });
-
-  test('rejects orqali tekshirish', async () => {
-    await expect(getTemperature('Noma\'lum')).rejects.toThrow();
-  });
-});
-
-describe('callback uslubi', () => {
-  test('done bilan callback natijasini tekshirish', (done) => {
-    fetchWithCallback('Toshkent', (err, temp) => {
-      expect(err).toBeNull();
-      expect(temp).toBe(28);
-      done();
-    });
-  });
-});
-
-// Ishga tushirish: npx jest weatherService.test.js --verbose
+// Ishga tushirish: npx jest findMax.test.js --verbose
