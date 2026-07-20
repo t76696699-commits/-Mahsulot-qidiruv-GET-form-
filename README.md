@@ -1,46 +1,45 @@
-Test Coverage (test qamrovi) nima?
-Test coverage — bu kodning qancha qismi testlar tomonidan "bosib o'tilgani"ni ko'rsatuvchi metrika. U foizlarda o'lchanadi va sizga qaysi qatorlar, funksiyalar yoki shartlar hech qachon test qilinmaganini ko'rsatadi.
+Yakuniy loyiha: To'liq test qamrovi bilan modul yaratish
+Bu darsda siz o'rgangan barcha bilimlarni birlashtirasiz: Jest asoslari, mock/spy, asinxron testlash, TDD va coverage. Vazifa — "Savatcha" (Shopping Cart) modulini TDD yondashuvi bilan yaratish va uni to'liq test qilish.
 
-Coverage turlari
-Turi	Nima o'lchanadi
-Statement coverage	Har bir operator (qator) bajarilganmi
-Branch coverage	Har bir if/else shoxi tekshirilganmi
-Function coverage	Har bir funksiya chaqirilganmi
-Line coverage	Har bir qator bajarilganmi
-Jest'da coverage olish
-Coverage hisobotini olish uchun terminalda:
-
-npx jest --coverage
-Bu buyruq coverage/ papkasida HTML hisobot yaratadi va terminalda jadval ko'rsatadi:
-
-File        | % Stmts | % Branch | % Funcs | % Lines
-mathUtils.js|   87.5  |   75.0   |  100.0  |   87.5
-100% coverage — bu yaxshimi?
-Muhim tushuncha: yuqori coverage kod xatosiz degani emas. Coverage faqat kod bajarilganini ko'rsatadi, lekin expect() orqali to'g'ri natija tekshirilganini kafolatlamaydi. Shu bilan birga, past coverage (masalan 20%) degani ko'p kod umuman tekshirilmagan va yashirin xatolar bo'lishi mumkin.
-
-Coverage jarayoni
-Ha, masalan 80%+
+Loyiha talablari
+Mahsulot qo'shish (addItem) — narx va miqdorni saqlaydi
+Mahsulot olib tashlash (removeItem)
+Umumiy summani hisoblash (getTotal) — chegirmalarni hisobga oladi
+Asinxron "to'lovni tasdiqlash" funksiyasi (checkout) — tashqi to'lov API'sini mock qilish orqali test qilinadi
+TDD yondashuvida ishlash tartibi
+Har bir metod uchun avval testlar yoziladi (RED)
+Testlarni o'tkazish uchun minimal kod yoziladi (GREEN)
+Kod tozalanadi, takrorlanishlar olib tashlanadi (REFACTOR)
+Coverage hisobot orqali tekshirilmagan holatlar aniqlanadi va yangi testlar qo'shiladi
+Test strategiyasi
+Funksiya	Test turi
+addItem, removeItem	Oddiy sinxron unit test
+getTotal	Turli holatlar: bo'sh savat, chegirmali, chegirmasiz
+checkout	Asinxron test + to'lov API mocklash
+Yakuniy loyiha oqimi
+Ha
 
 Yo'q
 
-jest --coverage ishga tushadi
+Talablarni tahlil qilish
 
-Har bir qator kuzatiladi
+TDD: RED - testlar yozish
 
-Testlar bajariladi
+TDD: GREEN - minimal kod
 
-Qaysi qatorlar bosib o'tildi?
+TDD: REFACTOR - kodni tozalash
 
-HTML va terminal hisobot yaratiladi
+Mock: to'lov API'sini soxtalashtirish
 
-Coverage yetarlimi?
+Asinxron checkout testlari
 
-Loyiha sifat standartiga mos
+Coverage hisobotini tekshirish
 
-Yangi testlar qo'shish kerak
+Coverage >= 80%?
 
-Amaliy tavsiya
-Ko'pchilik professional jamoalar 80% coverageni minimal standart sifatida belgilaydi — bu balansni ta'minlaydi: yetarlicha ishonch, lekin har bir mayda detalni testlashga vaqt sarflamaslik.
+Loyiha yakunlandi ✔
+
+Bu loyiha real ish joylarida qo'llaniladigan to'liq test strategiyasini aks ettiradi — bir nechta test turini birlashtirish orqali ishonchli va barqaror kod yaratish.
 
 💻
 Код
@@ -48,67 +47,120 @@ Kod namunasi
 #2
 code
  Копировать
-// discount.js — coverage bilan tahlil qilinadigan modul
-function calculateDiscount(price, customerType, couponCode) {
-  let discount = 0;
-
-  if (customerType === 'vip') {
-    discount = 0.2;
-  } else if (customerType === 'regular') {
-    discount = 0.1;
-  } else {
-    discount = 0;
+// shoppingCart.js — TDD bilan yaratilgan yakuniy modul
+class ShoppingCart {
+  constructor() {
+    this.items = [];
   }
 
-  if (couponCode === 'SAVE10') {
-    discount += 0.1;
+  addItem(name, price, quantity = 1) {
+    if (price < 0) throw new Error("Narx manfiy bo'lishi mumkin emas");
+    this.items.push({ name, price, quantity });
   }
 
-  if (discount > 0.5) {
-    discount = 0.5; // Maksimal chegirma 50%
+  removeItem(name) {
+    this.items = this.items.filter((item) => item.name !== name);
   }
 
-  return Math.round(price * (1 - discount));
+  getTotal(discountPercent = 0) {
+    const subtotal = this.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    return Math.round(subtotal * (1 - discountPercent / 100));
+  }
+
+  async checkout(paymentGateway) {
+    const total = this.getTotal();
+    if (total === 0) {
+      throw new Error("Savatcha bo'sh");
+    }
+    const result = await paymentGateway.charge(total);
+    if (!result.success) {
+      throw new Error("To'lov amalga oshmadi");
+    }
+    this.items = [];
+    return { total, transactionId: result.transactionId };
+  }
 }
 
-module.exports = calculateDiscount;
+module.exports = ShoppingCart;
 
-// discount.test.js — coverage'ni oshiruvchi testlar
-const calculateDiscount = require('./discount');
+// shoppingCart.test.js — to'liq test to'plami
+const ShoppingCart = require('./shoppingCart');
 
-describe('calculateDiscount — barcha shoxlarni qamrash', () => {
-  test('VIP mijoz uchun 20% chegirma', () => {
-    expect(calculateDiscount(1000, 'vip', null)).toBe(800);
+describe('ShoppingCart — sinxron metodlar', () => {
+  let cart;
+
+  beforeEach(() => {
+    cart = new ShoppingCart();
   });
 
-  test('oddiy mijoz uchun 10% chegirma', () => {
-    expect(calculateDiscount(1000, 'regular', null)).toBe(900);
+  test('mahsulot qo\'shiladi va summaga qo\'shiladi', () => {
+    cart.addItem('Kitob', 50000, 2);
+    expect(cart.getTotal()).toBe(100000);
   });
 
-  test('mijoz turi noma\'lum bo\'lsa chegirma yo\'q', () => {
-    expect(calculateDiscount(1000, 'guest', null)).toBe(1000);
+  test('mahsulot olib tashlanadi', () => {
+    cart.addItem('Kitob', 50000, 1);
+    cart.addItem('Ruchka', 5000, 1);
+    cart.removeItem('Ruchka');
+    expect(cart.getTotal()).toBe(50000);
   });
 
-  test('kupon kodi qo\'shimcha 10% beradi', () => {
-    expect(calculateDiscount(1000, 'regular', 'SAVE10')).toBe(800);
+  test('chegirma to\'g\'ri hisoblanadi', () => {
+    cart.addItem('Noutbuk', 1000000, 1);
+    expect(cart.getTotal(10)).toBe(900000);
   });
 
-  test('VIP + kupon birgalikda 30% chegirma', () => {
-    expect(calculateDiscount(1000, 'vip', 'SAVE10')).toBe(700);
-  });
-
-  test('maksimal chegirma 50% dan oshmaydi', () => {
-    // Bu holatni sinash uchun tasavvuriy holat: juda katta chegirmalar
-    // Coverage: bu shoxni tekshirish uchun махсус holat kerak bo'lishi mumkin
-    expect(calculateDiscount(1000, 'vip', 'SAVE10')).toBeLessThanOrEqual(1000);
-  });
-
-  test('noto\'g\'ri kupon kodida qo\'shimcha chegirma yo\'q', () => {
-    expect(calculateDiscount(1000, 'regular', 'WRONGCODE')).toBe(900);
+  test('manfiy narxda xato tashlaydi', () => {
+    expect(() => cart.addItem('Xato mahsulot', -100, 1)).toThrow();
   });
 });
 
-// Coverage hisobotini ko'rish: npx jest discount.test.js --coverage
-// Natija taxminan: Statements 100%, Branches 87.5%, Functions 100%, Lines 100%
-// Branch coverage 100% dan past bo'lishi mumkin — chunki "discount > 0.5"
-// shoxi hali alohida to'liq test qilinmagan.
+describe('ShoppingCart — checkout (asinxron + mock)', () => {
+  let cart;
+
+  beforeEach(() => {
+    cart = new ShoppingCart();
+    cart.addItem('Telefon', 500000, 1);
+  });
+
+  test('muvaffaqiyatli to\'lovda savat tozalanadi', async () => {
+    const mockGateway = {
+      charge: jest.fn().mockResolvedValue({
+        success: true,
+        transactionId: 'TXN123',
+      }),
+    };
+
+    const result = await cart.checkout(mockGateway);
+
+    expect(result.total).toBe(500000);
+    expect(result.transactionId).toBe('TXN123');
+    expect(cart.items.length).toBe(0);
+    expect(mockGateway.charge).toHaveBeenCalledWith(500000);
+  });
+
+  test('to\'lov muvaffaqiyatsiz bo\'lsa xato tashlaydi', async () => {
+    const mockGateway = {
+      charge: jest.fn().mockResolvedValue({ success: false }),
+    };
+
+    await expect(cart.checkout(mockGateway)).rejects.toThrow(
+      "To'lov amalga oshmadi"
+    );
+  });
+
+  test('bo\'sh savatda checkout xato tashlaydi', async () => {
+    const emptyCart = new ShoppingCart();
+    const mockGateway = { charge: jest.fn() };
+
+    await expect(emptyCart.checkout(mockGateway)).rejects.toThrow(
+      "Savatcha bo'sh"
+    );
+    expect(mockGateway.charge).not.toHaveBeenCalled();
+  });
+});
+
+// Ishga tushirish: npx jest shoppingCart.test.js --coverage --verbose
