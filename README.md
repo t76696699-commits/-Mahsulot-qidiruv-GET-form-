@@ -1,66 +1,79 @@
-// userApi.js — tashqi API bilan ishlaydigan modul
-async function fetchUser(id) {
-  const response = await fetch(`https://api.example.com/users/${id}`);
-  if (!response.ok) {
-    throw new Error('Foydalanuvchi topilmadi');
-  }
-  return response.json();
+// weatherService.js — asinxron funksiyalar
+function getTemperature(city) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (city === 'Toshkent') {
+        resolve(28);
+      } else {
+        reject(new Error("Shahar topilmadi"));
+      }
+    }, 100);
+  });
 }
 
-function logEvent(logger, eventName) {
-  logger.log(`Event: ${eventName}`);
-  return true;
+async function getTemperatureAsync(city) {
+  const temp = await getTemperature(city);
+  return `${city}: ${temp}°C`;
 }
 
-module.exports = { fetchUser, logEvent };
+function fetchWithCallback(city, callback) {
+  setTimeout(() => {
+    if (city === 'Toshkent') {
+      callback(null, 28);
+    } else {
+      callback(new Error('Shahar topilmadi'));
+    }
+  }, 100);
+}
 
-// userApi.test.js — mock va spy misollari
-const { fetchUser, logEvent } = require('./userApi');
+module.exports = { getTemperature, getTemperatureAsync, fetchWithCallback };
 
-describe('fetchUser — mock bilan test', () => {
-  beforeEach(() => {
-    // Har bir testdan oldin global fetch'ni mocklaymiz
-    global.fetch = jest.fn();
+// weatherService.test.js — asinxron test usullari
+const {
+  getTemperature,
+  getTemperatureAsync,
+  fetchWithCallback,
+} = require('./weatherService');
+
+describe('async/await uslubi', () => {
+  test('Toshkent uchun harorat qaytaradi', async () => {
+    const result = await getTemperatureAsync('Toshkent');
+    expect(result).toBe('Toshkent: 28°C');
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  test('noma\'lum shahar uchun xato tashlaydi', async () => {
+    await expect(getTemperature('Marsx')).rejects.toThrow(
+      'Shahar topilmadi'
+    );
   });
+});
 
-  test('muvaffaqiyatli javobda foydalanuvchi qaytaradi', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 1, name: 'Aziz' }),
+describe('Promise qaytarish uslubi', () => {
+  test('harorat 28 ga teng', () => {
+    return getTemperature('Toshkent').then((temp) => {
+      expect(temp).toBe(28);
     });
-
-    const user = await fetchUser(1);
-
-    expect(user).toEqual({ id: 1, name: 'Aziz' });
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.example.com/users/1'
-    );
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  test('xato javobda Error tashlaydi', async () => {
-    global.fetch.mockResolvedValue({ ok: false });
-
-    await expect(fetchUser(999)).rejects.toThrow(
-      'Foydalanuvchi topilmadi'
-    );
   });
 });
 
-describe('logEvent — spy bilan test', () => {
-  test('logger.log to\'g\'ri argument bilan chaqiriladi', () => {
-    const logger = { log: () => {} };
-    const spy = jest.spyOn(logger, 'log');
+describe('resolves/rejects uslubi', () => {
+  test('resolves orqali tekshirish', async () => {
+    await expect(getTemperature('Toshkent')).resolves.toBe(28);
+  });
 
-    logEvent(logger, 'user_login');
-
-    expect(spy).toHaveBeenCalledWith('Event: user_login');
-    spy.mockRestore();
+  test('rejects orqali tekshirish', async () => {
+    await expect(getTemperature('Noma\'lum')).rejects.toThrow();
   });
 });
 
-// Ishga tushirish: npx jest userApi.test.js --verbose
+describe('callback uslubi', () => {
+  test('done bilan callback natijasini tekshirish', (done) => {
+    fetchWithCallback('Toshkent', (err, temp) => {
+      expect(err).toBeNull();
+      expect(temp).toBe(28);
+      done();
+    });
+  });
+});
+
+// Ishga tushirish: npx jest weatherService.test.js --verbose
