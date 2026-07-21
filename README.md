@@ -1,156 +1,205 @@
-Takrorlash: Modul 2 — Shartlar, sikllar, listlar
-qoshish
+def todo_app():
+    # Asosiy vazifalar ro'yxati (har bir vazifa dictionary ko'rinishida saqlanadi)
+    vazifalar = []
 
-ochirish
+    while True:
+        print("\n" + "=" * 42)
+        print("📌 VAZIFALAR BOSHQARUVCHISI (TO-DO LIST)")
+        print("=" * 42)
+        print("1. ➕ Vazifa qo'shish")
+        print("2. 📋 Vazifalarni ko'rish")
+        print("3. ✅ Vazifani bajarilgan deb belgilash")
+        print("4. 🗑️ Vazifani o'chirish")
+        print("5. 📊 Statistika")
+        print("6. 🔄 Saralash (Muhimlik bo'yicha)")
+        print("7. 🔍 Filtrlash (Bajarilmaganlar)")
+        print("8. 🚪 Chiqish")
+        print("-" * 42)
 
-korsatish
+        tanlov = input("Tanlovingiz (1-8): ").strip()
 
-saralash
+        # 1. VAZIFA QO'SHISH
+        if tanlov == "1":
+            matn = input("Vazifa matnini kiriting: ").strip()
+            if not matn:
+                print("❌ Xatolik: Vazifa matni bo'sh bo'lishi mumkin emas!")
+                continue
 
-chiqish
+            print("Muhimlik darajasini tanlang:")
+            print("  1. Low (Past)")
+            print("  2. Medium (O'rta)")
+            print("  3. High (Yuqori)")
+            daraja_tanlov = input("Daraja raqamini kiriting (1-3): ").strip()
 
-items list
+            if daraja_tanlov == "1":
+                muhimlik = "Low"
+            elif daraja_tanlov == "2":
+                muhimlik = "Medium"
+            elif daraja_tanlov == "3":
+                muhimlik = "High"
+            else:
+                print("⚠️ Noto'g'ri tanlov! Standart bo'lib 'Medium' o'rnatildi.")
+                muhimlik = "Medium"
 
-menu while True
+            yangi_vazifa = {
+                "matn": matn,
+                "muhimlik": muhimlik,
+                "bajarilgan": False,
+            }
+            vazifalar.append(yangi_vazifa)
+            print(f"✅ Vazifa muvaffaqiyatli qo'shildi! [{muhimlik}]")
 
-input then append
+        # 2. VAZIFALARNI KO'RISH
+        elif tanlov == "2":
+            if not vazifalar:
+                print("\n📭 Hozircha vazifalar ro'yxati bo'sh.")
+                continue
 
-input then remove
+            print("\n--- BARCHA VAZIFALAR ---")
+            for idx, v in enumerate(vazifalar, 1):
+                status = "✅ Bajarilgan" else "⏳ Bajarilmagan"
+                # Yuqoridagi qatorni to'g'ri yozish uchun ternar operator:
+                status_matn = "✅" if v["bajarilgan"] else "⏳"
+                print(
+                    f"{idx}. [{status_matn}] {v['matn']} (Muhimlik: {v['muhimlik']})"
+                )
 
-for then print
+        # 3. BAJARILGANINI BELGILASH
+        elif tanlov == "3":
+            if not vazifalar:
+                print("\n📭 Vazifalar ro'yxati bo'sh.")
+                continue
 
-sort or sorted
+            # Faqat bajarilmaganlarni ko'rsatish
+            print("\n--- BAJARILMAGAN VAZIFALAR ---")
+            bajarilmaganlar = [
+                (i, v) for i, v in enumerate(vazifalar) if not v["bajarilgan"]
+            ]
 
-break
+            if not bajarilmaganlar:
+                print("🎉 Barcha vazifalar bajarib bo'lingan!")
+                continue
 
-dastur tugaydi
+            for haqiqiy_indeks, v in bajarilmaganlar:
+                print(
+                    f"{haqiqiy_indeks + 1}. {v['matn']} (Muhimlik: {v['muhimlik']})"
+                )
 
-Modul 2 da siz shartli ifodalar, sikllar, list va tuple bilan ishlashni o'rgandingiz. Endi bu 3 ta konseptni birga ishlatib, o'z tovarlar ro'yxati (TODO list) ilovasini yaratamiz.
+            raqam_str = input(
+                "\nBajarilgan deb belgilamoqchi bo'lgan vazifa raqamini kiriting: "
+            ).strip()
+            if raqam_str.isdigit():
+                idx = int(raqam_str) - 1
+                if 0 <= idx < len(vazifalar):
+                    if not vazifalar[idx]["bajarilgan"]:
+                        vazifalar[idx]["bajarilgan"] = True
+                        print(
+                            f"🎉 '{vazifalar[idx]['matn']}' bajarilgan deb belgilandi!"
+                        )
+                    else:
+                        print("ℹ️ Bu vazifa allaqachon bajarilgan!")
+                else:
+                    print("❌ Bunday raqamdagi vazifa mavjud emas!")
+            else:
+                print("❌ Iltimos, raqam kiriting!")
 
-📋 Modul 2 da nimalarni o'rgandingiz
-Dars	Asosiy konsept	Misol
-4	if/elif/else, and/or/not, ==/!=	if x > 0 and y < 10:
-5	for/while, range, break/continue	for i in range(10):
-6	list, tuple, slicing, comprehension	[x*2 for x in nums]
-🧩 Modul 1 + 2 = haqiqiy ilova
-Endi bizda quyidagi imkoniyatlar bor:
+        # 4. O'CHIRISH
+        elif tanlov == "4":
+            if not vazifalar:
+                print("\n📭 O'chirish uchun vazifalar yo'q.")
+                continue
 
-Foydalanuvchi bilan muloqot: input, print, f-string (1-modul)
-Qaror qabul qilish: if/elif/else (4-dars)
-Takrorlash: while True bilan menu (5-dars)
-Ma'lumotni saqlash: list.append, list.remove (6-dars)
-Bu to'rt narsa birga — interaktiv ilovaning poydevori. Tovarlar ro'yxati, kontakt kitobi, to-do list — hammasi shu shaklda yoziladi.
+            print("\n--- VAZIFALARNI O'CHIRISH ---")
+            for idx, v in enumerate(vazifalar, 1):
+                status_matn = "✅" if v["bajarilgan"] else "⏳"
+                print(
+                    f"{idx}. [{status_matn}] {v['matn']} (Muhimlik: {v['muhimlik']})"
+                )
 
-🏗 Menu pattern — har bir interaktiv ilovaning poydevori
-tovarlar = []
+            raqam_str = input(
+                "\nO'chirmoqchi bo'lgan vazifa raqamini kiriting: "
+            ).strip()
+            if raqam_str.isdigit():
+                idx = int(raqam_str) - 1
+                if 0 <= idx < len(vazifalar):
+                    ochirilgan = vazifalar.pop(idx)
+                    print(f"🗑️ '{ochirilgan['matn']}' vazifasi o'chirildi.")
+                else:
+                    print("❌ Bunday raqamdagi vazifa mavjud emas!")
+            else:
+                print("❌ Iltimos, raqam kiriting!")
 
-while True:
-    print()
-    print("1. Tovar qo'shish")
-    print("2. Tovar o'chirish")
-    print("3. Hammasini ko'rsatish")
-    print("4. Chiqish")
-    tanlov = input("Tanlovingiz: ").strip()
+        # 5. STATISTIKA
+        elif tanlov == "5":
+            jami = len(vazifalar)
+            if jami == 0:
+                print(
+                    "\n📊 Hozircha statistika uchun ma'lumotlar mavjud emas."
+                )
+                continue
 
-    if tanlov == "1":
-        # ... qo'shish ...
-    elif tanlov == "2":
-        # ... o'chirish ...
-    elif tanlov == "3":
-        # ... ko'rsatish ...
-    elif tanlov == "4":
-        break
-    else:
-        print("Noma'lum tanlov")
-Bu shakl juda muhim — uni eslab qoling. Kelajakda har xil ilovalarga bu pattern asos bo'ladi.
+            # List comprehension yordamida hisoblash
+            bajarilgan_soni = len([v for v in vazifalar if v["bajarilgan"]])
+            qolgan_soni = jami - bajarilgan_soni
+            foiz = (bajarilgan_soni / jami) * 100
 
-⚠️ Modul 2 da eng ko'p uchragan xatolar
-Sikl ichida o'zgaruvchini o'zgartirishni unutish: while x < 10: — agar x ichkarida o'zgarmasa, cheksiz sikl.
-range() chegarasi: range(1, 10) da 10 KIRMAYDI. Faqat 1..9.
-List o'zgartirish vaqtida aylanish: for x in lst: lst.remove(x) — xato. Yangi list yarating.
-List index xatosi: bo'sh listdan l[0] olish — IndexError. Avval if l: tekshiring.
-Strani solishtirish: foydalanuvchi javobi katta/kichik harf bo'lishi mumkin. .strip().lower() ishlating.
-🎯 Endi navbat sizda
-Pastdagi kod — to'liq ishlaydigan tovarlar ro'yxati ilovasi. Birinchi navbatda kodni o'qib chiqing va har qatorni tushuning. Keyin o'zingizning loyihangizni qurishga o'ting — masalan, vazifalar ro'yxati (TODO) yoki kontakt kitobi.
+            print("\n" + "=" * 30)
+            print("📊 VAZIFALAR STATISTIKASI")
+            print("=" * 30)
+            print(f"• Jami vazifalar: {jami}")
+            print(f"• Bajarilganlar: {bajarilgan_soni}")
+            print(f"• Qolgan (bajarilmagan): {qolgan_soni}")
+            print(f"• Bajarilish foizi: {foiz:.1f}%")
+            print("=" * 30)
 
-💻
-Код
-Код
-#2
-python
- Копировать
-# tovarlar_royxati.py — Modul 2 takrorlash loyihasi
-# Menu pattern + if/elif/else + while + list
+        # 6. SARALASH: MUHIMLIKKA QARAB
+        elif tanlov == "6":
+            if not vazifalar:
+                print("\n📭 Saralash uchun vazifalar mavjud emas.")
+                continue
 
-tovarlar = []
+            # Muhimlik darajalariga vazn beramiz: High=1, Medium=2, Low=3
+            muhimlik_tartibi = {"High": 1, "Medium": 2, "Low": 3}
 
-print("🛒 Tovarlar ro'yxati ilovasi")
-print("=" * 40)
+            # sort() funksiyasi uchun maxsus kalit (key) funksiyasi
+            saralangan = sorted(
+                vazifalar, key=lambda x: muhimlik_tartibi[x["muhimlik"]]
+            )
 
-while True:
-    print()
-    print("1. Tovar qo'shish")
-    print("2. Tovar o'chirish")
-    print("3. Hammasini ko'rsatish")
-    print("4. Alifbo tartibida saralash")
-    print("5. Qidirish")
-    print("6. Chiqish")
+            print("\n--- MUHIMLIK BO'YICHA SARALANGAN VAZIFALAR ---")
+            for idx, v in enumerate(saralangan, 1):
+                status_matn = "✅" if v["bajarilgan"] else "⏳"
+                print(
+                    f"{idx}. [{status_matn}] {v['matn']} (Muhimlik: {v['muhimlik']})"
+                )
 
-    tanlov = input("Tanlov (1-6): ").strip()
+        # 7. BONUS: BAJARILMAGAN VAZIFALARNI FILTRLASH
+        elif tanlov == "7":
+            if not vazifalar:
+                print("\n📭 Vazifalar ro'yxati bo'sh.")
+                continue
 
-    if tanlov == "1":
-        nom = input("Tovar nomi: ").strip()
-        if not nom:
-            print("⚠️ Bo'sh nom bo'lmaydi")
-        elif nom.lower() in [t.lower() for t in tovarlar]:
-            print(f"⚠️ '{nom}' allaqachon ro'yxatda")
+            # List comprehension orqali faqat bajarilmaganlarni ajratib olamiz
+            bajarilmagan_list = [v for v in vazifalar if not v["bajarilgan"]]
+
+            if not bajarilmagan_list:
+                print(
+                    "\n🎉 Ajoyib! Hozirda bajarilmagan vazifalarning o'zi yo'q."
+                )
+            else:
+                print("\n--- 🔍 BAJARILMAGAN VAZIFALAR FILTRI ---")
+                for idx, v in enumerate(bajarilmagan_list, 1):
+                    print(
+                        f"{idx}. ⏳ {v['matn']} (Muhimlik: {v['muhimlik'])})"
+                    )
+
+        # 8. CHIQISH
+        elif tanlov == "8":
+            print("\nDastur tugatildi. Xayr! 👋")
+            break
         else:
-            tovarlar.append(nom)
-            print(f"✅ '{nom}' qo'shildi")
+            print("❌ Noto'g'ri tanlov! Iltimos, 1 dan 8 gacha bo'lgan raqamni tanlang.")
 
-    elif tanlov == "2":
-        if not tovarlar:
-            print("⚠️ Ro'yxat bo'sh")
-            continue
-        nom = input("O'chirilsin: ").strip()
-        # Case-insensitive remove
-        for t in tovarlar:
-            if t.lower() == nom.lower():
-                tovarlar.remove(t)
-                print(f"🗑 '{t}' o'chirildi")
-                break
-        else:
-            print(f"⚠️ '{nom}' topilmadi")
 
-    elif tanlov == "3":
-        if not tovarlar:
-            print("Ro'yxat bo'sh — birinchi tovarni qo'shing")
-        else:
-            print(f"\n📋 Jami {len(tovarlar)} ta tovar:")
-            for i, t in enumerate(tovarlar, start=1):
-                print(f"  {i}. {t}")
-
-    elif tanlov == "4":
-        tovarlar.sort(key=str.lower)
-        print("🔤 Alifbo tartibida saralandi")
-
-    elif tanlov == "5":
-        if not tovarlar:
-            print("Ro'yxat bo'sh")
-            continue
-        kalit = input("Qidirilsin: ").strip().lower()
-        topildi = [t for t in tovarlar if kalit in t.lower()]
-        if topildi:
-            print(f"🔍 {len(topildi)} ta natija:")
-            for t in topildi:
-                print(f"  • {t}")
-        else:
-            print(f"'{kalit}' uchun hech narsa topilmadi")
-
-    elif tanlov == "6":
-        print(f"\nYakuniy ro'yxat ({len(tovarlar)} ta): {tovarlar}")
-        print("Xayr!")
-        break
-
-    else:
-        print(f"⚠️ Noma'lum tanlov: {tanlov!r}")
+if __name__ == "__main__":
+    todo_app()
