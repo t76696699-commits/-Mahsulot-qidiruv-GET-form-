@@ -1,169 +1,164 @@
-Shartli ifodalar — if/elif/else
-True
+Sikllar — for va while
+yes
 
-False
+no
 
-True
+yes
 
-False
+break
 
-murakkab shart
+continue
 
-bool ifoda
+no
 
-if shart True
+for i in range 5
 
-asosiy blok
+body har iter
 
-elif shart True
+yana qoldi
 
-elif blok
+loop tugadi
 
-else blok
+while shart
 
-davom
+shart True
 
-and or not
+body
 
-Hozirgacha dasturlarimiz har doim bir xil ishlagan. Endi qaror qabul qilishni o'rganamiz: agar shart bajarilsa — bir narsa, aks holda — boshqa.
+Ba'zan bir xil amalni bir necha marta takrorlash kerak: 100 ta foydalanuvchini ro'yxatdan o'tkazish, 1 dan 1000 gacha sonlarni hisoblash, fayldagi har qatorni qayta ishlash. Sikl (loop) shu uchun.
 
-Eng oddiy shart — if
-yosh = int(input("Yoshingiz: "))
+for sikli — ma'lum miqdorda takrorlash
+# range(5) → 0, 1, 2, 3, 4
+for i in range(5):
+    print("i =", i)
+Natija:
 
-if yosh >= 18:
-    print("Siz balog'at yoshidasiz")
-E'tibor bering: Python indentatsiya (bo'sh joylar bilan ko'chirish) ishlatadi blok belgisi sifatida. Boshqa tillarda {} qavslar ishlatiladi — Python'da 4 ta bo'sh joy.
+i = 0
+i = 1
+i = 2
+i = 3
+i = 4
+range — son ketma-ketligi
+Chaqirish	Natija
+range(5)	0, 1, 2, 3, 4
+range(1, 6)	1, 2, 3, 4, 5
+range(0, 10, 2)	0, 2, 4, 6, 8
+range(10, 0, -1)	10, 9, 8, ..., 1
+String yoki list bo'ylab aylanish
+matn = "Python"
+for harf in matn:
+    print(harf)
 
-if + else — ikki yo'l
-yosh = int(input("Yoshingiz: "))
+mevalar = ["olma", "banan", "uzum"]
+for meva in mevalar:
+    print(meva)
+while sikli — shart bajarilguncha
+son = 1
+while son <= 5:
+    print(son)
+    son = son + 1
+Sikl shart True bo'lguncha takrorlanadi. Ehtiyot: shartni o'zgartirishni unutmang — aks holda cheksiz sikl (infinite loop) yuz beradi va dastur to'xtamaydi.
 
-if yosh >= 18:
-    print("Voyaga yetgan")
-else:
-    print("Voyaga yetmagan")
-if + elif + else — bir nechta yo'l
-baho = int(input("Bahoyingiz (0-100): "))
+while True + break — foydalanuvchidan kutish
+while True:
+    javob = input("Davom etamizmi? (ha/yoq): ")
+    if javob == "yoq":
+        break  # sikldan chiqish
+    print("Davom etyapmiz")
+print("Tugadi")
+break va continue
+break — sikldan butunlay chiqish
+continue — joriy iteratsiyani o'tkazib yuborish va keyingisiga o'tish
+for i in range(10):
+    if i == 5:
+        break       # 0,1,2,3,4 chiqadi va to'xtaydi
+    print(i)
 
-if baho >= 90:
-    print("A — A'lo")
-elif baho >= 75:
-    print("B — Yaxshi")
-elif baho >= 60:
-    print("C — Qoniqarli")
-elif baho >= 50:
-    print("D — Yetarli")
-else:
-    print("F — Qoniqarsiz")
-elif — "else if" ning qisqartmasi. Faqat bitta blok ishlaydi — birinchi True bo'lganida.
+for i in range(10):
+    if i % 2 == 0:
+        continue    # juftlarni o'tkazib yuboradi
+    print(i)        # 1, 3, 5, 7, 9
+Nested loops — sikl ichida sikl
+# Ko'paytirish jadvali
+for i in range(1, 4):
+    for j in range(1, 4):
+        print(f"{i} * {j} = {i * j}")
+    print("---")
+enumerate — indeks va element birga
+mevalar = ["olma", "banan", "uzum"]
+for indeks, meva in enumerate(mevalar):
+    print(f"{indeks}: {meva}")
+# 0: olma
+# 1: banan
+# 2: uzum
+Foydali pattern — yig'ish (accumulator)
+# 1 dan 100 gacha sonlar yig'indisi
+yigindi = 0
+for son in range(1, 101):
+    yigindi = yigindi + son
+print("Yig'indi:", yigindi)  # 5050
 
-Solishtirish operatorlari
-Belgi	Ma'no	Misol
-==	teng	x == 5
-!=	teng emas	x != 0
-<	kichik	x < 10
->	katta	x > 10
-<=	kichik yoki teng	x <= 100
->=	katta yoki teng	x >= 0
-⚠️ Eng ko'p uchragan xato: = (qiymat berish) va == (solishtirish)ni aralashtirish. if x = 5: — SyntaxError. To'g'risi: if x == 5:.
-
-Mantiqiy operatorlar — and, or, not
-yosh = 25
-shahar = "Toshkent"
-
-# and — ikkalasi ham True bo'lishi kerak
-if yosh >= 18 and shahar == "Toshkent":
-    print("Voyaga yetgan toshkentlik")
-
-# or — kamida bittasi True bo'lsa yetadi
-if shahar == "Toshkent" or shahar == "Samarqand":
-    print("Katta shaharda yashayapsiz")
-
-# not — qiymatni teskari qiladi
-mehmon = False
-if not mehmon:
-    print("Siz mehmon emassiz")
-Boolean qiymatlar va "truthy" tushunchasi
-Python'da har qiymat True yoki False deb baholanadi:
-
-False	True
-False, 0, 0.0, "", None, [], {}	Qolgan deyarli hamma narsa
-ism = input("Ismingiz: ")
-if ism:                  # bo'sh string False, demak boshqasi True
-    print(f"Salom, {ism}")
-else:
-    print("Ism kiritmadingiz")
-Ichki shartlar (nested)
-yosh = 25
-foydalanuvchi_id = 42
-
-if foydalanuvchi_id:
-    if yosh >= 18:
-        print("Ruxsat berildi")
-    else:
-        print("Yosh kichik")
-else:
-    print("Login qiling")
-3 dan ortiq ichki blok — yomon belgi. Ko'pincha bittada birlashtirsa bo'ladi:
-
-if foydalanuvchi_id and yosh >= 18:
-    print("Ruxsat berildi")
+# Eng katta sonni topish
+sonlar = [3, 7, 2, 9, 4]
+eng_katta = sonlar[0]
+for son in sonlar:
+    if son > eng_katta:
+        eng_katta = son
+print("Eng katta:", eng_katta)
 ⚠️ Eng ko'p uchraydigan xatolar
-: ni unutish: if x > 5 — SyntaxError. if x > 5: kerak.
-Indentatsiya buzilishi: blok ichidagi qatorlar bir xil ko'chirilishi kerak (har doim 4 bo'sh joy).
-= vs ==: = qiymat berish, == solishtirish.
-Bool natijani solishtirish: if x == True: — keraksiz. Qisqaroq: if x:
+Cheksiz sikl: while x < 10: print(x) — x hech qachon o'zgarmagani uchun to'xtamaydi. Ctrl+C bilan to'xtating.
+range(1, 10) → 10 ham bormi? Yo'q. range(1, 10) = 1, 2, ..., 9. 10 kirmaydi.
+Sikl ichidagi o'zgaruvchini tashqarida ishlatish: ishlaydi, lekin oxirgi qiymat saqlanadi.
 💻
 Код
 Код
 #2
 python
  Копировать
-# conditions.py — shartli ifodalar
+# loops.py — for va while sikllari
 
-# Yosh va guruh aniqlash
-yosh = int(input("Yoshingizni kiriting: "))
-
-if yosh < 0:
-    print("Yosh manfiy bo'lmaydi!")
-elif yosh < 6:
-    print("Bola")
-elif yosh < 13:
-    print("Maktab yoshi")
-elif yosh < 18:
-    print("O'smir")
-elif yosh < 60:
-    print("Voyaga yetgan")
-else:
-    print("Keksa yosh")
-
-# Mantiqiy operatorlar
+# 1. Oddiy for sikli
+print("1 dan 5 gacha:")
+for i in range(1, 6):
+    print(i, end=" ")
 print()
-shahar = input("Qaysi shaharda yashaysiz? ").strip().title()
-ish = input("Ishlaysizmi? (ha/yoq): ").strip().lower()
 
-if yosh >= 18 and ish == "ha":
-    print("Siz mustaqil yashaysiz")
-elif yosh >= 18 and ish != "ha":
-    print("Voyaga yetgan, ammo ish topish kerak")
-else:
-    print("Hali bola — ota-onaga tayanasiz")
+# 2. Yig'indi hisoblash
+yigindi = 0
+for son in range(1, 11):
+    yigindi += son
+print(f"1+2+...+10 = {yigindi}")
 
-if shahar == "Toshkent" or shahar == "Samarqand" or shahar == "Buxoro":
-    print(f"{shahar} — katta shahar!")
-else:
-    print(f"{shahar} — yaxshi joy")
-
-# Truthy va falsy
+# 3. Ko'paytirish jadvali (5 ga)
 print()
-foydalanuvchi_nomi = input("Foydalanuvchi nomi (bo'sh qoldirish mumkin): ")
-if foydalanuvchi_nomi:
-    print(f"Xush kelibsiz, {foydalanuvchi_nomi}!")
-else:
-    print("Mehmon sifatida kirdingiz")
+print("5 ga ko'paytirish jadvali:")
+for i in range(1, 11):
+    print(f"5 x {i} = {5 * i}")
 
-# Juft-toq tekshirish
-son = int(input("Sonni kiriting: "))
-if son % 2 == 0:
-    print(f"{son} — juft son")
+# 4. Stringdagi unli harflar sanash
+matn = input("Matn kiriting: ")
+unlilar = "aeiouAEIOU"
+soni = 0
+for harf in matn:
+    if harf in unlilar:
+        soni += 1
+print(f"Unli harflar soni: {soni}")
+
+# 5. while bilan menyu
+print()
+sonlar = []
+while True:
+    javob = input("Son kiriting (chiqish uchun 'q'): ")
+    if javob == "q":
+        break
+    try:
+        sonlar.append(float(javob))
+    except ValueError:
+        print("Bu son emas, qayta urinib ko'ring")
+        continue
+
+if sonlar:
+    print(f"Kiritilgan sonlar: {sonlar}")
+    print(f"O'rtacha: {sum(sonlar) / len(sonlar):.2f}")
 else:
-    print(f"{son} — toq son")
+    print("Hech narsa kiritilmadi")
