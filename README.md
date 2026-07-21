@@ -1,36 +1,76 @@
-# 1. Foydalanuvchidan matn kiritish va strip() orqali ortiqcha bo'shliqlarni olib tashlash
-matn = input("Matn kiriting: ").strip()
+# 1. Foydalanuvchidan ma'lumotlarni qabul qilish va casting
+try:
+    print("--- Kengaytirilgan Kalkulyator ---")
+    print("Amallar: +, -, *, /, //, %, **, foiz (f), ildiz (i)")
+    
+    amal = input("Amalni kiriting: ").strip().lower()
 
-# Bo'sh matn holatini tekshirish
-if not matn:
-    print("Xatolik: Hech qanday matn kiritilmadi!")
-else:
-    # 2. String metodlarini qo'llash (kamida 5 ta: upper, lower, replace, strip, count)
-    katta_harf = matn.upper()
-    kichik_harf = matn.lower()
-    almashtirilgan = matn.replace("a", "@").replace("A", "@")
-    bosh_oxir_kesilgan = matn.strip()
-    belgi_soni_e = matn.lower().count('e')
+    # Kvadrat ildiz faqat bitta sonni talab qilgani uchun uni alohida tekshiramiz
+    if amal == "i" or amal == "ildiz":
+        num = float(input("Ildiz ostidagi sonni kiriting: "))
+        
+        if num < 0:
+            print("Xatolik: Manfiy sondan kvadrat ildiz chiqarib bo'lmaydi!")
+        else:
+            # math kutubxonasiz kvadrat ildiz hisoblash
+            natija = num ** 0.5
+            print(f"Natija: √{num} = {natija:.2f}")
+            print(f"O'zgaruvchi turi: {type(natija)}")
+            
+    else:
+        # Ikki sonli amallar uchun
+        num1 = float(input("Birinchi sonni kiriting: "))
+        num2 = float(input("Ikkinchi sonni kiriting: "))
 
-    # 3. Matn uzunligi va so'zlar sonini aniqlash
-    uzunlik = len(matn)
-    sozlar = matn.split()
-    soz_soni = len(sozlar)
+        # 2. Arifmetik amallar va maxsus xatoliklarni boshqarish
+        if amal == "+":
+            natija = num1 + num2
+            print(f"Natija: {num1} + {num2} = {natija:.2f}")
+            
+        elif amal == "-":
+            natija = num1 - num2
+            print(f"Natija: {num1} - {num2} = {natija:.2f}")
+            
+        elif amal == "*":
+            natija = num1 * num2
+            print(f"Natija: {num1} * {num2} = {natija:.2f}")
+            
+        elif amal == "/":
+            if num2 == 0:
+                print("Xatolik: 0 ga bo'lish mumkin emas!")
+            else:
+                natija = num1 / num2
+                print(f"Natija: {num1} / {num2} = {natija:.2f}")
+                
+        elif amal == "//":
+            if num2 == 0:
+                print("Xatolik: 0 ga bo'lib butun qismni olib bo'lmaydi!")
+            else:
+                natija = num1 // num2
+                print(f"Natija: {num1} // {num2} = {natija:.2f}")
+                
+        elif amal == "%":
+            if num2 == 0:
+                print("Xatolik: 0 ga bo'lib qoldiq topib bo'lmaydi!")
+            else:
+                natija = num1 % num2
+                print(f"Natija: {num1} % {num2} = {natija:.2f}")
+                
+        elif amal == "**":
+            natija = num1 ** num2
+            print(f"Natija: {num1} ** {num2} = {natija:.2f}")
+            
+        elif amal == "f" or amal == "foiz":
+            # a dan b foiz (masalan: 200 dan 15 foiz -> 200 * 15 / 100)
+            natija = (num1 * num2) / 100
+            print(f"Natija: {num1} ning {num2}% foizi = {natija:.2f}")
+            
+        else:
+            print(f"Aniq xato: '{amal}' nomli noma'lum amal kiritildi! Iltimos, ro'yxatdagi amallardan birini tanlang.")
 
-    # 4. Slicing orqali matnning bir qismini olish (masalan, birinchi 10 ta belgi)
-    qism = matn[:10]
+        # Agar amal muvaffaqiyatli bajarilgan bo'lsa, turning chiqarilishi
+        if amal in ["+", "-", "*", "/", "//", "%", "**", "f", "foiz"] and not (amal in ["/", "//", "%"] and num2 == 0):
+            print(f"O'zgaruvchi turi: {type(natija)}")
 
-    # 5. f-string yordamida chiroyli natija chiqarish
-    print("\n" + "=" * 40)
-    print("MATN TAHLILI NATIJALARI")
-    print("=" * 40)
-    print(f"Asliy matn:              {matn}")
-    print(f"Matn uzunligi:           {uzunlik} ta belgi")
-    print(f"So'zlar soni:            {soz_soni} ta")
-    print(f"Boshlang'ich 10 belgi:   {qism}")
-    print("-" * 40)
-    print(f"Barchasi katta harfda:   {katta_harf}")
-    print(f"Barchasi kichik harfda:  {kichik_harf}")
-    print(f"'a' harfini '@' ga almashtirib: {almashtirilgan}")
-    print(f"'e' harfi qatnashish soni: {belgi_soni_e} ta")
-    print("=" * 40)
+except ValueError:
+    print("Aniq xato: Faqat raqamlar kiritilishi shart! Harf yoki bo'sh joy kiritmang.")
