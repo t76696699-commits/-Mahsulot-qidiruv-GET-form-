@@ -1,32 +1,36 @@
-# 1. Foydalanuvchidan sonlarni kiritish va casting (float ga o'tkazish)
-try:
-    num1 = float(input("Birinchi sonni kiriting: "))
-    num2 = float(input("Ikkinchi sonni kiriting: "))
-    amal = input("Amalni kiriting (+, -, *, /): ")
+# 1. Foydalanuvchidan matn kiritish va strip() orqali ortiqcha bo'shliqlarni olib tashlash
+matn = input("Matn kiriting: ").strip()
 
-    # 2. To'rtta amalni bajarish va 0 ga bo'lishni tekshirish
-    if amal == "+":
-        natija = num1 + num2
-        # 3. Natijalarni f-string yordamida 2 xona aniqlikda formatlash
-        print(f"Natija: {num1} + {num2} = {natija:.2f}")
-    elif amal == "-":
-        natija = num1 - num2
-        print(f"Natija: {num1} - {num2} = {natija:.2f}")
-    elif amal == "*":
-        natija = num1 * num2
-        print(f"Natija: {num1} * {num2} = {natija:.2f}")
-    elif amal == "/":
-        if num2 == 0:
-            print("Xatolik: 0 ga bo'lish mumkin emas!")
-        else:
-            natija = num1 / num2
-            print(f"Natija: {num1} / {num2} = {natija:.2f}")
-    else:
-        print("Noto'g'ri amal kiritildi!")
+# Bo'sh matn holatini tekshirish
+if not matn:
+    print("Xatolik: Hech qanday matn kiritilmadi!")
+else:
+    # 2. String metodlarini qo'llash (kamida 5 ta: upper, lower, replace, strip, count)
+    katta_harf = matn.upper()
+    kichik_harf = matn.lower()
+    almashtirilgan = matn.replace("a", "@").replace("A", "@")
+    bosh_oxir_kesilgan = matn.strip()
+    belgi_soni_e = matn.lower().count('e')
 
-    # 4. type() yordamida natija o'zgaruvchisining turini chiqarish (agar amal to'g'ri bajarilgan bo'lsa)
-    if amal in ["+", "-", "*"] or (amal == "/" and num2 != 0):
-        print(f"O'zgaruvchi turi (type): {type(natija)}")
+    # 3. Matn uzunligi va so'zlar sonini aniqlash
+    uzunlik = len(matn)
+    sozlar = matn.split()
+    soz_soni = len(sozlar)
 
-except ValueError:
-    print("Xatolik: Faqat raqam kiritilishi kerak!")
+    # 4. Slicing orqali matnning bir qismini olish (masalan, birinchi 10 ta belgi)
+    qism = matn[:10]
+
+    # 5. f-string yordamida chiroyli natija chiqarish
+    print("\n" + "=" * 40)
+    print("MATN TAHLILI NATIJALARI")
+    print("=" * 40)
+    print(f"Asliy matn:              {matn}")
+    print(f"Matn uzunligi:           {uzunlik} ta belgi")
+    print(f"So'zlar soni:            {soz_soni} ta")
+    print(f"Boshlang'ich 10 belgi:   {qism}")
+    print("-" * 40)
+    print(f"Barchasi katta harfda:   {katta_harf}")
+    print(f"Barchasi kichik harfda:  {kichik_harf}")
+    print(f"'a' harfini '@' ga almashtirib: {almashtirilgan}")
+    print(f"'e' harfi qatnashish soni: {belgi_soni_e} ta")
+    print("=" * 40)
