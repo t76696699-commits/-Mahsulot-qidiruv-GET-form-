@@ -1,76 +1,49 @@
-# 1. Foydalanuvchidan ma'lumotlarni qabul qilish va casting
-try:
-    print("--- Kengaytirilgan Kalkulyator ---")
-    print("Amallar: +, -, *, /, //, %, **, foiz (f), ildiz (i)")
-    
-    amal = input("Amalni kiriting: ").strip().lower()
+# conditions.py — shartli ifodalar
 
-    # Kvadrat ildiz faqat bitta sonni talab qilgani uchun uni alohida tekshiramiz
-    if amal == "i" or amal == "ildiz":
-        num = float(input("Ildiz ostidagi sonni kiriting: "))
-        
-        if num < 0:
-            print("Xatolik: Manfiy sondan kvadrat ildiz chiqarib bo'lmaydi!")
-        else:
-            # math kutubxonasiz kvadrat ildiz hisoblash
-            natija = num ** 0.5
-            print(f"Natija: √{num} = {natija:.2f}")
-            print(f"O'zgaruvchi turi: {type(natija)}")
-            
-    else:
-        # Ikki sonli amallar uchun
-        num1 = float(input("Birinchi sonni kiriting: "))
-        num2 = float(input("Ikkinchi sonni kiriting: "))
+# Yosh va guruh aniqlash
+yosh = int(input("Yoshingizni kiriting: "))
 
-        # 2. Arifmetik amallar va maxsus xatoliklarni boshqarish
-        if amal == "+":
-            natija = num1 + num2
-            print(f"Natija: {num1} + {num2} = {natija:.2f}")
-            
-        elif amal == "-":
-            natija = num1 - num2
-            print(f"Natija: {num1} - {num2} = {natija:.2f}")
-            
-        elif amal == "*":
-            natija = num1 * num2
-            print(f"Natija: {num1} * {num2} = {natija:.2f}")
-            
-        elif amal == "/":
-            if num2 == 0:
-                print("Xatolik: 0 ga bo'lish mumkin emas!")
-            else:
-                natija = num1 / num2
-                print(f"Natija: {num1} / {num2} = {natija:.2f}")
-                
-        elif amal == "//":
-            if num2 == 0:
-                print("Xatolik: 0 ga bo'lib butun qismni olib bo'lmaydi!")
-            else:
-                natija = num1 // num2
-                print(f"Natija: {num1} // {num2} = {natija:.2f}")
-                
-        elif amal == "%":
-            if num2 == 0:
-                print("Xatolik: 0 ga bo'lib qoldiq topib bo'lmaydi!")
-            else:
-                natija = num1 % num2
-                print(f"Natija: {num1} % {num2} = {natija:.2f}")
-                
-        elif amal == "**":
-            natija = num1 ** num2
-            print(f"Natija: {num1} ** {num2} = {natija:.2f}")
-            
-        elif amal == "f" or amal == "foiz":
-            # a dan b foiz (masalan: 200 dan 15 foiz -> 200 * 15 / 100)
-            natija = (num1 * num2) / 100
-            print(f"Natija: {num1} ning {num2}% foizi = {natija:.2f}")
-            
-        else:
-            print(f"Aniq xato: '{amal}' nomli noma'lum amal kiritildi! Iltimos, ro'yxatdagi amallardan birini tanlang.")
+if yosh < 0:
+    print("Yosh manfiy bo'lmaydi!")
+elif yosh < 6:
+    print("Bola")
+elif yosh < 13:
+    print("Maktab yoshi")
+elif yosh < 18:
+    print("O'smir")
+elif yosh < 60:
+    print("Voyaga yetgan")
+else:
+    print("Keksa yosh")
 
-        # Agar amal muvaffaqiyatli bajarilgan bo'lsa, turning chiqarilishi
-        if amal in ["+", "-", "*", "/", "//", "%", "**", "f", "foiz"] and not (amal in ["/", "//", "%"] and num2 == 0):
-            print(f"O'zgaruvchi turi: {type(natija)}")
+# Mantiqiy operatorlar
+print()
+shahar = input("Qaysi shaharda yashaysiz? ").strip().title()
+ish = input("Ishlaysizmi? (ha/yoq): ").strip().lower()
 
-except ValueError:
-    print("Aniq xato: Faqat raqamlar kiritilishi shart! Harf yoki bo'sh joy kiritmang.")
+if yosh >= 18 and ish == "ha":
+    print("Siz mustaqil yashaysiz")
+elif yosh >= 18 and ish != "ha":
+    print("Voyaga yetgan, ammo ish topish kerak")
+else:
+    print("Hali bola — ota-onaga tayanasiz")
+
+if shahar == "Toshkent" or shahar == "Samarqand" or shahar == "Buxoro":
+    print(f"{shahar} — katta shahar!")
+else:
+    print(f"{shahar} — yaxshi joy")
+
+# Truthy va falsy
+print()
+foydalanuvchi_nomi = input("Foydalanuvchi nomi (bo'sh qoldirish mumkin): ")
+if foydalanuvchi_nomi:
+    print(f"Xush kelibsiz, {foydalanuvchi_nomi}!")
+else:
+    print("Mehmon sifatida kirdingiz")
+
+# Juft-toq tekshirish
+son = int(input("Sonni kiriting: "))
+if son % 2 == 0:
+    print(f"{son} — juft son")
+else:
+    print(f"{son} — toq son")
