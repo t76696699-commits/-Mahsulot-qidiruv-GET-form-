@@ -1,89 +1,103 @@
-# 1. DOIRA (Aylana)
-def doira_maydoni(radius, pi=3.14159):
-    """Doiraning maydonini hisoblaydi. Agar radius manfiy bo'lsa ValueError beradi."""
-    if radius < 0:
-        raise ValueError("Radius manfiy bo'lishi mumkin emas!")
-    return pi * (radius ** 2)
+class BankAccount:
 
-def doira_perimetri(radius, pi=3.14159):
-    """Doiraning perimetrini (aylana uzunligini) hisoblaydi."""
-    if radius < 0:
-        raise ValueError("Radius manfiy bo'lishi mumkin emas!")
-    return 2 * pi * radius
+    def __init__(self, ism, qoldiq=0):
+        self.ism = ism
+        self.qoldiq = qoldiq
+        self.tarix = []  # Amallar tarixi
+        self.tarix.append(f"Hisob ochildi. Boshlang'ich qoldiq: {qoldiq}")
+
+    def pul_qoyish(self, summa):
+        if summa <= 0:
+            print("Xato: Summa 0 dan ko'p bo'lishi kerak!")
+            return False
+
+        self.qoldiq += summa
+        self.tarix.append(f"Pul qo'shildi: +{summa}")
+        print(f"{self.ism}: {summa} so'm qo'shildi.")
+        return True
+
+    def pul_chiqarish(self, summa):
+        if summa <= 0:
+            print("Xato: Noto'g'ri summa!")
+            return False
+
+        if self.qoldiq - summa < 0:
+            raise ValueError(f"Xato: Mablag' yetarli emas! Qoldiq: {self.qoldiq}")
+
+        self.qoldiq -= summa
+        self.tarix.append(f"Pul yechildi: -{summa}")
+        print(f"{self.ism}: {summa} so'm yechildi.")
+        return True
+
+    def qoldiq_korish(self):
+        print(f"[{self.ism}] Balans: {self.qoldiq} so'm")
+        return self.qoldiq
+
+    def transfer(self, boshqa_hisob, summa):
+        print(f"\n{self.ism} dan {boshqa_hisob.ism} ga {summa} so'm o'tkazilmoqda...")
+        # Pulni yechib olamiz (agar yetmasa ValueError beradi)
+        self.pul_chiqarish(summa)
+        # Boshqa hisobga qo'shamiz
+        boshqa_hisob.pul_qoyish(summa)
+
+        self.tarix.append(f"Transfer: {boshqa_hisob.ism} ga {summa} o'tkazildi")
+        boshqa_hisob.tarix.append(f"Transfer: {self.ism} dan {summa} keldi")
+        print("Transfer muvaffaqiyatli bajarildi!")
+
+    def __str__(__self_obj):
+        return f"Mijoz: {__self_obj.ism}, Balans: {__self_obj.qoldiq} so'm"
 
 
-# 2. KVADRAT
-def kvadrat_maydoni(tomon):
-    """Kvadratning maydonini hisoblaydi."""
-    if tomon < 0:
-        raise ValueError("Tomon manfiy bo'lishi mumkin emas!")
-    return tomon ** 2
+# INHERITANCE: PremiumAccount (Kredit limiti bor)
+class PremiumAccount(BankAccount):
 
-def kvadrat_perimetri(tomon):
-    """Kvadratning perimetrini hisoblaydi."""
-    if tomon < 0:
-        raise ValueError("Tomon manfiy bo'lishi mumkin emas!")
-    return 4 * tomon
+    def __init__(self, ism, qoldiq=0, kredit_limiti=500000):
+        super().__init__(ism, qoldiq)
+        self.kredit_limiti = kredit_limiti
+        self.tarix.append(f"Premium status berildi. Kredit: {kredit_limiti}")
 
+    # Metodni qayta yozamiz (Overriding) - kredit hisobiga ham pul yechish mumkin
+    def pul_chiqarish(self, summa):
+        if summa <= 0:
+            print("Xato: Noto'g'ri summa!")
+            return False
 
-# 3. TO'G'RI TO'RTBURCHAK
-def tortburchak_maydoni(eni, boyi):
-    """To'g'ri to'rtburchakning maydonini hisoblaydi."""
-    if eni < 0 or boyi < 0:
-        raise ValueError("O'lchamlar manfiy bo'lishi mumkin emas!")
-    return eni * boyi
+        # Umumiy pul (qoldiq + kredit limiti) yetishini tekshiramiz
+        if (self.qoldiq + self.kredit_limiti) - summa < 0:
+            raise ValueError("Xato: Kredit limitidan ham oshib ketdi!")
 
-def tortburchak_perimetri(eni, boyi):
-    """To'g'ri to'rtburchakning perimetrini hisoblaydi."""
-    if eni < 0 or boyi < 0:
-        raise ValueError("O'lchamlar manfiy bo'lishi mumkin emas!")
-    return 2 * (eni + boyi)
+        self.qoldiq -= summa
+        self.tarix.append(f"Premium yechish: -{summa}")
+        print(f"{self.ism} (Premium): {summa} so'm yechildi.")
+        return True
 
 
-# ASOSIY MENU FUNKSIYASI
-def asosiy_menu():
-    while True:
-        print("\n--- GEOMETRIK SHAKLLAR ---")
-        print("1. Doira")
-        print("2. Kvadrat")
-        print("3. To'g'ri to'rtburchak")
-        print("4. Chiqish")
-        
-        tanlov = input("Tanlovingiz (1-4): ").strip()
-        
-        if tanlov == "1":
-            try:
-                r = float(input("Doira radiusini kiriting: "))
-                m = doira_maydoni(r)
-                p = doira_perimetri(r)
-                print(f"Natija -> Maydoni: {m:.2f}, Perimetri: {p:.2f}")
-            except ValueError as e:
-                print(f"Xatolik: {e}")
-                
-        elif tanlov == "2":
-            try:
-                t = float(input("Kvadrat tomonini kiriting: "))
-                m = kvadrat_maydoni(t)
-                p = kvadrat_perimetri(t)
-                print(f"Natija -> Maydoni: {m}, Perimetri: {p}")
-            except ValueError as e:
-                print(f"Xatolik: {e}")
-                
-        elif tanlov == "3":
-            try:
-                eni = float(input("Enini kiriting: "))
-                boyi = float(input("Bo'yini kiriting: "))
-                m = tortburchak_maydoni(eni, boyi)
-                p = tortburchak_perimetri(eni, boyi)
-                print(f"Natija -> Maydoni: {m}, Perimetri: {p}")
-            except ValueError as e:
-                print(f"Xatolik: {e}")
-                
-        elif tanlov == "4":
-            print("Dastur tugatildi.")
-            break
-        else:
-            print("Noto'g'ri tanlov! 1 dan 4 gacha raqam kiriting.")
-
+# --- SINOV (KAMIDA 3 TA OBYEKT VA TRANSFER) ---
 if __name__ == "__main__":
-    asosiy_menu()
+    print("--- BANK TIZIMI TESTI ---")
+
+    # 1. Obyektlar yaratish
+    hisob1 = BankAccount("Ali", 100000)
+    hisob2 = BankAccount("Vali", 50000)
+    hisob3 = PremiumAccount("Sardor", 20000, 300000)
+
+    print("\n1. Obyektlar holati (__str__):")
+    print(hisob1)
+    print(hisob2)
+    print(hisob3)
+
+    print("\n2. Transfer amallari:")
+    # Ali Valiga 30000 o'tkazadi
+    hisob1.transfer(hisob2, 30000)
+
+    # Sardor (Premium) Aliga 40000 o'tkazadi
+    hisob3.transfer(hisob1, 40000)
+
+    print("\n3. Oxirgi balanslar:")
+    hisob1.qoldiq_korish()
+    hisob2.qoldiq_korish()
+    hisob3.qoldiq_korish()
+
+    print("\n4. Ali hisob tarixi:")
+    for t in hisob1.tarix:
+        print("-", t)
