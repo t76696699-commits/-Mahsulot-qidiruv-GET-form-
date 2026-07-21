@@ -1,82 +1,75 @@
-def talaba_bahlari_boshqaruvchisi():
-    print("--- TALABA BAHLARI BOSHQARUVCHISI ---")
-    print("Iltimos, kamida 5 ta bahoni kiriting (0 dan 100 gacha).")
-    print("Tugatish uchun 'stop' deb yozing (kamida 5 ta kiritilgandan keyin).\n")
+# tovarlar_royxati.py — Modul 2 takrorlash loyihasi
+# Menu pattern + if/elif/else + while + list
 
-    baholar = []
+tovarlar = []
 
-    # 1. Baholarni qabul qilish va validatsiya qilish
-    while True:
-        kiritish = input(
-            f"{len(baholar) + 1}-bahoni kiriting (yoki 'stop'): "
-        ).strip()
+print("🛒 Tovarlar ro'yxati ilovasi")
+print("=" * 40)
 
-        if kiritish.lower() == "stop":
-            if len(baholar) >= 5:
-                break
-            else:
-                print(
-                    f"❌ Xatolik: Hali atigi {len(baholar)} ta baho kiritildi. Kamida 5 ta bo'lishi shart!"
-                )
-                continue
+while True:
+    print()
+    print("1. Tovar qo'shish")
+    print("2. Tovar o'chirish")
+    print("3. Hammasini ko'rsatish")
+    print("4. Alifbo tartibida saralash")
+    print("5. Qidirish")
+    print("6. Chiqish")
 
-        # Raqam ekanligini tekshirish
-        if not kiritish.isdigit():
-            print(
-                "❌ Xatolik: Iltimos, faqat 0-100 oralig'idagi butun son kiriting!"
-            )
-            continue
+    tanlov = input("Tanlov (1-6): ").strip()
 
-        baho = int(kiritish)
-
-        # 0-100 oralig'i validatsiyasi
-        if 0 <= baho <= 100:
-            baholar.append(baho)
-            print(f"✅ Qo'shildi: {baho}")
+    if tanlov == "1":
+        nom = input("Tovar nomi: ").strip()
+        if not nom:
+            print("⚠️ Bo'sh nom bo'lmaydi")
+        elif nom.lower() in [t.lower() for t in tovarlar]:
+            print(f"⚠️ '{nom}' allaqachon ro'yxatda")
         else:
-            print("❌ Xatolik: Baho 0 va 100 orasida bo'lishi kerak!")
+            tovarlar.append(nom)
+            print(f"✅ '{nom}' qo'shildi")
 
-    # 2. Baholarni oshib boruvchi tartibda tartiblash
-    baholar.sort()
+    elif tanlov == "2":
+        if not tovarlar:
+            print("⚠️ Ro'yxat bo'sh")
+            continue
+        nom = input("O'chirilsin: ").strip()
+        # Case-insensitive remove
+        for t in tovarlar:
+            if t.lower() == nom.lower():
+                tovarlar.remove(t)
+                print(f"🗑 '{t}' o'chirildi")
+                break
+        else:
+            print(f"⚠️ '{nom}' topilmadi")
 
-    print("\n" + "=" * 40)
-    print("📊 NATIJALAR VA STATISTIKA")
-    print("=" * 40)
-    print(f"Kiritilgan baholar (tartiblangan): {baholar}")
+    elif tanlov == "3":
+        if not tovarlar:
+            print("Ro'yxat bo'sh — birinchi tovarni qo'shing")
+        else:
+            print(f"\n📋 Jami {len(tovarlar)} ta tovar:")
+            for i, t in enumerate(tovarlar, start=1):
+                print(f"  {i}. {t}")
 
-    # 3. Statistikani hisoblash (sum, max, min)
-    jami_baho = sum(baholar)
-    soni = len(baholar)
-    ortacha = jami_baho / soni
-    eng_yuqori = max(baholar)
-    eng_past = min(baholar)
+    elif tanlov == "4":
+        tovarlar.sort(key=str.lower)
+        print("🔤 Alifbo tartibida saralandi")
 
-    # Mediana hisoblash
-    if soni % 2 == 1:
-        mediana = baholar[soni // 2]
+    elif tanlov == "5":
+        if not tovarlar:
+            print("Ro'yxat bo'sh")
+            continue
+        kalit = input("Qidirilsin: ").strip().lower()
+        topildi = [t for t in tovarlar if kalit in t.lower()]
+        if topildi:
+            print(f"🔍 {len(topildi)} ta natija:")
+            for t in topildi:
+                print(f"  • {t}")
+        else:
+            print(f"'{kalit}' uchun hech narsa topilmadi")
+
+    elif tanlov == "6":
+        print(f"\nYakuniy ro'yxat ({len(tovarlar)} ta): {tovarlar}")
+        print("Xayr!")
+        break
+
     else:
-        orta_1 = baholar[(soni // 2) - 1]
-        orta_2 = baholar[soni // 2]
-        mediana = (orta_1 + orta_2) / 2
-
-    print(f"• O'rtacha baho: {ortacha:.2f}")
-    print(f"• Eng yuqori baho: {eng_yuqori}")
-    print(f"• Eng past baho: {eng_past}")
-    print(f"• Mediana: {mediana}")
-
-    # 4. 60 dan kam baholarni ajratish ('qoniqarsiz')
-    qoniqarsizlar = [b for b in baholar if b < 60]
-    if qoniqarsizlar:
-        print(f"• Qoniqarsiz baholar (<60): {qoniqarsizlar}")
-    else:
-        print("• Qoniqarsiz baholar (<60): Mavjud emas (Barakalla! 🎉)")
-
-    # 5. List comprehension yordamida A'lo baholarni (90+) filtrlash
-    alo_baholar = [b for b in baholar if b >= 90]
-    print(f"• A'lo baholar (90+): {alo_baholar}")
-    print("=" * 40)
-
-
-# O'yin/dasturni ishga tushirish
-if __name__ == "__main__":
-    talaba_bahlari_boshqaruvchisi()
+        print(f"⚠️ Noma'lum tanlov: {tanlov!r}")
