@@ -1,24 +1,32 @@
-# Ushbu dastur Python dasturlash tilidagi print() funksiyasining 
-# asosiy imkoniyatlarini, jumladan maxsus belgilar bilan bezatish, 
-# shuningdek 'sep' va 'end' parametrlaridan foydalanishni namoyish etadi.
+# 1. Foydalanuvchidan sonlarni kiritish va casting (float ga o'tkazish)
+try:
+    num1 = float(input("Birinchi sonni kiriting: "))
+    num2 = float(input("Ikkinchi sonni kiriting: "))
+    amal = input("Amalni kiriting (+, -, *, /): ")
 
-# 1-print: Dastur sarlavhasi maxsus belgilar bilan bezatilgan
-print("=" * 40)
-print("PYTHON PRINT() FUNKSIYASI NAMOYISHI")
-print("=" * 40)
+    # 2. To'rtta amalni bajarish va 0 ga bo'lishni tekshirish
+    if amal == "+":
+        natija = num1 + num2
+        # 3. Natijalarni f-string yordamida 2 xona aniqlikda formatlash
+        print(f"Natija: {num1} + {num2} = {natija:.2f}")
+    elif amal == "-":
+        natija = num1 - num2
+        print(f"Natija: {num1} - {num2} = {natija:.2f}")
+    elif amal == "*":
+        natija = num1 * num2
+        print(f"Natija: {num1} * {num2} = {natija:.2f}")
+    elif amal == "/":
+        if num2 == 0:
+            print("Xatolik: 0 ga bo'lish mumkin emas!")
+        else:
+            natija = num1 / num2
+            print(f"Natija: {num1} / {num2} = {natija:.2f}")
+    else:
+        print("Noto'g'ri amal kiritildi!")
 
-# 2-print: Bo'sh joy tashlab o'tish uchun
-print()
+    # 4. type() yordamida natija o'zgaruvchisining turini chiqarish (agar amal to'g'ri bajarilgan bo'lsa)
+    if amal in ["+", "-", "*"] or (amal == "/" and num2 != 0):
+        print(f"O'zgaruvchi turi (type): {type(natija)}")
 
-# 3-print: Oddiy matn va ma'lumot chiqarish
-print("Dastur muvaffaqiyatli ishga tushdi.")
-
-# 4-print: 'sep' parametri yordamida so'zlarni maxsus belgi bilan ajratish
-print("Python", "Java", "C++", "JavaScript", sep=" * ")
-
-# 5-print: 'end' parametri yordamida keyingi qatorga o'tishni boshqarish
-print("Yuklanmoqda", end="... ")
-print("Tayyor!")
-
-# 6-print: Pastki qismni maxsus chiziq bilan bezatish
-print("-" * 40)
+except ValueError:
+    print("Xatolik: Faqat raqam kiritilishi kerak!")
