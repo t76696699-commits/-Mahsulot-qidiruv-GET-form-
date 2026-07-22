@@ -1,160 +1,202 @@
 # ════════════════════════════════════════════════════════════════════
-# DARS 1: Git nima va birinchi repo
-# Maqsad: init → add → commit → log
+# DARS 2: .gitignore, log, diff
+# Maqsad: keraksiz fayllarni yashirish + tarix bilan ishlash
 # ════════════════════════════════════════════════════════════════════
 
 # ─────────────────────────────────────────────────────────────────────
-# 0) Tekshirish va sozlash
+# 1) .gitignore yaratish
 # ─────────────────────────────────────────────────────────────────────
 
-git --version
-# git version 2.43.0 (siznikida boshqacha bo'lishi mumkin)
-
-# Birinchi marta — ism va email
-git config --global user.name "Olim Karimov"
-git config --global user.email "olim@example.uz"
-
-# Default branch — main
-git config --global init.defaultBranch main
-
-# Tekshirish
-git config --list
-git config user.name
-git config user.email
-
-# ─────────────────────────────────────────────────────────────────────
-# 1) Yangi repo
-# ─────────────────────────────────────────────────────────────────────
-
-mkdir mening-loyiham
 cd mening-loyiham
 
-git init
-# Initialized empty Git repository in .../mening-loyiham/.git/
+# .gitignore — pattern'lar
+cat > .gitignore <<EOF
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
 
-# .git papka paydo bo'ldi
-ls -la
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and builds
+*.log
+dist/
+build/
+EOF
+
+git add .gitignore
+git commit -m "chore: .gitignore qo'shildi"
 
 # ─────────────────────────────────────────────────────────────────────
-# 2) Birinchi fayl va commit
+# 2) Sinash — secret fayl
 # ─────────────────────────────────────────────────────────────────────
 
-# Fayl yaratamiz
-echo "# Mening loyiham" > README.md
-echo "Bu mening birinchi Git loyihalarim" >> README.md
+echo "SECRET_KEY=abc123-very-secret" > .env
 
-# Status — Git nima ko'rdi?
 git status
-# On branch main
-# No commits yet
-# Untracked files:
-#   README.md
-# nothing added to commit but untracked files present
+# (.env ko'rinmaydi! gitignore ishladi)
 
-# Staging'ga qo'shamiz
-git add README.md
+# Tasodifan add qilishga urinsangiz:
+git add .env
+# Bu xato chiqarmaydi, lekin status'da ko'rinmaydi
+# (gitignore'dagi fayllar add qilinmaydi)
 
-# Yana status
-git status
-# Changes to be committed:
-#   new file: README.md
+# Tekshirish — Git nima ko'radi
+git check-ignore -v .env
+# .gitignore:2:.env  .env
 
-# Commit
-git commit -m "docs: birinchi README qo'shildi"
-# [main (root-commit) abc1234] docs: birinchi README qo'shildi
-#  1 file changed, 2 insertions(+)
-#  create mode 100644 README.md
+# ─────────────────────────────────────────────────────────────────────
+# 3) Tarix uchun ko'p commit yaratamiz
+# ─────────────────────────────────────────────────────────────────────
 
-# Tarix
+# Commit 1
+echo "def salom(ism): return f'Salom, {ism}!'" > main.py
+git add main.py
+git commit -m "feat: salom() funksiyasi qo'shildi"
+
+# Commit 2
+echo "def xayr(ism): return f'Xayr, {ism}!'" >> main.py
+git add main.py
+git commit -m "feat: xayr() funksiyasi qo'shildi"
+
+# Commit 3
+echo "if __name__ == '__main__': print(salom('Dunyo'))" >> main.py
+git add main.py
+git commit -m "feat: main blok qo'shildi"
+
+# Commit 4
+sed -i.bak "s/Salom/Assalomu alaykum/g" main.py
+rm main.py.bak
+git add main.py
+git commit -m "refactor: rasmiyroq salomlashish"
+
+# ─────────────────────────────────────────────────────────────────────
+# 4) Log — turli ko'rinishlarda
+# ─────────────────────────────────────────────────────────────────────
+
+# Oddiy
 git log
-# commit abc1234... (HEAD -> main)
-# Author: Olim Karimov <olim@example.uz>
-# Date: ...
-#
-#     docs: birinchi README qo'shildi
 
 # Bir qatorli
 git log --oneline
 
-# ─────────────────────────────────────────────────────────────────────
-# 3) Ko'p fayl, ko'p commit
-# ─────────────────────────────────────────────────────────────────────
+# Grafik bilan
+git log --oneline --graph --all
 
-echo "print('Salom, Git!')" > main.py
-echo "Hello from JS" > script.js
+# Filtr
+git log --author="Olim"
+git log --since="1 hour ago"
+git log --grep="feat"
+git log -n 3                  # oxirgi 3
 
-git status
-# Untracked: main.py, script.js
+# To'liq diff bilan
+git log -p
 
-# Hammasini birga
-git add .
+# Faqat fayl statistika
+git log --stat
 
-# Yoki alohida
-# git add main.py
-# git add script.js
+# Alias yaratamiz — keyingilar uchun qulay
+git config --global alias.lg "log --oneline --graph --decorate --all"
 
-git commit -m "feat: main.py va script.js qo'shildi"
-
-# Tarix
-git log --oneline
-# def5678 (HEAD -> main) feat: main.py va script.js qo'shildi
-# abc1234 docs: birinchi README qo'shildi
+git lg
 
 # ─────────────────────────────────────────────────────────────────────
-# 4) Faylni o'zgartirish — modify
+# 5) Diff — nima o'zgargan?
 # ─────────────────────────────────────────────────────────────────────
 
-# main.py ni o'zgartirib qo'yamiz
-echo "print('Yangilangan salom!')" > main.py
+# Yangi o'zgarish (hali add'siz)
+echo "# Yangi komment" >> main.py
 
-git status
-# modified: main.py
-
-# Nimani aniq o'zgartirdik?
 git diff
-# - print('Salom, Git!')
-# + print('Yangilangan salom!')
+# - if __name__ == '__main__': print(salom('Dunyo'))
+# + if __name__ == '__main__': print(salom('Dunyo'))
+# + # Yangi komment
 
-# Stage va commit
+# Add qilamiz
 git add main.py
-git commit -m "fix: main.py salom matni yangilandi"
+
+git diff             # bo'sh — working = staging
+git diff --staged    # endi farq ko'rinadi
+git diff HEAD        # working vs oxirgi commit (hammasi)
+
+# Commit qilamiz
+git commit -m "docs: komment qo'shildi"
 
 # ─────────────────────────────────────────────────────────────────────
-# 5) Multi-line commit (batafsil)
+# 6) Show — bir commit batafsil
 # ─────────────────────────────────────────────────────────────────────
 
-echo "# Sozlamalar" > config.md
-
-git add config.md
-git commit -m "docs: sozlamalar fayli qo'shildi" \
-           -m "Bu commit foydalanuvchi sozlamalari uchun config.md faylini qo'shadi. Hozircha bo'sh — keyingi commitda ma'lumot to'ldiriladi."
-
-# ─────────────────────────────────────────────────────────────────────
-# 6) Tarix turli ko'rinishlarda
-# ─────────────────────────────────────────────────────────────────────
-
-git log                    # to'liq
-git log --oneline          # qisqa
-git log -n 3               # oxirgi 3
-git log --author="Olim"    # faqat Olim'ning commitlari
-git log --since="1 week ago"
-git log --grep="fix"       # xabarda "fix" so'zi borlari
-
-# Oxirgi commit'ning to'liq
+# Oxirgi
 git show
 
-# Belgilangan commit
+# 2 oldingi
+git show HEAD~2
+
+# Belgilangan SHA bilan
 git show abc1234
 
+# Aniq commit'dagi fayl mazmuni
+git show HEAD:main.py
+
 # ─────────────────────────────────────────────────────────────────────
-# 7) Ataylab xato — add'siz commit
+# 7) Blame — qaysi qator kim tomonidan
 # ─────────────────────────────────────────────────────────────────────
 
-echo "yangi qator" >> README.md
-git commit -m "test"
-# nothing to commit, working tree clean
-# (chunki staging area bo'sh — add qilmagansiz)
+git blame main.py
+# abc1234 (Olim 2026-06-08) def salom(ism):
+# def5678 (Olim 2026-06-08) def xayr(ism):
+# ...
 
-# To'g'risi:
-git add README.md
-git commit -m "docs: README ga yangi qator qo'shildi"
+# Aniq qatorlar (10-20)
+git blame -L 10,20 main.py
+
+# ─────────────────────────────────────────────────────────────────────
+# 8) Tarix qidirish — log bilan
+# ─────────────────────────────────────────────────────────────────────
+
+# "salom" so'zi qaysi commit'da paydo bo'lgan?
+git log -S "salom" --oneline
+
+# Funksiya tarixini ko'rsatish
+git log -L :salom:main.py
+
+# ─────────────────────────────────────────────────────────────────────
+# 9) Allaqachon kuzatilgan faylni ignore qilish
+# ─────────────────────────────────────────────────────────────────────
+
+# Faraz: config.json allaqachon commit qilingan
+echo "config.json" >> .gitignore
+
+# Tarixdan emas, hozirgi kuzatuvdan olib tashlash
+# git rm --cached config.json
+
+# Endi commit qilsangiz, Git uni unutadi
+# git commit -m "chore: config.json endi gitignore'da"
+
+# ─────────────────────────────────────────────────────────────────────
+# 10) Global .gitignore (kompyuteringizdagi har repo uchun)
+# ─────────────────────────────────────────────────────────────────────
+
+git config --global core.excludesfile ~/.gitignore_global
+
+cat >> ~/.gitignore_global <<EOF
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
+EOF
