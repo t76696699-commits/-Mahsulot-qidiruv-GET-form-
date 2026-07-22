@@ -1,103 +1,160 @@
-class BankAccount:
+# ════════════════════════════════════════════════════════════════════
+# DARS 1: Git nima va birinchi repo
+# Maqsad: init → add → commit → log
+# ════════════════════════════════════════════════════════════════════
 
-    def __init__(self, ism, qoldiq=0):
-        self.ism = ism
-        self.qoldiq = qoldiq
-        self.tarix = []  # Amallar tarixi
-        self.tarix.append(f"Hisob ochildi. Boshlang'ich qoldiq: {qoldiq}")
+# ─────────────────────────────────────────────────────────────────────
+# 0) Tekshirish va sozlash
+# ─────────────────────────────────────────────────────────────────────
 
-    def pul_qoyish(self, summa):
-        if summa <= 0:
-            print("Xato: Summa 0 dan ko'p bo'lishi kerak!")
-            return False
+git --version
+# git version 2.43.0 (siznikida boshqacha bo'lishi mumkin)
 
-        self.qoldiq += summa
-        self.tarix.append(f"Pul qo'shildi: +{summa}")
-        print(f"{self.ism}: {summa} so'm qo'shildi.")
-        return True
+# Birinchi marta — ism va email
+git config --global user.name "Olim Karimov"
+git config --global user.email "olim@example.uz"
 
-    def pul_chiqarish(self, summa):
-        if summa <= 0:
-            print("Xato: Noto'g'ri summa!")
-            return False
+# Default branch — main
+git config --global init.defaultBranch main
 
-        if self.qoldiq - summa < 0:
-            raise ValueError(f"Xato: Mablag' yetarli emas! Qoldiq: {self.qoldiq}")
+# Tekshirish
+git config --list
+git config user.name
+git config user.email
 
-        self.qoldiq -= summa
-        self.tarix.append(f"Pul yechildi: -{summa}")
-        print(f"{self.ism}: {summa} so'm yechildi.")
-        return True
+# ─────────────────────────────────────────────────────────────────────
+# 1) Yangi repo
+# ─────────────────────────────────────────────────────────────────────
 
-    def qoldiq_korish(self):
-        print(f"[{self.ism}] Balans: {self.qoldiq} so'm")
-        return self.qoldiq
+mkdir mening-loyiham
+cd mening-loyiham
 
-    def transfer(self, boshqa_hisob, summa):
-        print(f"\n{self.ism} dan {boshqa_hisob.ism} ga {summa} so'm o'tkazilmoqda...")
-        # Pulni yechib olamiz (agar yetmasa ValueError beradi)
-        self.pul_chiqarish(summa)
-        # Boshqa hisobga qo'shamiz
-        boshqa_hisob.pul_qoyish(summa)
+git init
+# Initialized empty Git repository in .../mening-loyiham/.git/
 
-        self.tarix.append(f"Transfer: {boshqa_hisob.ism} ga {summa} o'tkazildi")
-        boshqa_hisob.tarix.append(f"Transfer: {self.ism} dan {summa} keldi")
-        print("Transfer muvaffaqiyatli bajarildi!")
+# .git papka paydo bo'ldi
+ls -la
 
-    def __str__(__self_obj):
-        return f"Mijoz: {__self_obj.ism}, Balans: {__self_obj.qoldiq} so'm"
+# ─────────────────────────────────────────────────────────────────────
+# 2) Birinchi fayl va commit
+# ─────────────────────────────────────────────────────────────────────
 
+# Fayl yaratamiz
+echo "# Mening loyiham" > README.md
+echo "Bu mening birinchi Git loyihalarim" >> README.md
 
-# INHERITANCE: PremiumAccount (Kredit limiti bor)
-class PremiumAccount(BankAccount):
+# Status — Git nima ko'rdi?
+git status
+# On branch main
+# No commits yet
+# Untracked files:
+#   README.md
+# nothing added to commit but untracked files present
 
-    def __init__(self, ism, qoldiq=0, kredit_limiti=500000):
-        super().__init__(ism, qoldiq)
-        self.kredit_limiti = kredit_limiti
-        self.tarix.append(f"Premium status berildi. Kredit: {kredit_limiti}")
+# Staging'ga qo'shamiz
+git add README.md
 
-    # Metodni qayta yozamiz (Overriding) - kredit hisobiga ham pul yechish mumkin
-    def pul_chiqarish(self, summa):
-        if summa <= 0:
-            print("Xato: Noto'g'ri summa!")
-            return False
+# Yana status
+git status
+# Changes to be committed:
+#   new file: README.md
 
-        # Umumiy pul (qoldiq + kredit limiti) yetishini tekshiramiz
-        if (self.qoldiq + self.kredit_limiti) - summa < 0:
-            raise ValueError("Xato: Kredit limitidan ham oshib ketdi!")
+# Commit
+git commit -m "docs: birinchi README qo'shildi"
+# [main (root-commit) abc1234] docs: birinchi README qo'shildi
+#  1 file changed, 2 insertions(+)
+#  create mode 100644 README.md
 
-        self.qoldiq -= summa
-        self.tarix.append(f"Premium yechish: -{summa}")
-        print(f"{self.ism} (Premium): {summa} so'm yechildi.")
-        return True
+# Tarix
+git log
+# commit abc1234... (HEAD -> main)
+# Author: Olim Karimov <olim@example.uz>
+# Date: ...
+#
+#     docs: birinchi README qo'shildi
 
+# Bir qatorli
+git log --oneline
 
-# --- SINOV (KAMIDA 3 TA OBYEKT VA TRANSFER) ---
-if __name__ == "__main__":
-    print("--- BANK TIZIMI TESTI ---")
+# ─────────────────────────────────────────────────────────────────────
+# 3) Ko'p fayl, ko'p commit
+# ─────────────────────────────────────────────────────────────────────
 
-    # 1. Obyektlar yaratish
-    hisob1 = BankAccount("Ali", 100000)
-    hisob2 = BankAccount("Vali", 50000)
-    hisob3 = PremiumAccount("Sardor", 20000, 300000)
+echo "print('Salom, Git!')" > main.py
+echo "Hello from JS" > script.js
 
-    print("\n1. Obyektlar holati (__str__):")
-    print(hisob1)
-    print(hisob2)
-    print(hisob3)
+git status
+# Untracked: main.py, script.js
 
-    print("\n2. Transfer amallari:")
-    # Ali Valiga 30000 o'tkazadi
-    hisob1.transfer(hisob2, 30000)
+# Hammasini birga
+git add .
 
-    # Sardor (Premium) Aliga 40000 o'tkazadi
-    hisob3.transfer(hisob1, 40000)
+# Yoki alohida
+# git add main.py
+# git add script.js
 
-    print("\n3. Oxirgi balanslar:")
-    hisob1.qoldiq_korish()
-    hisob2.qoldiq_korish()
-    hisob3.qoldiq_korish()
+git commit -m "feat: main.py va script.js qo'shildi"
 
-    print("\n4. Ali hisob tarixi:")
-    for t in hisob1.tarix:
-        print("-", t)
+# Tarix
+git log --oneline
+# def5678 (HEAD -> main) feat: main.py va script.js qo'shildi
+# abc1234 docs: birinchi README qo'shildi
+
+# ─────────────────────────────────────────────────────────────────────
+# 4) Faylni o'zgartirish — modify
+# ─────────────────────────────────────────────────────────────────────
+
+# main.py ni o'zgartirib qo'yamiz
+echo "print('Yangilangan salom!')" > main.py
+
+git status
+# modified: main.py
+
+# Nimani aniq o'zgartirdik?
+git diff
+# - print('Salom, Git!')
+# + print('Yangilangan salom!')
+
+# Stage va commit
+git add main.py
+git commit -m "fix: main.py salom matni yangilandi"
+
+# ─────────────────────────────────────────────────────────────────────
+# 5) Multi-line commit (batafsil)
+# ─────────────────────────────────────────────────────────────────────
+
+echo "# Sozlamalar" > config.md
+
+git add config.md
+git commit -m "docs: sozlamalar fayli qo'shildi" \
+           -m "Bu commit foydalanuvchi sozlamalari uchun config.md faylini qo'shadi. Hozircha bo'sh — keyingi commitda ma'lumot to'ldiriladi."
+
+# ─────────────────────────────────────────────────────────────────────
+# 6) Tarix turli ko'rinishlarda
+# ─────────────────────────────────────────────────────────────────────
+
+git log                    # to'liq
+git log --oneline          # qisqa
+git log -n 3               # oxirgi 3
+git log --author="Olim"    # faqat Olim'ning commitlari
+git log --since="1 week ago"
+git log --grep="fix"       # xabarda "fix" so'zi borlari
+
+# Oxirgi commit'ning to'liq
+git show
+
+# Belgilangan commit
+git show abc1234
+
+# ─────────────────────────────────────────────────────────────────────
+# 7) Ataylab xato — add'siz commit
+# ─────────────────────────────────────────────────────────────────────
+
+echo "yangi qator" >> README.md
+git commit -m "test"
+# nothing to commit, working tree clean
+# (chunki staging area bo'sh — add qilmagansiz)
+
+# To'g'risi:
+git add README.md
+git commit -m "docs: README ga yangi qator qo'shildi"
