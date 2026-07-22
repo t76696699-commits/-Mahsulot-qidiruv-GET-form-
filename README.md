@@ -1,185 +1,215 @@
 # ════════════════════════════════════════════════════════════════════
-# DARS 4: GitHub, SSH, remote
+# DARS 5: Pull Request lifecycle
 # ════════════════════════════════════════════════════════════════════
 
 # ─────────────────────────────────────────────────────────────────────
-# 1) SSH key yaratish va GitHub'ga qo'shish
+# 1) O'z repo'da PR
 # ─────────────────────────────────────────────────────────────────────
-
-# Avval — bormi?
-ls ~/.ssh/
-# id_ed25519, id_ed25519.pub (bor bo'lsa)
-
-# Yo'q bo'lsa — yaratish
-ssh-keygen -t ed25519 -C "olim@example.uz"
-# Enter file in which to save the key: [Enter — default]
-# Enter passphrase: [Enter yoki kuchli parol]
-
-# Public key'ni ko'rsatish
-cat ~/.ssh/id_ed25519.pub
-# ssh-ed25519 AAAAC3NzaC1lZDI1... olim@example.uz
-
-# Buni nusxalang va GitHub'ga qo'shing:
-# GitHub → Settings → SSH and GPG keys → New SSH key
-
-# Tekshirish
-ssh -T git@github.com
-# Hi olim! You've successfully authenticated...
-
-# ─────────────────────────────────────────────────────────────────────
-# 2) Lokal repo'ni GitHub'ga bog'lash
-# ─────────────────────────────────────────────────────────────────────
-
-# Avval GitHub'da repo yarating (web UI):
-# github.com → New repository → nom: "mening-loyiham"
-# README qo'shmang!
 
 cd mening-loyiham
 
-# Remote qo'shish
-git remote add origin git@github.com:olim/mening-loyiham.git
+# Yangi feature
+git switch -c feature/dark-mode
 
-# Tekshirish
-git remote -v
-# origin  git@github.com:olim/mening-loyiham.git (fetch)
-# origin  git@github.com:olim/mening-loyiham.git (push)
+cat > theme.css <<'EOF'
+:root {
+    --bg: #fff;
+    --text: #000;
+}
 
-# Birinchi push — -u bilan upstream
-git push -u origin main
-# Enumerating objects: 12, done.
-# To github.com:olim/mening-loyiham.git
-#  * [new branch]      main -> main
+[data-theme="dark"] {
+    --bg: #222;
+    --text: #fff;
+}
+EOF
 
-# Endi GitHub sahifasini yangilang — kodingiz ko'rinadi!
+git add theme.css
+git commit -m "feat: dark mode CSS variables"
+
+# UI tugmasi
+echo '<button id="theme-toggle">🌙</button>' >> index.html
+
+git add index.html
+git commit -m "feat: theme toggle button"
+
+# Push
+git push -u origin feature/dark-mode
+# remote: Create a pull request for 'feature/dark-mode'...
+# remote: https://github.com/olim/mening-loyiham/pull/new/feature/dark-mode
+
+# URL'ga o'tib PR yarating
+# yoki gh CLI bilan:
+gh pr create \
+    --title "feat: dark mode qo'shildi" \
+    --body "$(cat <<'PR'
+## Nima o'zgardi
+- CSS variables bilan dark mode
+- Theme toggle button
+
+## Nima uchun
+Foydalanuvchilar so'rovi (issue #15).
+
+## Test
+- [x] Chrome'da sinangan
+- [x] Firefox'da sinangan
+- [ ] Safari (TODO)
+
+## Screenshot
+(rasmni qo'shing)
+PR
+)"
+
+# PR'ni ko'rish
+gh pr view --web
 
 # ─────────────────────────────────────────────────────────────────────
-# 3) Yangi commit + push
+# 2) Reviewer feedback: o'zgartirish so'raldi
 # ─────────────────────────────────────────────────────────────────────
 
-echo "Yangi qator" >> README.md
-git add README.md
-git commit -m "docs: README yangilandi"
+# Reviewer dedi: "localStorage'da saqlash kerak"
 
+cat >> theme.js <<'EOF'
+const toggle = document.getElementById('theme-toggle');
+toggle.onclick = () => {
+    const yangi = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.body.dataset.theme = yangi;
+    localStorage.setItem('theme', yangi);
+};
+
+// Saqlangan tema
+document.body.dataset.theme = localStorage.getItem('theme') || 'light';
+EOF
+
+git add theme.js
+git commit -m "feat: tema localStorage'da saqlanadi"
+
+# Push — PR avtomatik yangilanadi!
 git push
-# Endi -u kerak emas — birinchi marta sozlangan
-# To github.com:olim/mening-loyiham.git
-#    abc1234..def5678  main -> main
 
 # ─────────────────────────────────────────────────────────────────────
-# 4) clone — boshqa joydan olish
+# 3) Merge — 3 ta variant
 # ─────────────────────────────────────────────────────────────────────
 
-cd ~/Desktop
+# GitHub UI'da Merge dropdown:
+# - Create a merge commit
+# - Squash and merge       (mashhur)
+# - Rebase and merge
 
-# To'liq clone
-git clone git@github.com:olim/mening-loyiham.git
-cd mening-loyiham
-
-# Tarix, branchlar — hammasi keldi
-git log --oneline
-
-# Boshqa nom bilan
-# git clone git@github.com:olim/mening-loyiham.git mening-loyiham-2
-
-# Faqat oxirgi commit (tezroq)
-# git clone --depth 1 git@github.com:olim/mening-loyiham.git
-
-# Belgilangan branch
-# git clone -b develop git@github.com:olim/mening-loyiham.git
-
-# ─────────────────────────────────────────────────────────────────────
-# 5) pull — yangiliklar olish
-# ─────────────────────────────────────────────────────────────────────
-
-# Faraz: GitHub'da yoki boshqa kompyuterda commit bo'ldi
-# Lokal'da ko'ramiz:
-git pull
-# Already up to date.
+# Yoki gh CLI:
+gh pr merge --squash --delete-branch
 # yoki:
-# Updating abc1234..def5678
-# Fast-forward
-#  README.md | 1 +
-#  1 file changed, 1 insertion(+)
-
-# pull = fetch + merge
-git fetch origin
-git merge origin/main
-# (yuqorisi bilan teng)
-
-# Faqat ko'rib chiqish (merge qilmasdan)
-git fetch origin
-git log --oneline HEAD..origin/main
-# (yangi commit'lar ko'rinadi)
+# gh pr merge --merge --delete-branch
+# gh pr merge --rebase --delete-branch
 
 # ─────────────────────────────────────────────────────────────────────
-# 6) Push xato — reject
+# 4) Lokal toza
 # ─────────────────────────────────────────────────────────────────────
 
-# Sinariy: boshqa joyda commit bo'ldi, siz lokal'da ham commit qildingiz
-# Push qilmoqchisiz...
+git switch main
+git pull              # main yangiliklar (squash commit shu yerda)
+git branch -d feature/dark-mode
 
-# git push
-# ! [rejected]        main -> main (fetch first)
-# error: failed to push some refs
-# hint: Updates were rejected because the remote contains work...
+# Remote'da ham o'chirish (agar gh --delete-branch ishlatmagansiz)
+# git push origin --delete feature/dark-mode
 
-# Yechim:
-git pull --rebase     # yoki: git pull
-git push
-
-# (rebase — 8-darsda batafsil)
+# Eskirgan local branchlarni tozalash
+git fetch --prune
+git branch --merged main | grep -v "main" | xargs -n 1 git branch -d
 
 # ─────────────────────────────────────────────────────────────────────
-# 7) Boshqa branchni push
+# 5) Fork workflow (open source)
 # ─────────────────────────────────────────────────────────────────────
 
-git switch -c feature/footer
+# 1. GitHub'da Fork tugmasini bosing
+#    github.com/anthropic/cool-project → Fork → github.com/olim/cool-project
 
-echo "<footer>© 2026</footer>" > footer.html
-git add footer.html
-git commit -m "feat: footer komponenti"
+# 2. Clone (SIZNING fork)
+git clone git@github.com:olim/cool-project.git
+cd cool-project
 
-# Birinchi marta — upstream sozlash
-git push -u origin feature/footer
-# To github.com:olim/mening-loyiham.git
-#  * [new branch]      feature/footer -> feature/footer
-# branch 'feature/footer' set up to track 'origin/feature/footer'.
+# 3. upstream — asl repo'ni qo'shing
+git remote add upstream git@github.com:anthropic/cool-project.git
 
-# Keyingi safar — git push yetadi
-
-# ─────────────────────────────────────────────────────────────────────
-# 8) Remote boshqarish
-# ─────────────────────────────────────────────────────────────────────
-
-# Ro'yxat
 git remote -v
+# origin    git@github.com:olim/cool-project.git
+# upstream  git@github.com:anthropic/cool-project.git
 
-# URL o'zgartirish (HTTPS → SSH ga)
-git remote set-url origin git@github.com:olim/mening-loyiham.git
+# 4. Asosiy ish
+git switch -c fix/readme-typo
 
-# O'chirish
-# git remote remove origin
+# Tahrir...
+sed -i.bak 's/recieve/receive/g' README.md
+rm README.md.bak
 
-# Rename
-# git remote rename origin upstream
+git add README.md
+git commit -m "fix: typo 'recieve' -> 'receive'"
+
+git push -u origin fix/readme-typo
+
+# 5. PR yarating — upstream/main ga
+gh pr create \
+    --title "fix: README typo" \
+    --body "Recieve -> receive" \
+    --base main \
+    --head olim:fix/readme-typo
+
+# 6. Reviewer'lar javob, siz tuzatish — qaytadan push
+# 7. Merge bo'lgach, fork'ni yangilang:
+
+git switch main
+git pull upstream main
+git push origin main      # sizning fork'da main yangilanadi
+
+git branch -d fix/readme-typo
+git push origin --delete fix/readme-typo
 
 # ─────────────────────────────────────────────────────────────────────
-# 9) Branch o'chirish (lokal va remote)
+# 6) gh CLI — kunlik buyruqlar
 # ─────────────────────────────────────────────────────────────────────
 
-# Lokal
-git branch -d feature/footer
+# Auth
+gh auth login
 
-# Remote
-git push origin --delete feature/footer
+# PR ro'yxat (joriy repo)
+gh pr list
 
-# Ikkalasi birga
-# (qisqa skript yo'q — alohida buyruq)
+# PR sizning (har repo'da)
+gh pr list --author "@me"
+
+# Bitta PR'ni ko'rish
+gh pr view 42
+gh pr view 42 --web
+
+# PR checkout (sherikingiz PR'iga o'tish)
+gh pr checkout 42
+
+# Comment qo'shish
+gh pr comment 42 --body "LGTM 🎉"
+
+# Approve
+gh pr review 42 --approve
+
+# Request changes
+gh pr review 42 --request-changes --body "Test yo'q"
+
+# Draft PR
+gh pr create --draft
+
+# Ready for review
+gh pr ready
 
 # ─────────────────────────────────────────────────────────────────────
-# 10) Force push — XAVFLI
+# 7) Fork'ni yangilash — qisqa
 # ─────────────────────────────────────────────────────────────────────
 
-# Faqat shaxsiy branch'da, jamoadosh bilan kelishilgan paytda
-# git push --force                  # ESKI — eng xavfli
-# git push --force-with-lease       # YAXSHI — eski versiyaga override qilmaydi
+# Variant A: terminal
+git fetch upstream
+git switch main
+git merge upstream/main
+git push origin main
+
+# Variant B: gh CLI (zamonaviy)
+gh repo sync olim/cool-project --branch main
+
+# Variant C: GitHub UI
+# Fork sahifasida "Sync fork" tugmasi
