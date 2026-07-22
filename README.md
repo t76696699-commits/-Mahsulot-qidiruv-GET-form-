@@ -1,213 +1,185 @@
 # ════════════════════════════════════════════════════════════════════
-# REVISION 1: Kunlik commit jurnal
-# Modul 1: init + gitignore + add + commit + branch + merge
+# DARS 4: GitHub, SSH, remote
 # ════════════════════════════════════════════════════════════════════
 
 # ─────────────────────────────────────────────────────────────────────
-# Vazifa 1: loyihani boshlash
+# 1) SSH key yaratish va GitHub'ga qo'shish
 # ─────────────────────────────────────────────────────────────────────
 
-mkdir kundalik && cd kundalik
+# Avval — bormi?
+ls ~/.ssh/
+# id_ed25519, id_ed25519.pub (bor bo'lsa)
 
-git init
+# Yo'q bo'lsa — yaratish
+ssh-keygen -t ed25519 -C "olim@example.uz"
+# Enter file in which to save the key: [Enter — default]
+# Enter passphrase: [Enter yoki kuchli parol]
 
-cat > README.md <<EOF
-# Kundalik
+# Public key'ni ko'rsatish
+cat ~/.ssh/id_ed25519.pub
+# ssh-ed25519 AAAAC3NzaC1lZDI1... olim@example.uz
 
-Mening kundalik commit jurnali. Git bilan o'rganaman.
-
-## Struktura
-
-- 2026/MM/DD.md — har kun yozuv
-- shablonlar/ — kun shabloni
-EOF
-
-cat > .gitignore <<EOF
-# OS
-.DS_Store
-Thumbs.db
-
-# Editor
-.vscode/
-.idea/
-*.swp
-
-# Vaqtinchalik
-*.tmp
-*.bak
-EOF
-
-git add .
-git commit -m "chore: loyiha boshlash"
-
-# ─────────────────────────────────────────────────────────────────────
-# Vazifa 2: shablon
-# ─────────────────────────────────────────────────────────────────────
-
-mkdir shablonlar
-
-cat > shablonlar/kun-shabloni.md <<'EOF'
-# <Sana>
-
-## 🎯 Bugun nima qildim
--
-
-## 🐛 Qiyinchiliklar
--
-
-## 💡 Yangi o'rganganlar
--
-
-## 📋 Ertaga
--
-EOF
-
-git add shablonlar/
-git commit -m "feat: kun shabloni yaratildi"
-
-# ─────────────────────────────────────────────────────────────────────
-# Vazifa 3: feature/teglar branch
-# ─────────────────────────────────────────────────────────────────────
-
-git switch -c feature/teglar
-
-# Shablonga teglar bo'limi
-cat >> shablonlar/kun-shabloni.md <<'EOF'
-
-## 🏷️ Teglar
--
-EOF
-
-# README ga teglar
-cat >> README.md <<'EOF'
-
-## Teglar
-
-Har yozuvda foydalanish mumkin:
-- `#kod` — dasturlash bilan bog'liq
-- `#kitob` — o'qigan
-- `#ish` — ish vazifalari
-- `#sport` — jismoniy tarbiya
-EOF
-
-git add .
-git commit -m "feat(teglar): teglar tizimi qo'shildi"
-
-# main'ga qaytib merge
-git switch main
-git merge feature/teglar
-git branch -d feature/teglar
+# Buni nusxalang va GitHub'ga qo'shing:
+# GitHub → Settings → SSH and GPG keys → New SSH key
 
 # Tekshirish
-git log --oneline --graph --all
+ssh -T git@github.com
+# Hi olim! You've successfully authenticated...
 
 # ─────────────────────────────────────────────────────────────────────
-# Vazifa 4: 5 kunlik yozuv
+# 2) Lokal repo'ni GitHub'ga bog'lash
 # ─────────────────────────────────────────────────────────────────────
 
-mkdir -p 2026/06
+# Avval GitHub'da repo yarating (web UI):
+# github.com → New repository → nom: "mening-loyiham"
+# README qo'shmang!
 
-for kun in 08 09 10 11 12; do
-  cp shablonlar/kun-shabloni.md 2026/06/$kun.md
-  # macOS sed
-  sed -i.bak "s/<Sana>/2026-06-$kun/" 2026/06/$kun.md
-  rm 2026/06/$kun.md.bak
-  git add 2026/06/$kun.md
-  git commit -m "docs(daily): $kun-iyun yozuv"
-done
+cd mening-loyiham
 
-# Linux sed (agar -i.bak ishlamasa):
-# sed -i "s/<Sana>/2026-06-$kun/" 2026/06/$kun.md
+# Remote qo'shish
+git remote add origin git@github.com:olim/mening-loyiham.git
 
-# ─────────────────────────────────────────────────────────────────────
-# Vazifa 5: tahrir + diff
-# ─────────────────────────────────────────────────────────────────────
+# Tekshirish
+git remote -v
+# origin  git@github.com:olim/mening-loyiham.git (fetch)
+# origin  git@github.com:olim/mening-loyiham.git (push)
 
-# 08.md ga to'liq mazmun yozamiz
-cat > 2026/06/08.md <<'EOF'
-# 2026-06-08
+# Birinchi push — -u bilan upstream
+git push -u origin main
+# Enumerating objects: 12, done.
+# To github.com:olim/mening-loyiham.git
+#  * [new branch]      main -> main
 
-## 🎯 Bugun nima qildim
-- Git va GitHub kursini boshlashdim
-- Birinchi commit qildim — juda zo'r tuyildi!
-- 3 ta branch yaratdim va merge qildim
-
-## 🐛 Qiyinchiliklar
-- `git add` ni unutib `commit` qilishga urinardim
-- Branch o'zgartirishda "uncommitted changes" xato chiqdi
-
-## 💡 Yangi o'rganganlar
-- Conventional Commits formati: `feat:`, `fix:`, `chore:`
-- `git log --oneline --graph` — chiroyli tarix
-- .gitignore qoidalari
-
-## 📋 Ertaga
-- GitHub account ochish
-- SSH key sozlash
-
-## 🏷️ Teglar
-- #kod #git #boshlanish
-EOF
-
-# Diff'ni ko'rish
-git diff 2026/06/08.md
-
-# Commit
-git add 2026/06/08.md
-git commit -m "docs(daily): 08-iyun yozuv to'ldirildi"
+# Endi GitHub sahifasini yangilang — kodingiz ko'rinadi!
 
 # ─────────────────────────────────────────────────────────────────────
-# Vazifa 6: tarix tahlili
+# 3) Yangi commit + push
 # ─────────────────────────────────────────────────────────────────────
 
-cat > tarix-tahlili.md <<'EOF'
-# Tarix tahlili
+echo "Yangi qator" >> README.md
+git add README.md
+git commit -m "docs: README yangilandi"
 
-## Jami commit'lar
-EOF
-
-echo '```' >> tarix-tahlili.md
-git log --oneline | wc -l >> tarix-tahlili.md
-echo '```' >> tarix-tahlili.md
-
-cat >> tarix-tahlili.md <<'EOF'
-
-## Statistika
-EOF
-
-echo '```' >> tarix-tahlili.md
-git log --stat | tail -50 >> tarix-tahlili.md
-echo '```' >> tarix-tahlili.md
-
-git add tarix-tahlili.md
-git commit -m "docs: tarix tahlili"
+git push
+# Endi -u kerak emas — birinchi marta sozlangan
+# To github.com:olim/mening-loyiham.git
+#    abc1234..def5678  main -> main
 
 # ─────────────────────────────────────────────────────────────────────
-# Vazifa 7: .gitignore sinash
+# 4) clone — boshqa joydan olish
 # ─────────────────────────────────────────────────────────────────────
 
-echo "test" > test.tmp
+cd ~/Desktop
 
-git status
-# (test.tmp YO'Q — gitignore ishladi)
+# To'liq clone
+git clone git@github.com:olim/mening-loyiham.git
+cd mening-loyiham
 
-git check-ignore -v test.tmp
-# .gitignore:10:*.tmp  test.tmp
+# Tarix, branchlar — hammasi keldi
+git log --oneline
 
-rm test.tmp
+# Boshqa nom bilan
+# git clone git@github.com:olim/mening-loyiham.git mening-loyiham-2
+
+# Faqat oxirgi commit (tezroq)
+# git clone --depth 1 git@github.com:olim/mening-loyiham.git
+
+# Belgilangan branch
+# git clone -b develop git@github.com:olim/mening-loyiham.git
 
 # ─────────────────────────────────────────────────────────────────────
-# Yakuniy holat
+# 5) pull — yangiliklar olish
 # ─────────────────────────────────────────────────────────────────────
 
-git log --oneline --graph --all
+# Faraz: GitHub'da yoki boshqa kompyuterda commit bo'ldi
+# Lokal'da ko'ramiz:
+git pull
+# Already up to date.
+# yoki:
+# Updating abc1234..def5678
+# Fast-forward
+#  README.md | 1 +
+#  1 file changed, 1 insertion(+)
 
-# Tipik natija:
-# * abc123 (HEAD -> main) docs: tarix tahlili
-# * def456 docs(daily): 08-iyun yozuv to'ldirildi
-# * ...
-# * ghi789 docs(daily): 12-iyun yozuv
-# ...
-# * jkl012 feat(teglar): teglar tizimi qo'shildi
-# * mno345 feat: kun shabloni
-# * pqr678 chore: loyiha boshlash
+# pull = fetch + merge
+git fetch origin
+git merge origin/main
+# (yuqorisi bilan teng)
+
+# Faqat ko'rib chiqish (merge qilmasdan)
+git fetch origin
+git log --oneline HEAD..origin/main
+# (yangi commit'lar ko'rinadi)
+
+# ─────────────────────────────────────────────────────────────────────
+# 6) Push xato — reject
+# ─────────────────────────────────────────────────────────────────────
+
+# Sinariy: boshqa joyda commit bo'ldi, siz lokal'da ham commit qildingiz
+# Push qilmoqchisiz...
+
+# git push
+# ! [rejected]        main -> main (fetch first)
+# error: failed to push some refs
+# hint: Updates were rejected because the remote contains work...
+
+# Yechim:
+git pull --rebase     # yoki: git pull
+git push
+
+# (rebase — 8-darsda batafsil)
+
+# ─────────────────────────────────────────────────────────────────────
+# 7) Boshqa branchni push
+# ─────────────────────────────────────────────────────────────────────
+
+git switch -c feature/footer
+
+echo "<footer>© 2026</footer>" > footer.html
+git add footer.html
+git commit -m "feat: footer komponenti"
+
+# Birinchi marta — upstream sozlash
+git push -u origin feature/footer
+# To github.com:olim/mening-loyiham.git
+#  * [new branch]      feature/footer -> feature/footer
+# branch 'feature/footer' set up to track 'origin/feature/footer'.
+
+# Keyingi safar — git push yetadi
+
+# ─────────────────────────────────────────────────────────────────────
+# 8) Remote boshqarish
+# ─────────────────────────────────────────────────────────────────────
+
+# Ro'yxat
+git remote -v
+
+# URL o'zgartirish (HTTPS → SSH ga)
+git remote set-url origin git@github.com:olim/mening-loyiham.git
+
+# O'chirish
+# git remote remove origin
+
+# Rename
+# git remote rename origin upstream
+
+# ─────────────────────────────────────────────────────────────────────
+# 9) Branch o'chirish (lokal va remote)
+# ─────────────────────────────────────────────────────────────────────
+
+# Lokal
+git branch -d feature/footer
+
+# Remote
+git push origin --delete feature/footer
+
+# Ikkalasi birga
+# (qisqa skript yo'q — alohida buyruq)
+
+# ─────────────────────────────────────────────────────────────────────
+# 10) Force push — XAVFLI
+# ─────────────────────────────────────────────────────────────────────
+
+# Faqat shaxsiy branch'da, jamoadosh bilan kelishilgan paytda
+# git push --force                  # ESKI — eng xavfli
+# git push --force-with-lease       # YAXSHI — eski versiyaga override qilmaydi
