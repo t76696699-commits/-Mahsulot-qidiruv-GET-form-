@@ -1,215 +1,183 @@
 # ════════════════════════════════════════════════════════════════════
-# DARS 5: Pull Request lifecycle
+# DARS 6: Merge conflict — yechish
 # ════════════════════════════════════════════════════════════════════
-
-# ─────────────────────────────────────────────────────────────────────
-# 1) O'z repo'da PR
-# ─────────────────────────────────────────────────────────────────────
 
 cd mening-loyiham
 
-# Yangi feature
-git switch -c feature/dark-mode
-
-cat > theme.css <<'EOF'
-:root {
-    --bg: #fff;
-    --text: #000;
-}
-
-[data-theme="dark"] {
-    --bg: #222;
-    --text: #fff;
-}
-EOF
-
-git add theme.css
-git commit -m "feat: dark mode CSS variables"
-
-# UI tugmasi
-echo '<button id="theme-toggle">🌙</button>' >> index.html
-
-git add index.html
-git commit -m "feat: theme toggle button"
-
-# Push
-git push -u origin feature/dark-mode
-# remote: Create a pull request for 'feature/dark-mode'...
-# remote: https://github.com/olim/mening-loyiham/pull/new/feature/dark-mode
-
-# URL'ga o'tib PR yarating
-# yoki gh CLI bilan:
-gh pr create \
-    --title "feat: dark mode qo'shildi" \
-    --body "$(cat <<'PR'
-## Nima o'zgardi
-- CSS variables bilan dark mode
-- Theme toggle button
-
-## Nima uchun
-Foydalanuvchilar so'rovi (issue #15).
-
-## Test
-- [x] Chrome'da sinangan
-- [x] Firefox'da sinangan
-- [ ] Safari (TODO)
-
-## Screenshot
-(rasmni qo'shing)
-PR
-)"
-
-# PR'ni ko'rish
-gh pr view --web
-
 # ─────────────────────────────────────────────────────────────────────
-# 2) Reviewer feedback: o'zgartirish so'raldi
+# 1) Toza holatdan boshlash
 # ─────────────────────────────────────────────────────────────────────
 
-# Reviewer dedi: "localStorage'da saqlash kerak"
+git switch main
+git pull
 
-cat >> theme.js <<'EOF'
-const toggle = document.getElementById('theme-toggle');
-toggle.onclick = () => {
-    const yangi = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.body.dataset.theme = yangi;
-    localStorage.setItem('theme', yangi);
-};
-
-// Saqlangan tema
-document.body.dataset.theme = localStorage.getItem('theme') || 'light';
-EOF
-
-git add theme.js
-git commit -m "feat: tema localStorage'da saqlanadi"
-
-# Push — PR avtomatik yangilanadi!
+# Test fayl
+echo "matn versiya 1" > test.txt
+git add test.txt
+git commit -m "test: boshlang'ich fayl"
 git push
 
 # ─────────────────────────────────────────────────────────────────────
-# 3) Merge — 3 ta variant
+# 2) Conflict yaratamiz
 # ─────────────────────────────────────────────────────────────────────
 
-# GitHub UI'da Merge dropdown:
-# - Create a merge commit
-# - Squash and merge       (mashhur)
-# - Rebase and merge
+# Feature branch
+git switch -c feature/o-zgartirish
+echo "matn — feature versiyasi" > test.txt
+git add test.txt
+git commit -m "feat: matn feature uslubida"
 
-# Yoki gh CLI:
-gh pr merge --squash --delete-branch
-# yoki:
-# gh pr merge --merge --delete-branch
-# gh pr merge --rebase --delete-branch
+# Main'ga qaytib boshqa o'zgarish
+git switch main
+echo "matn — main versiyasi" > test.txt
+git add test.txt
+git commit -m "feat: matn main uslubida"
+
+# Merge — CONFLICT!
+git merge feature/o-zgartirish
+# Auto-merging test.txt
+# CONFLICT (content): Merge conflict in test.txt
+# Automatic merge failed; fix conflicts and then commit the result.
 
 # ─────────────────────────────────────────────────────────────────────
-# 4) Lokal toza
+# 3) Conflict'ni ko'rish
 # ─────────────────────────────────────────────────────────────────────
+
+git status
+# Unmerged paths:
+#   both modified: test.txt
+
+cat test.txt
+# <<<<<<< HEAD
+# matn — main versiyasi
+# =======
+# matn — feature versiyasi
+# >>>>>>> feature/o-zgartirish
+
+# ─────────────────────────────────────────────────────────────────────
+# 4) Yechish — 4 ta variant
+# ─────────────────────────────────────────────────────────────────────
+
+# Variant 1: faqat main
+cat > test.txt <<'EOF'
+matn — main versiyasi
+EOF
+
+# yoki avtomatik:
+git checkout --ours test.txt
+
+# Variant 2: faqat feature
+git checkout --theirs test.txt
+
+# Variant 3: ikkalasi birga
+cat > test.txt <<'EOF'
+matn — main versiyasi
+matn — feature versiyasi
+EOF
+
+# Variant 4: yangi mazmun
+cat > test.txt <<'EOF'
+matn — main va feature versiyalari birlashtirildi
+EOF
+
+# Hozir variant 4 ni tanlaymiz
+cat > test.txt <<'EOF'
+matn — birlashtirildi
+EOF
+
+# ─────────────────────────────────────────────────────────────────────
+# 5) Yechilganini Git'ga aytish
+# ─────────────────────────────────────────────────────────────────────
+
+git add test.txt
+
+git status
+# All conflicts fixed but you are still merging.
+
+git commit
+# Editor ochiladi (yoki avtomatik xabar bilan)
+# Default xabar: "Merge branch 'feature/o-zgartirish'"
+
+# ─────────────────────────────────────────────────────────────────────
+# 6) Tarix
+# ─────────────────────────────────────────────────────────────────────
+
+git log --oneline --graph --all
+# *   merge_sha Merge branch 'feature/o-zgartirish'
+# |\
+# | * feat_sha feat: matn feature uslubida
+# * | main_sha feat: matn main uslubida
+# |/
+# * old_sha test: boshlang'ich fayl
+
+# ─────────────────────────────────────────────────────────────────────
+# 7) Merge'ni bekor qilish
+# ─────────────────────────────────────────────────────────────────────
+
+# Conflict paytida — eski holatga qaytish
+# git merge --abort
+
+# Bu — eski main'ga qaytish. Hech narsa o'zgarmagan.
+
+# ─────────────────────────────────────────────────────────────────────
+# 8) Ko'p faylda conflict
+# ─────────────────────────────────────────────────────────────────────
+
+# Faraz — 3 ta faylda
+git switch main
+echo "main a" > a.txt && echo "main b" > b.txt && echo "main c" > c.txt
+git add . && git commit -m "main: a,b,c"
+
+git switch -c feature/multi
+echo "feat a" > a.txt && echo "feat b" > b.txt && echo "feat c" > c.txt
+git add . && git commit -m "feat: a,b,c"
 
 git switch main
-git pull              # main yangiliklar (squash commit shu yerda)
-git branch -d feature/dark-mode
+echo "yana main" > a.txt && echo "yana main b" > b.txt
+git add . && git commit -m "main: a,b yangilandi"
 
-# Remote'da ham o'chirish (agar gh --delete-branch ishlatmagansiz)
-# git push origin --delete feature/dark-mode
+git merge feature/multi
+# CONFLICT in: a.txt, b.txt (c.txt avtomatik mergeli)
 
-# Eskirgan local branchlarni tozalash
-git fetch --prune
-git branch --merged main | grep -v "main" | xargs -n 1 git branch -d
+# Har birini alohida
+echo "yakuniy a" > a.txt && git add a.txt
+echo "yakuniy b" > b.txt && git add b.txt
 
-# ─────────────────────────────────────────────────────────────────────
-# 5) Fork workflow (open source)
-# ─────────────────────────────────────────────────────────────────────
+git status
+# all conflicts fixed
 
-# 1. GitHub'da Fork tugmasini bosing
-#    github.com/anthropic/cool-project → Fork → github.com/olim/cool-project
-
-# 2. Clone (SIZNING fork)
-git clone git@github.com:olim/cool-project.git
-cd cool-project
-
-# 3. upstream — asl repo'ni qo'shing
-git remote add upstream git@github.com:anthropic/cool-project.git
-
-git remote -v
-# origin    git@github.com:olim/cool-project.git
-# upstream  git@github.com:anthropic/cool-project.git
-
-# 4. Asosiy ish
-git switch -c fix/readme-typo
-
-# Tahrir...
-sed -i.bak 's/recieve/receive/g' README.md
-rm README.md.bak
-
-git add README.md
-git commit -m "fix: typo 'recieve' -> 'receive'"
-
-git push -u origin fix/readme-typo
-
-# 5. PR yarating — upstream/main ga
-gh pr create \
-    --title "fix: README typo" \
-    --body "Recieve -> receive" \
-    --base main \
-    --head olim:fix/readme-typo
-
-# 6. Reviewer'lar javob, siz tuzatish — qaytadan push
-# 7. Merge bo'lgach, fork'ni yangilang:
-
-git switch main
-git pull upstream main
-git push origin main      # sizning fork'da main yangilanadi
-
-git branch -d fix/readme-typo
-git push origin --delete fix/readme-typo
+git commit
 
 # ─────────────────────────────────────────────────────────────────────
-# 6) gh CLI — kunlik buyruqlar
+# 9) VS Code'ni mergetool sifatida
 # ─────────────────────────────────────────────────────────────────────
 
-# Auth
-gh auth login
+# git config --global merge.tool vscode
+# git config --global mergetool.vscode.cmd 'code --wait $MERGED'
 
-# PR ro'yxat (joriy repo)
-gh pr list
+# Conflict paytida
+# git mergetool
 
-# PR sizning (har repo'da)
-gh pr list --author "@me"
-
-# Bitta PR'ni ko'rish
-gh pr view 42
-gh pr view 42 --web
-
-# PR checkout (sherikingiz PR'iga o'tish)
-gh pr checkout 42
-
-# Comment qo'shish
-gh pr comment 42 --body "LGTM 🎉"
-
-# Approve
-gh pr review 42 --approve
-
-# Request changes
-gh pr review 42 --request-changes --body "Test yo'q"
-
-# Draft PR
-gh pr create --draft
-
-# Ready for review
-gh pr ready
+# VS Code ochiladi, har conflict joyida tugmalar:
+# - Accept Current Change (ours)
+# - Accept Incoming Change (theirs)
+# - Accept Both Changes
+# - Compare Changes
 
 # ─────────────────────────────────────────────────────────────────────
-# 7) Fork'ni yangilash — qisqa
+# 10) PR'da conflict — lokal yechish
 # ─────────────────────────────────────────────────────────────────────
 
-# Variant A: terminal
-git fetch upstream
-git switch main
-git merge upstream/main
-git push origin main
+# GitHub: "This branch has conflicts that must be resolved"
 
-# Variant B: gh CLI (zamonaviy)
-gh repo sync olim/cool-project --branch main
+# Lokal:
+git switch feature/login
+git fetch origin
+git merge origin/main         # main'ni feature'ga
+# CONFLICT...
 
-# Variant C: GitHub UI
-# Fork sahifasida "Sync fork" tugmasi
+# Yechib commit qiling
+# git add . && git commit
+
+# Push — PR yangilanadi
+git push
