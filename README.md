@@ -1,243 +1,261 @@
 # ════════════════════════════════════════════════════════════════════
-# REVISION 3: Yo'qotilgan kodni qutqarish — laboratoriyasi
-# Modul 3: reset + revert + reflog
+# DARS 10: Tag, release, GitHub Actions
+# ════════════════════════════════════════════════════════════════════
+# Bu fayl 2 qism: bash buyruqlar + YAML workflow misollari
+
+# ─────────────────────────────────────────────────────────────────────
+# QISM A: BASH — tag va release
+# ─────────────────────────────────────────────────────────────────────
+
+cd mening-loyiham
+
+# Tag — lightweight
+git tag v0.1.0
+
+# Annotated tag (tavsiya)
+git tag -a v1.0.0 -m "Birinchi rasmiy versiya"
+
+# Belgilangan commit'ga
+git tag -a v0.9.0 abc1234 -m "Beta versiyasi"
+
+# Ro'yxat
+git tag
+git tag -l "v1.*"     # patternga mos
+
+# Tag'ni ko'rish
+git show v1.0.0
+
+# Tag'ni remote'ga push
+git push origin v1.0.0
+git push origin --tags     # hammasi
+
+# Lokal tag o'chirish
+git tag -d v0.1.0
+
+# Remote tag o'chirish
+git push origin --delete v0.1.0
+
+# ─────────────────────────────────────────────────────────────────────
+# Release yaratish — gh CLI bilan
+# ─────────────────────────────────────────────────────────────────────
+
+gh release create v1.0.0 \
+    --title "v1.0.0 — Birinchi versiya" \
+    --notes "$(cat <<'EOF'
+## 🚀 Yangi xususiyatlar
+- Login va register
+- Profile sahifa
+- Dark mode
+
+## 🐛 Bug fixes
+- Email validatsiyasi to'g'rilandi
+
+## 📦 Dependencies
+- React 19
+- Vite 7
+EOF
+)"
+
+# Fayl yuklash
+gh release upload v1.0.0 dist/app.zip
+
+# Release ro'yxati
+gh release list
+
+# Bitta'ni ko'rish
+gh release view v1.0.0
+
+# ─────────────────────────────────────────────────────────────────────
+# QISM B: YAML workflow misollari
+# ─────────────────────────────────────────────────────────────────────
+
+# Repo ildizida:
+# mkdir -p .github/workflows
+# .github/workflows/test.yml fayl yarating
+
+# ════════════════════════════════════════════════════════════════════
+# Misol 1: Python test
 # ════════════════════════════════════════════════════════════════════
 
-# Toza laboratoriya
-mkdir qutqarish-lab && cd qutqarish-lab
-git init
-echo "boshlang'ich" > README.md
-git add . && git commit -m "init"
+cat > .github/workflows/test-python.yml << 'YAML'
+name: Python Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Test with pytest
+        run: pytest --cov --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+YAML
+
+# ════════════════════════════════════════════════════════════════════
+# Misol 2: Node.js build va deploy
+# ════════════════════════════════════════════════════════════════════
+
+cat > .github/workflows/deploy-node.yml << 'YAML'
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+YAML
+
+# ════════════════════════════════════════════════════════════════════
+# Misol 3: Release tag'ga binary build
+# ════════════════════════════════════════════════════════════════════
+
+cat > .github/workflows/release.yml << 'YAML'
+name: Release Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build
+        run: go build -o myapp${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: myapp*
+YAML
+
+# ════════════════════════════════════════════════════════════════════
+# Misol 4: Scheduled (har kun)
+# ════════════════════════════════════════════════════════════════════
+
+cat > .github/workflows/daily-report.yml << 'YAML'
+name: Daily Report
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # har kun ertalab 8:00 UTC
+  workflow_dispatch:       # qo'l bilan ham ishlatish
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate stats
+        run: |
+          echo "## Daily report" > report.md
+          git log --oneline --since="yesterday" >> report.md
+
+      - name: Send to Slack
+        env:
+          WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"Daily report:\n$(cat report.md)\"}"
+YAML
 
 # ─────────────────────────────────────────────────────────────────────
-# SENARIY 1: Muhim branchni tasodifan o'chirish
+# Hammasini commit va push
 # ─────────────────────────────────────────────────────────────────────
 
-# Sozlash
-git switch -c feature/payment
-for i in 1 2 3 4 5; do
-    echo "payment kod step $i" >> payment.py
-    git add . && git commit -m "feat: payment step $i"
-done
+git add .github/
+git commit -m "ci: GitHub Actions workflows qo'shildi"
+git push
 
-git log --oneline
-# 5 ta commit + init
-
-git switch main
-
-# ❌ KATASTROFA
-git branch -D feature/payment
-# Deleted branch feature/payment (was abc1234).
-
-# 🚨 QUTQARISH
-git reflog
-# Eng yuqori — oxirgi harakatlar
-# abc1234 HEAD@{0}: checkout: moving from feature/payment to main
-# def5678 HEAD@{1}: commit: feat: payment step 5
-
-# SHA topish — oxirgi feature/payment HEAD
-SHA=$(git reflog | grep "payment step 5" | head -1 | awk '{print $1}')
-echo "Topildi: $SHA"
-
-# Branchni qaytarish
-git branch feature/payment $SHA
-
-# Tekshirish
-git switch feature/payment
-git log --oneline
-# ✅ 5 ta commit qaytdi
+# GitHub'da Actions tab — workflow'lar ishga tushadi
+# Yashil ✅ — passing
+# Qizil ❌ — log'larni ko'ring
 
 # ─────────────────────────────────────────────────────────────────────
-# SENARIY 2: reset --hard bilan ish yo'qotish
+# README ga badge qo'shish
 # ─────────────────────────────────────────────────────────────────────
 
-git switch main
+cat >> README.md << 'EOF'
 
-for i in 1 2 3; do
-    echo "ish $i" >> ish.py
-    git add . && git commit -m "feat: ish $i"
-done
+## Status
 
-git log --oneline | head -5
-
-# ❌ KATASTROFA — 3 commit yo'qotish
-git reset --hard HEAD~3
-
-ls ish.py
-# ❌ ish.py YO'Q!
-
-# 🚨 QUTQARISH
-git reflog
-# HEAD@{0}: reset: moving to HEAD~3
-# HEAD@{1}: commit: feat: ish 3   ← bu eski holat
-
-# Eski holatga
-git reset --hard HEAD@{1}
-
-ls ish.py
-# ✅ ish.py qaytdi
-git log --oneline | head -5
-# 3 ta commit ham qaytdi
-
-# ─────────────────────────────────────────────────────────────────────
-# SENARIY 3: Push qilingan yomon commit (revert)
-# ─────────────────────────────────────────────────────────────────────
-
-# Push'siz simulyatsiya — yomon commit qilingan
-echo "DELETE EVERYTHING" > bad.py
-git add . && git commit -m "BUG: delete everything"
-
-git log --oneline | head -3
-
-# ❌ Yomon commit allaqachon push qilingan (faraz)
-# Reset xavfli — chunki push qilingan
-# Yechim — REVERT
-
-git revert HEAD --no-edit
-# Yangi commit yaratiladi:
-# Revert "BUG: delete everything"
-
-ls bad.py
-# ❌ bad.py YO'Q (revert bekor qildi)
-
-git log --oneline | head -3
-# revert_sha Revert "BUG..."
-# bad_sha BUG: delete everything
-# ✅ Tarix saqlanadi, lekin bad effect bekor
-
-# ─────────────────────────────────────────────────────────────────────
-# SENARIY 4: Wrong branch'da commit
-# ─────────────────────────────────────────────────────────────────────
-
-git switch main
-
-# Tasodifan main'da 3 commit
-echo "profile UI 1" > profile1.py && git add . && git commit -m "feat: profile 1"
-echo "profile UI 2" > profile2.py && git add . && git commit -m "feat: profile 2"
-echo "profile UI 3" > profile3.py && git add . && git commit -m "feat: profile 3"
-
-# Voy — bu feature/profile branchda bo'lishi kerak edi
-# 🚨 QUTQARISH (push qilmagan deb faraz):
-
-# 1) Joriy holat'dan branch yaratish
-git branch feature/profile
-
-# 2) main'ni 3 commit oldinga qaytarish
-git reset --hard HEAD~3
-
-# 3) Yangi branchga o'tish
-git switch feature/profile
-
-git log --oneline | head -5
-# ✅ 3 ta commit shu yerda
-# main toza
-
-# ─────────────────────────────────────────────────────────────────────
-# SENARIY 5: Detached HEAD'da ish
-# ─────────────────────────────────────────────────────────────────────
-
-git switch main
-
-# 3 commit orqaga
-git checkout HEAD~3
-# Note: switching to 'abc1234'.
-# You are in 'detached HEAD' state.
-
-# Eksperiment
-echo "ekspriment 1" > exp.py
-git add . && git commit -m "exp: 1"
-
-echo "ekspriment 2" >> exp.py
-git add . && git commit -m "exp: 2"
-
-# Voy — branch'ga qaytmoqchi
-git switch main
-# ❌ exp commit'lar ko'rinmaydi (branch'siz qoldi)
-
-ls exp.py
-# ❌ YO'Q
-
-# 🚨 QUTQARISH
-git reflog | grep "exp"
-# abc HEAD@{N}: commit: exp: 2
-
-SHA=$(git reflog | grep "exp: 2" | head -1 | awk '{print $1}')
-
-# Branch yaratish o'sha SHA dan
-git branch experiment $SHA
-
-git switch experiment
-ls exp.py
-# ✅ exp.py qaytdi
-git log --oneline | head -3
-
-# ─────────────────────────────────────────────────────────────────────
-# BONUS SENARIY 6: Rebase --abort
-# ─────────────────────────────────────────────────────────────────────
-
-git switch main
-echo "shared" > shared.txt && git add . && git commit -m "main: shared"
-
-git switch -c feature/conflict
-echo "feature shared" > shared.txt && git add . && git commit -m "feat: shared"
-
-git switch main
-echo "yana main" > shared.txt && git add . && git commit -m "main: yana"
-
-git switch feature/conflict
-
-# Rebase
-git rebase main
-# CONFLICT...
-
-# Yarim yechdim, lekin xato qildim
-echo "wrong" > shared.txt
-git add shared.txt
-
-# 🚨 QUTQARISH — bekor qilish
-git rebase --abort
-# Eski holatga qaytadi
-
-git status
-# clean — hech narsa o'zgarmagan
-
-# ─────────────────────────────────────────────────────────────────────
-# Yakuniy hisobot
-# ─────────────────────────────────────────────────────────────────────
-
-cat > hisobot.md <<'EOF'
-# Recovery laboratoriyasi — hisobot
-
-## Senariy 1: Branch o'chirish
-- ❌ git branch -D feature/payment
-- 🚨 git reflog + git branch feature/payment <SHA>
-- ✅ Tiklandi
-
-## Senariy 2: reset --hard
-- ❌ git reset --hard HEAD~3
-- 🚨 git reflog + git reset --hard HEAD@{1}
-- ✅ Tiklandi
-
-## Senariy 3: Push qilingan yomon commit
-- ❌ Bad commit + push
-- 🚨 git revert HEAD (reset emas, chunki push qilingan)
-- ✅ Yangi commit bilan bekor
-
-## Senariy 4: Wrong branch
-- ❌ main'da feature commit'lar
-- 🚨 git branch <yangi> + git reset --hard HEAD~N main'da
-- ✅ Tiklandi
-
-## Senariy 5: Detached HEAD
-- ❌ checkout SHA + commit'lar
-- 🚨 git reflog + git branch <yangi> <SHA>
-- ✅ Tiklandi
-
-## Senariy 6: Rebase abort
-- ❌ Yarim conflict yechish — adashish
-- 🚨 git rebase --abort
-- ✅ Eski holatga
+![Tests](https://github.com/olim/mening-loyiham/workflows/Python%20Tests/badge.svg)
+![Deploy](https://github.com/olim/mening-loyiham/workflows/Build%20and%20Deploy/badge.svg)
 EOF
-
-git add hisobot.md
-git commit -m "docs: recovery lab hisoboti"
